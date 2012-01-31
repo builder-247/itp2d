@@ -63,7 +63,7 @@ You should have received a copy of the GNU General Public License along with
 itp2d.  If not, see <http://www.gnu.org/licenses/>.
 
 [author]: mailto:perttu.luukko@iki.fi
-[webpage]: http://TODO_FILL_IN_THIS_URL_ONCE_THE_CODE_IS_IN_GITHUB
+[webpage]: https://github.com/nuteater/itp2d
 
 Program structure
 -----------------
