@@ -1,0 +1,48 @@
+/* Copyright 2012 Perttu Luukko
+
+ * This file is part of itp2d.
+
+ * itp2d is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+
+ * itp2d is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+
+ * You should have received a copy of the GNU General Public License along with
+ * itp2d.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "potential.hpp"
+
+Potential::Potential(DataLayout const& dl, PotentialType const& ptype, RNG& rng, Noise const& noise, std::string arg_name) :
+		datalayout(dl), type(ptype), name(arg_name) {
+	if (typeid(ptype) == typeid(ZeroPotential) and typeid(noise) == typeid(NoNoise)) {
+		isnull = true;
+		values = NULL;
+	}
+	else {
+		isnull = false;
+		values = new double[datalayout.sizex*datalayout.sizey];
+		double dx, dy;
+		for (size_t y=0; y<datalayout.sizey; y++) {
+			dy = datalayout.get_posy(y);
+			for (size_t x=0; x<datalayout.sizex; x++) {
+				dx = datalayout.get_posx(x);
+				datalayout.value(values, x, y) = ptype(dx,dy);
+			}
+		}
+		noise.add_noise(datalayout, values, rng);
+	}
+}
+
+Potential::~Potential() {
+	delete[] values;
+}
+
+std::ostream& Potential::print(std::ostream& stream) const {
+	return stream << "V";
+}
