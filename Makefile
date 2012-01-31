@@ -141,7 +141,7 @@ itp2d: obj/itp2d.o .deps/itp2d.d | data internalchecks
 run_tests: obj/run_tests.o obj/gtest-all.o .deps/run_tests.d | data internalchecks
 	$(CXX) $(flags) $(filter %.o,$^) $(lib_flags) $(test_lib_flags) -o $@
 
-%.html: %.mdwn
+%.html: %.md
 	$(markdown) $< > $@
 
 # include dependencies
