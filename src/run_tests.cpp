@@ -28,6 +28,7 @@
 #include "test_transformer.hpp"
 #include "test_stateset.hpp"
 #include "test_operators.hpp"
+#include "test_parser.hpp"
 #include "test_commandlineparser.hpp"
 #include "test_potentialparser.hpp"
 #include "test_laplacian.hpp"

@@ -115,6 +115,15 @@ class InvalidConvergenceHistoryAccess : public std::runtime_error {
 		}
 };
 
+class ParseError : public std::runtime_error {
+	public:
+		ParseError(std::string str) : std::runtime_error("") {
+			std::stringstream ss;
+			ss << "String \"" << str << "\" could not be parsed.";
+			static_cast<std::runtime_error&>(*this) = std::runtime_error(ss.str());
+		}
+};
+
 class UnknownPotentialType : public std::runtime_error {
 	public:
 		UnknownPotentialType(std::string str) : std::runtime_error("") {
