@@ -25,6 +25,7 @@ CommandLineParser::CommandLineParser() :
 	arg_wisdom_file_name("", "wisdom", "File name to use for FFTW wisdom.", false, Parameters::default_wisdom_file_name, "FILENAME", cmd),
 	arg_noise("", "noise", "Description of possible noise added to the potential. Valid descriptions:\nGaussian spikes with the prescribed density and normally distributed amplitude and width:\n\tgaussians(density,amp_mean,amp_stdev,width_mean,width_stdev)\nSee header noise.hpp for details.", false, Parameters::default_noise_type, "STRING", cmd),
 	arg_recover("", "recover", "Restart simulation instead of quitting on some fatal errors.", cmd),
+	arg_rngseed("", "rngseed", "Provide a seed for the random number generator. If not set, one is generated based on the current time.", false, Parameters::default_rngseed, "NUM", cmd),
 	arg_min_time_step("", "mineps", "Bail out if the imaginary time step goes below this value.", false, Parameters::default_min_time_step, "FLOAT", cmd),
 	arg_max_steps("", "maxsteps", "Bail out after this many iterations.", false, Parameters::default_max_steps, "NUM", cmd),
 	arg_exhaust_eps_values("", "exhaust_eps", "Exhaust user-specified (with argument --timestep) list of time step values before starting convergence checking, i.e. do one iteration with each provided time step value.", cmd),
@@ -84,6 +85,10 @@ void CommandLineParser::parse(std::vector<std::string>& args) {
 		throw_if_nonpositive(arg_max_steps);
 		// Build the Parameters class instance based on the command line options given
 		params.recover = arg_recover.getValue();
+		if (arg_rngseed.isSet())
+			params.set_random_seed(arg_rngseed.getValue());
+		else
+			params.set_random_seed(RNG::produce_random_seed());
 		params.datafile_name = arg_datafile_name.getValue();
 		params.set_wisdom_file_name(arg_wisdom_file_name.getValue());
 		params.copy_from = arg_copy_from.getValue();

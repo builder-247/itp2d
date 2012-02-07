@@ -29,8 +29,9 @@ ITPSystem::ITPSystem(Parameters const& given_params, std::ostream& arg_out, std:
 		finished(false), error_flag(false), quit_flag(false), save_flag(false),
 		all_needed_states_timestep_converged(false), all_needed_states_finally_converged(false),
 		exhausting_eps_values(params.get_exhaust_eps()),
+		rng(params.get_random_seed()),
 		pot_type(parse_potential_description(params.get_potential_type())),
-		pot(datalayout, *pot_type, params.get_rng(), params.get_noise()),
+		pot(datalayout, *pot_type, rng, params.get_noise()),
 		kin(params.get_B(), transformer, boundary_type),
 		states(params.get_N(), datalayout, params.get_ortho_algorithm()),
 		Esn_tuples(params.get_N()),
@@ -43,6 +44,7 @@ ITPSystem::ITPSystem(Parameters const& given_params, std::ostream& arg_out, std:
 		// Create a datafile and write some attributes describing the simulation
 		datafile = new Datafile(params.get_datafile_name(), datalayout, params.get_clobber());
 		datafile->add_attribute("program_version", version_string);
+		datafile->add_attribute("random_seed", params.get_random_seed());
 		datafile->add_attribute("start_time", timestring);
 		datafile->add_attribute("num_states", static_cast<int>(params.get_N()));
 		datafile->add_attribute("num_wanted_to_converge", static_cast<int>(params.get_needed_to_converge()));
@@ -86,7 +88,7 @@ ITPSystem::ITPSystem(Parameters const& given_params, std::ostream& arg_out, std:
 	// Create an approximation for the imaginary time evolution operator
 	T = new MultiProductSplit(params.get_halforder(), pot, eps, transformer, boundary_type, params.get_B());
 	// Initialize states
-	states.init(params);
+	states.init(params, rng);
 	// Allocate some working space for multithreaded operation
 	// This is used for operating with the evolution operator
 	// and calculating the mean and standard deviation
@@ -227,7 +229,7 @@ void ITPSystem::orthonormalize() {
 		if (params.get_recover()) {
 			err	<< "Trying to recover: Changing time step and resetting states." << std::endl;
 			change_time_step();
-			states.init(params);
+			states.init(params, rng);
 			out << "States reset. Resuming propagation." << std::endl;
 		}
 		else {

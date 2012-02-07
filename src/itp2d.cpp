@@ -58,7 +58,6 @@ void sighandler(int s) {
 
 int main(int argc, char* argv[]) {
 	Timer timer;
-	RNG rng;
 	// Trap SIGINT and SIGUSR1
 	signal(SIGINT, sighandler);
 	signal(SIGUSR1, sighandler);
@@ -67,7 +66,6 @@ int main(int argc, char* argv[]) {
 	CommandLineParser parser;
 	parser.parse(args);
 	Parameters params(parser.get_params());
-	params.define_random_source(rng);
 	// Import FFTW Wisdom if available
 	std::string const& fftw_wisdom_filename = params.get_wisdom_file_name();
 	FILE* wisdom_file = fopen(fftw_wisdom_filename.c_str(), "r");

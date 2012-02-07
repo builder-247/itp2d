@@ -20,8 +20,6 @@
 
 RNG::RNG(unsigned long int s) : seed(s), uniform_rng(base_rng_type(seed), uniform_distribution_type()), normal_distribution() {}
 
-RNG::RNG() : seed(produce_random_seed()), uniform_rng(base_rng_type(seed), uniform_distribution_type()), normal_distribution() {}
-
 unsigned long int RNG::produce_random_seed() {
 	timeval time_now;
 	gettimeofday(&time_now, NULL);

@@ -367,6 +367,17 @@ void Datafile::add_attribute(const char* name, int value) {
 	}
 }
 
+void Datafile::add_attribute(const char* name, unsigned long int value) {
+	try {
+		H5::Attribute attr = root_group.createAttribute(name, H5::PredType::NATIVE_ULONG, scalar_space);
+		attr.write(H5::PredType::NATIVE_ULONG, &value);
+	}
+	catch (H5::Exception& e) {
+		e.printError();
+		throw;
+	}
+}
+
 void Datafile::add_attribute(const char* name, const char* value) {
 	add_attribute(name, std::string(value));
 }

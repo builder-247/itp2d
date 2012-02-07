@@ -54,7 +54,7 @@ class StateSet {
 		StateSet(size_t N, DataLayout const& dl, OrthoAlgorithm algo = Default);
 		~StateSet();
 		// Initializing
-		void init(Parameters const& params);
+		void init(Parameters const& params, RNG& rng);
 		void init(comp (*initfunc)(size_t n, double x, double y)); // Initialize from function
 		void init_from_datafile(std::string filename);
 		void init_to_gaussian_noise(RNG& rng);
@@ -81,7 +81,6 @@ class StateSet {
 		// Public reference to the underlying data layout
 		DataLayout const& datalayout;
 	private:
-		RNG* rngptr;
 		const size_t N;
 		const OrthoAlgorithm ortho_algorithm;
 		// Normally all operations are done as much in-place as possible to

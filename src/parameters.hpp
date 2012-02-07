@@ -33,7 +33,6 @@
 #include "convergenceparser.hpp"
 #include "noise.hpp"
 #include "noiseparser.hpp"
-#include "rng.hpp"
 #include "transformer.hpp"
 
 class Parameters {
@@ -50,7 +49,7 @@ class Parameters {
 		~Parameters();
 		// Initialization
 		inline void set_recover(bool val) { recover = val; }
-		void define_random_source(RNG& rng);
+		inline void set_random_seed(unsigned long int s) { rngseed = s; }
 		void define_data_storage(std::string filename, SaveWhat save_what = FinalStates, bool clobber = false);
 		void set_wisdom_file_name(std::string const& filename) { wisdom_file_name = filename; }
 		void define_grid(size_t sizex, size_t sizey, double lenx, BoundaryType boundary = Periodic);
@@ -75,8 +74,7 @@ class Parameters {
 		inline void set_num_threads(int num) { num_threads = num; }
 		// Simple getters
 		inline bool get_recover() const { return recover; }
-		inline RNG& get_rng() const { return *rng; }
-		inline RNG* get_rngptr() const { return rng; }
+		inline unsigned long int get_random_seed() const { return rngseed; }
 		inline std::string const& get_datafile_name() const { return datafile_name; }
 		inline std::string const& get_wisdom_file_name() const { return wisdom_file_name; }
 		inline std::string const& get_copy_from() const { return copy_from; }
@@ -112,7 +110,7 @@ class Parameters {
 		 * Default values
 		 */
 		static const bool default_recover;
-		static RNG* const default_rng;
+		static const unsigned long int default_rngseed;
 		static const char default_datafile_name[];
 		static const char default_wisdom_file_name[];
 		static const SaveWhat default_save_what;
@@ -145,8 +143,8 @@ class Parameters {
 		 * Data members
 		 */
 		bool recover;
-		// RNG reference
-		RNG* rng;
+		// RNG seed
+		unsigned long int rngseed;
 		// Datafile parameters
 		std::string datafile_name;
 		std::string wisdom_file_name;

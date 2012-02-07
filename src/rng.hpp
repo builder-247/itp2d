@@ -42,8 +42,8 @@ public:
 	typedef std::tr1::uniform_real<double> uniform_distribution_type;
 	typedef std::tr1::bernoulli_distribution bernoulli_distribution_type;
 	typedef std::tr1::variate_generator<base_rng_type, uniform_distribution_type> uniform_rng_type;
-private:
 	static unsigned long int produce_random_seed();
+private:
 	unsigned long int seed;
 	// We must have a uniform double-valued generator not only to generate
 	// uniform random numbers, but also to generate normal distributed random

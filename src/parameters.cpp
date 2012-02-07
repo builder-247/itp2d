@@ -23,7 +23,7 @@
 #include "parameters.hpp"
 
 const bool Parameters::default_recover = false;
-RNG* const Parameters::default_rng = NULL;
+const unsigned long int Parameters::default_rngseed = 0x20120131;
 const char Parameters::default_datafile_name[] = "data/itp2d.h5";
 const char Parameters::default_wisdom_file_name[] = "fftw_wisdom";
 const Parameters::SaveWhat Parameters::default_save_what = FinalStates;
@@ -55,6 +55,7 @@ const double Parameters::default_min_time_step = 1e-9;
 
 std::ostream& operator<<(std::ostream& stream, const Parameters& params) {
 	stream << "recover: " << params.get_recover() << std::endl;
+	stream << "rngseed: " << params.get_random_seed() << std::endl;
 	stream << "datafile_name: " << params.get_datafile_name() << std::endl;
 	stream << "wisdom_file_name: " << params.get_wisdom_file_name() << std::endl;
 	stream << "copy_from: " << params.get_copy_from() << std::endl;
@@ -90,7 +91,7 @@ std::ostream& operator<<(std::ostream& stream, const Parameters& params) {
 void Parameters::set_to_defaults() {
 	// Just set everything to default values
 	recover = default_recover;
-	rng = default_rng;
+	rngseed = default_rngseed;
 	datafile_name = default_datafile_name;
 	wisdom_file_name = default_wisdom_file_name;
 	save_what = default_save_what;
@@ -124,10 +125,6 @@ Parameters::Parameters() :
 }
 
 Parameters::~Parameters() {
-}
-
-void Parameters::define_random_source(RNG& arg_rng) {
-	rng = &arg_rng;
 }
 
 void Parameters::define_data_storage(std::string filename, SaveWhat arg_save_what, bool arg_clobber) {

@@ -27,13 +27,12 @@
 class hamiltonian : public testing::Test {
 public:
 	hamiltonian() : gridsize(40) {
-		params.define_random_source(rng);
+		params.set_random_seed(RNG::produce_random_seed());
 		params.set_verbosity(0);
 		params.set_fftw_flags(FFTW_ESTIMATE);
 		params.define_data_storage("", Parameters::Nothing);
 	}
 	const size_t gridsize;
-	RNG rng;
 	Parameters params;
 };
 

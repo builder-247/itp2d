@@ -30,6 +30,7 @@
 #include "itp2d_common.hpp"
 #include "exceptions.hpp"
 #include "parameters.hpp"
+#include "rng.hpp"
 
 class CommandLineParser {
 	public:
@@ -46,6 +47,7 @@ class CommandLineParser {
 		TCLAP::ValueArg<std::string> arg_wisdom_file_name;
 		TCLAP::ValueArg<std::string> arg_noise;
 		TCLAP::SwitchArg arg_recover;
+		TCLAP::ValueArg<unsigned long int> arg_rngseed;
 		TCLAP::ValueArg<double> arg_min_time_step;
 		TCLAP::ValueArg<int> arg_max_steps;
 		TCLAP::SwitchArg arg_exhaust_eps_values;

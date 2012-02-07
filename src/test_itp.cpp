@@ -44,13 +44,12 @@ namespace test_itp_reference {
 class itp : public testing::Test {
 public:
 	itp() : sx(40), sy(40) {
-		params.define_random_source(rng);
+		params.set_random_seed(RNG::produce_random_seed());
 		params.set_verbosity(0);
 		params.set_fftw_flags(FFTW_ESTIMATE);
 	}
 	const size_t sx;
 	const size_t sy;
-	RNG rng;
 	Parameters params;
 };
 

@@ -24,7 +24,7 @@
 
 // Check that orthonormalization works.
 TEST(stateset, orthonormalization) {
-	RNG rng;
+	RNG rng(RNG::produce_random_seed());
 	const DataLayout dl(16, 16, 1.0);
 	StateSet states(8, dl, Default);
 	states.init_to_gaussian_noise(rng);
@@ -33,7 +33,7 @@ TEST(stateset, orthonormalization) {
 }
 
 TEST(stateset, orthonormalization_highmem) {
-	RNG rng;
+	RNG rng(RNG::produce_random_seed());
 	const DataLayout dl(16, 16, 1.0);
 	StateSet states(8, dl, HighMem);
 	states.init_to_gaussian_noise(rng);

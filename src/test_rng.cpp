@@ -28,7 +28,7 @@
 TEST(rng, gaussianity_of_gaussian_rand) {
 	const int N = 100000;
 	const double tolerance = 0.015;
-	RNG rng;
+	RNG rng(RNG::produce_random_seed());
 	double* membuf = new double[N];
 	for (int i=0; i<N; i++) {
 		membuf[i] = rng.gaussian_rand();
@@ -63,7 +63,7 @@ TEST(rng, gaussianity_of_gaussian_rand) {
 TEST(rng, uniformity_of_uniform_rand) {
 	const int N = 100000;
 	const double tolerance = 0.015;
-	RNG rng;
+	RNG rng(RNG::produce_random_seed());
 	double* membuf = new double[N];
 	for (int i=0; i<N; i++) {
 		membuf[i] = rng.uniform_rand();
@@ -103,7 +103,7 @@ class BernoulliTest : public ::testing::TestWithParam<double> {
 TEST_P(BernoulliTest, is_bernoulli) {
 	const int N = 100000;
 	const double tolerance = 0.01;
-	RNG rng;
+	RNG rng(RNG::produce_random_seed());
 	int n = 0;
 	for (int i=0; i<N; i++) {
 		if (rng.bernoulli_trial(p))

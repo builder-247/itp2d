@@ -57,6 +57,7 @@ class Datafile {
 		void write_potential(Potential const& pot);
 		// functions for adding attributes describing the simulation
 		void add_attribute(const char* name, int value);
+		void add_attribute(const char* name, unsigned long int value);
 		void add_attribute(const char* name, double value);
 		void add_attribute(const char* name, const char* value);
 		void add_attribute(const char* name, std::string const& value);

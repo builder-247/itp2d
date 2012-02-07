@@ -58,12 +58,11 @@ StateSet::~StateSet() {
 
 // Initializing
 
-void StateSet::init(Parameters const& params) {
+void StateSet::init(Parameters const& params, RNG& rng) {
 	assert(datalayout.sizex == params.get_sizex());
 	assert(datalayout.sizey == params.get_sizey());
 	assert(datalayout.dx == params.get_grid_delta());
 	Parameters::initialstatefunc func = params.get_initialstate_func();
-	rngptr = params.get_rngptr();
 	// Initialize wave function data
 	switch(params.get_initialstate_preset()) {
 		case Parameters::UserSuppliedInitialState:
@@ -80,8 +79,7 @@ void StateSet::init(Parameters const& params) {
 			init_from_datafile(params.get_copy_from());
 			break;
 		case Parameters::Random:
-			assert(rngptr != NULL);
-			init_to_gaussian_noise(*rngptr);
+			init_to_gaussian_noise(rng);
 			break;
 		default:
 			throw NotImplemented("Given initial state preset");
