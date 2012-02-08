@@ -23,7 +23,7 @@ using namespace std;
 // commandlineparser.cpp
 
 
-pair<string,vector<double> > parse_parameter_string(string const& s) {
+name_parameters_pair parse_parameter_string(string const& s) {
 	// First, search for whitespace around the string so we can ignore it
 	const size_t start = s.find_first_not_of(whitespace_characters);
 	if (start == string::npos)

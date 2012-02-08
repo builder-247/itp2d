@@ -36,6 +36,8 @@
 static const std::string whitespace_characters = " \f\n\r\t\v";
 static const std::string name_delim_characters = " \f\n\r\t\v(";
 
-std::pair<std::string,std::vector<double> > parse_parameter_string(std::string const& s);
+typedef std::pair<std::string,std::vector<double> > name_parameters_pair;
+
+name_parameters_pair parse_parameter_string(std::string const& s);
 
 #endif // _PARSER_HPP_
