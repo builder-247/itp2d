@@ -30,7 +30,6 @@
 
 #include "itp2d_common.hpp"
 #include "convergence.hpp"
-#include "convergenceparser.hpp"
 #include "noise.hpp"
 #include "transformer.hpp"
 

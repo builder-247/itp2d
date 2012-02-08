@@ -17,10 +17,40 @@
  */
 
 #include "convergence.hpp"
+
 // The implementations of convergence tests declared in convergence.hpp require
 // the actual class implementation of ITPSystem, so we need to include it here. We
 // couldn't include it before since itpsystem.hpp needs to include convergence.hpp.
 #include "itpsystem.hpp"
+
+// The parser function; simply uses the generic parse_parameter_string parsers
+// and feeds the results to individual subclass constructors
+ConvergenceTest const* parse_convergence_description(std::string const& str) {
+	// extract name and parameters
+	name_parameters_pair p;
+	try {
+		p = parse_parameter_string(str);
+	}
+	catch (ParseError& e) {
+		std::cerr << e.what() << std::endl;
+		throw InvalidPotentialType(str);
+	}
+	std::string const& name = p.first;
+	std::vector<double> const& params = p.second;
+	// delegate to constructors based on name
+	if (name == "none" or name == "no" or name == "null")
+		return new NoConvergenceTest(params);
+	if (name == "onestep" or name == "one-step")
+		return new OneStepConvergenceTest(params);
+	if (name == "absEchange" or name == "absEdelta")
+		return new AbsoluteEnergyChangeTest(params);
+	if (name == "relEchange" or name == "relEdelta")
+		return new RelativeEnergyChangeTest(params);
+	if (name == "deviation")
+		return new EnergyDeviationChangeTest(params);
+	throw UnknownConvergenceType(str);
+	return NULL;
+}
 
 /* Please see convergence.hpp for documentation of the different test functions */
 
