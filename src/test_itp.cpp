@@ -293,7 +293,7 @@ TEST_F(itp, harmonic_oscillator_magnetic) {
 	reference_energies.resize(params.get_needed_to_converge());
 	// Compare
 	for (size_t n=0; n<params.get_needed_to_converge(); n++) {
-		ASSERT_NEAR(sys->get_sorted_energy(n), std::tr1::get<0>(reference_energies[n]), 100*error_tolerance);
+		EXPECT_NEAR(sys->get_sorted_energy(n), std::tr1::get<0>(reference_energies[n]), 100*error_tolerance);
 	}
 	// Compare analytic values of density
 	DataLayout const& dl = sys->datalayout;
