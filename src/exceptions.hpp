@@ -161,6 +161,15 @@ class InvalidPotentialType : public std::runtime_error {
 		}
 };
 
+class InvalidNoiseType : public std::runtime_error {
+	public:
+		InvalidNoiseType(std::string str) : std::runtime_error("") {
+			std::stringstream ss;
+			ss	<< "Invalid noise type: " << str << std::endl;
+			static_cast<std::runtime_error&>(*this) = std::runtime_error(ss.str());
+		}
+};
+
 class InvalidDataspaceSelection : public std::runtime_error {
 	public:
 		InvalidDataspaceSelection(size_t const* bbox) : std::runtime_error("") {

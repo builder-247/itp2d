@@ -43,7 +43,6 @@ obj/kinetic.o
 obj/laplacian.o
 obj/multiproductsplit.o
 obj/noise.o
-obj/noiseparser.o
 obj/operatorproduct.o
 obj/operators.o
 obj/operatorsum.o
@@ -93,7 +92,6 @@ obj/transformer.o
 .deps/laplacian.o.d
 .deps/multiproductsplit.o.d
 .deps/noise.o.d
-.deps/noiseparser.o.d
 .deps/operatorproduct.o.d
 .deps/operators.o.d
 .deps/operatorsum.o.d

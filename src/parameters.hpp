@@ -32,7 +32,6 @@
 #include "convergence.hpp"
 #include "convergenceparser.hpp"
 #include "noise.hpp"
-#include "noiseparser.hpp"
 #include "transformer.hpp"
 
 class Parameters {

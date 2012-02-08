@@ -18,13 +18,34 @@
 
 #include "noise.hpp"
 
-GaussianSpikes::GaussianSpikes(double _density, double _amplitude_mean, double _amplitude_stdev, double _width_mean, double _width_stdev) :
-	density(_density), amplitude_mean(_amplitude_mean), amplitude_stdev(_amplitude_stdev), width_mean(_width_mean), width_stdev(_width_stdev) {
-		std::stringstream ss;
-		ss << "gaussian spikes, density = " << density << ", amplitude ~ N(" << amplitude_mean
-			<< "," << amplitude_stdev << "^2), width ~ N(" << width_mean << "," << width_stdev << "^2)";
-		description = ss.str();
+// default parameters
+
+const double GaussianSpikes::default_relative_amplitude_stdev = 0.20;
+const double GaussianSpikes::default_relative_width_stdev = 0.20;
+
+// noise parser function
+
+Noise const* parse_noise_description(std::string const& str) {
+	// Parse with the generic parse_parameter_string function and extract the
+	// name and parameters.
+	name_parameters_pair p;
+	try {
+		p = parse_parameter_string(str);
 	}
+	catch (ParseError& e) {
+		std::cerr << e.what() << std::endl;
+		throw InvalidPotentialType(str);
+	}
+	std::string const& name = p.first;
+	std::vector<double> const& params = p.second;
+	// Simply delegate to the individual constructors based on name
+	if (name == "no" or name == "none" or name == "zero")
+		return new NoNoise(params);
+	else if (name == "gaussian" or name == "gaussiannoise")
+		return new GaussianSpikes(params);
+	else
+		throw UnknownNoiseType(str);
+}
 
 void GaussianSpikes::add_noise(DataLayout const& dl, double* pot_values, RNG& rng) const {
 	// Probability that a grid point has a spike. This should be quite small,
