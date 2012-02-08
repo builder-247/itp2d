@@ -50,7 +50,6 @@ obj/operatorsum.o
 obj/parameters.o
 obj/parser.o
 obj/potential.o
-obj/potentialparser.o
 obj/potentialtypes.o
 obj/rng.o
 obj/run_tests.o
@@ -101,7 +100,6 @@ obj/transformer.o
 .deps/parameters.o.d
 .deps/parser.o.d
 .deps/potential.o.d
-.deps/potentialparser.o.d
 .deps/potentialtypes.o.d
 .deps/rng.o.d
 .deps/run_tests.d
