@@ -21,6 +21,8 @@
 // Default values for parameters
 
 const double HarmonicPotential::default_frequency = 1;
+const double HarmonicPotential::default_x0 = 0;
+const double HarmonicPotential::default_y0 = 0;
 const double PrettyHardSquare::default_exponent = 8;
 const double HenonHeiles::default_a = 205.0/42.0;
 const double HenonHeiles::default_b = -13.0/3.0;

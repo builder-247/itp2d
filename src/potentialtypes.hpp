@@ -103,21 +103,40 @@ class UserSetPotential : public PotentialType {
 class HarmonicPotential : public PotentialType {
 	public:
 		static const double default_frequency;
+		static const double default_x0;
+		static const double default_y0;
 		HarmonicPotential(double omega=default_frequency) : w(omega) {
 			init();
 		}
 		HarmonicPotential(std::vector<double> params) {
-			if (params.empty())
+			if (params.empty()) {
 				w = default_frequency;
-			else if (params.size() == 1)
+				x0 = default_x0;
+				y0 = default_y0;
+			}
+			else if (params.size() == 1) {
 				w = params[0];
+				x0 = default_x0;
+				y0 = default_y0;
+			}
+			else if (params.size() == 3) {
+				w = params[0];
+				x0 = params[1];
+				y0 = params[2];
+			}
 			else
-		 		throw InvalidPotentialType("harmonic oscillator potential only takes one parameter");
+				throw InvalidPotentialType("harmonic oscillator potential takes either zero, one or three parameters");
 			init();
 		}
-		inline double operator()(double x, double y) const { return 0.5*w*(x*x+y*y); }
+		inline double operator()(double x, double y) const {
+			const double px = x-x0;
+			const double py = y-y0;
+			return 0.5*w*(px*px+py*py);
+		}
 	private:
 		double w;
+		double x0;
+		double y0;
 		void init() {
 			if (w < 0)
 				throw InvalidPotentialType("harmonic oscillator with negative frequency");
