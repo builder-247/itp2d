@@ -20,6 +20,6 @@
 #define _TEST_POTENTIALPARSER_HPP_
 
 #include "tests_common.hpp"
-#include "potentialparser.hpp"
+#include "potentialtypes.hpp"
 
 #endif // _TEST_POTENTIALPARSER_HPP_

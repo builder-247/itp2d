@@ -48,7 +48,7 @@
 #include "rng.hpp"
 #include "timer.hpp"
 #include "parameters.hpp"
-#include "potentialparser.hpp"
+#include "potentialtypes.hpp"
 #include "convergence.hpp"
 
 class ITPSystem {

@@ -20,10 +20,8 @@
  * Different potential types are defined here.
  *
  * This is where you need to make changes if you want to implement new
- * potential functions. Also make modifications in potentialparser.cpp if you
- * want to use the potential from the command line interface, and
- * commandlineparser.cpp to include your potential in the in-line
- * documentation.
+ * potential functions. Also make modifications in commandlineparser.cpp to
+ * include your potential in the in-line documentation.
  */
 
 #ifndef _POTENTIALTYPES_HPP_
@@ -36,11 +34,15 @@
 
 #include "itp2d_common.hpp"
 #include "exceptions.hpp"
+#include "parser.hpp"
 
 // Main interface class.
 // A potential type is simply:
 // 	* A function giving its value on a certain point (x,y)
 // 	* A descriptive string
+// In addition, you need a constructor that constructs a potential from a
+// vector of doubles. This is used for creating potentials from user-provided
+// parameters.
 
 class PotentialType {
 	public:
@@ -50,16 +52,40 @@ class PotentialType {
 		std::string description;
 };
 
+// A parser function for constructing potentials from a user-provided string.
+// First, the generic parse_parameter_string is used to parse a string of the
+// form name(param1,param2,...) into a name and a vector of doubles. Then the
+// construction is delegated to the respective subclass constructors based on
+// the name.
+//
+// This parser could be (and has been) put into a separate file. However, it is
+// good to have *everything* relating to a single potential close to each
+// other.
+
+PotentialType const* parse_potential_description(std::string const& str);
+
 // Potential types
 
 class ZeroPotential : public PotentialType {
 	public:
 		ZeroPotential() {
-			description = "zero";
+			init();
+		}
+		ZeroPotential(std::vector<double> params) {
+			if (not params.empty())
+				throw InvalidPotentialType("zero potential does not take parameters");
+			init();
 		}
 		inline double operator()(__attribute__((unused)) double x, __attribute__((unused)) double y) const { return 0; }
+	private:
+		void init() {
+			description = "zero";
+		}
 };
 
+// This potential type is not used at the moment, but it is implemented here in
+// case e.g. some method of reading the potential from a file is made available
+// later
 class UserSetPotential : public PotentialType {
 	public:
 		typedef double (*potfunc)(double, double);
@@ -74,16 +100,25 @@ class UserSetPotential : public PotentialType {
 // The harmonic oscillator
 class HarmonicPotential : public PotentialType {
 	public:
-		HarmonicPotential(double omega=1) : w(omega) {
-			if (omega < 0)
-				throw InvalidPotentialType("harmonic oscillator with negative frequency");
-			std::stringstream ss;
-			ss << "harmonic(" << omega << ")";
-			description = ss.str();
+		HarmonicPotential(double omega=1) : w(omega) {}
+		HarmonicPotential(std::vector<double> params) {
+			if (params.size() == 0)
+				w = 1.0;
+			else if (params.size() == 1)
+				w = params[0];
+			else
+				throw InvalidPotentialType("harmonic oscillator potential only takes one parameter");
 		}
 		inline double operator()(double x, double y) const { return 0.5*w*(x*x+y*y); }
 	private:
-		const double w;
+		void init() {
+			if (w < 0)
+				throw InvalidPotentialType("harmonic oscillator with negative frequency");
+			std::stringstream ss;
+			ss << "harmonic(" << w << ")";
+			description = ss.str();
+		}
+		double w;
 };
 
 // A pretty hard square of length pi
