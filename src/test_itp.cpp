@@ -264,8 +264,8 @@ TEST_F(itp, particle_in_a_nonsquare_box_otherway) {
 }
 
 TEST_F(itp, harmonic_oscillator_magnetic) {
-	const double error_tolerance = 1e-4;
-	const double B = 1.0;
+	const double error_tolerance = 1e-3;
+	const double B = 10.0;
 	if (dump_data)
 		params.define_data_storage("data/test_itp_harmonic_magnetic.h5", Parameters::FinalStates, true);
 	else
@@ -323,7 +323,7 @@ TEST_F(itp, harmonic_oscillator_magnetic) {
 			}
 		}
 		sum = sqrt(sum/static_cast<double>(dl.N));
-		ASSERT_LT(sum, 10*1e-4);
+		EXPECT_LT(sum, 20*error_tolerance);
 		if (dump_data) {
 			datafile->write_state(i, 0, S);
 			datafile->write_state(i, 1, *reference);
