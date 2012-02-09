@@ -84,7 +84,7 @@ TEST_F(itp, harmonic_oscillator) {
 	}
 	// Compare
 	for (size_t n=0; n<params.get_needed_to_converge(); n++) {
-		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], 100*error_tolerance);
+		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
 	}
 	// Cleanup
 	delete sys;
@@ -121,7 +121,7 @@ TEST_F(itp, harmonic_oscillator_dirichlet) {
 	}
 	// Compare
 	for (size_t n=0; n<params.get_needed_to_converge(); n++) {
-		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], 100*error_tolerance);
+		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
 	}
 	// Cleanup
 	delete sys;
@@ -158,7 +158,7 @@ TEST_F(itp, harmonic_oscillator_nonsquare_simulation_box) {
 	}
 	// Compare
 	for (size_t n=0; n<params.get_needed_to_converge(); n++) {
-		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], 100*error_tolerance);
+		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
 	}
 	// Cleanup
 	delete sys;
@@ -191,7 +191,7 @@ TEST_F(itp, particle_in_a_box) {
 	reference_energies.resize(params.get_needed_to_converge());
 	// Compare
 	for (size_t n=0; n<params.get_needed_to_converge(); n++) {
-		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], 100*error_tolerance);
+		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
 	}
 	// Cleanup
 	delete sys;
@@ -224,7 +224,7 @@ TEST_F(itp, particle_in_a_nonsquare_box) {
 	reference_energies.resize(params.get_needed_to_converge());
 	// Compare
 	for (size_t n=0; n<params.get_needed_to_converge(); n++) {
-		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], 100*error_tolerance);
+		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
 	}
 	// Cleanup
 	delete sys;
@@ -257,7 +257,7 @@ TEST_F(itp, particle_in_a_nonsquare_box_otherway) {
 	reference_energies.resize(params.get_needed_to_converge());
 	// Compare
 	for (size_t n=0; n<params.get_needed_to_converge(); n++) {
-		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], 100*error_tolerance);
+		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
 	}
 	// Cleanup
 	delete sys;
@@ -270,7 +270,7 @@ TEST_F(itp, harmonic_oscillator_magnetic) {
 		params.define_data_storage("data/test_itp_harmonic_magnetic.h5", Parameters::FinalStates, true);
 	else
 		params.define_data_storage("", Parameters::Nothing);
-	params.define_grid(sx, sy, 10.0);
+	params.define_grid(sx, sy, 7.0);
 	params.set_num_states(14, 8);
 	params.add_eps_value(1.0);
 	params.define_external_field("harmonic(1)", B);
@@ -293,7 +293,7 @@ TEST_F(itp, harmonic_oscillator_magnetic) {
 	reference_energies.resize(params.get_needed_to_converge());
 	// Compare
 	for (size_t n=0; n<params.get_needed_to_converge(); n++) {
-		EXPECT_NEAR(sys->get_sorted_energy(n), std::tr1::get<0>(reference_energies[n]), 100*error_tolerance);
+		EXPECT_NEAR(sys->get_sorted_energy(n), std::tr1::get<0>(reference_energies[n]), error_tolerance);
 	}
 	// Compare analytic values of density
 	DataLayout const& dl = sys->datalayout;
@@ -367,7 +367,7 @@ TEST_F(itp, harmonic_oscillator_magnetic_dirichlet) {
 	reference_energies.resize(params.get_needed_to_converge());
 	// Compare
 	for (size_t n=0; n<params.get_needed_to_converge(); n++) {
-		ASSERT_NEAR(sys->get_sorted_energy(n), std::tr1::get<0>(reference_energies[n]), 100*error_tolerance);
+		ASSERT_NEAR(sys->get_sorted_energy(n), std::tr1::get<0>(reference_energies[n]), error_tolerance);
 	}
 	// Compare analytic values of density
 	DataLayout const& dl = sys->datalayout;
@@ -417,11 +417,11 @@ TEST_F(itp, particle_in_a_box_magnetic) {
 		params.define_data_storage("data/test_itp_particle_in_a_box_magnetic.h5", Parameters::FinalStates, true);
 	else
 		params.define_data_storage("", Parameters::Nothing);
-	params.define_grid(sx, sy, pi, Dirichlet);
+	params.define_grid(64, 64, pi, Dirichlet);
 	params.set_num_states(16, 8);
 	params.define_external_field("zero", 1.0);
 	params.add_eps_value(0.3);
-	params.set_timestep_convergence_test(new RelativeEnergyChangeTest(error_tolerance));
+	params.set_timestep_convergence_test(new AbsoluteEnergyChangeTest(error_tolerance));
 	params.set_final_convergence_test(new OneStepConvergenceTest());
 	ITPSystem* sys = new ITPSystem(params);
 	while (not sys->is_finished()) {
@@ -436,7 +436,7 @@ TEST_F(itp, particle_in_a_box_magnetic) {
 		14.310641, 14.751258};
 	// Compare
 	for (size_t n=0; n<params.get_needed_to_converge(); n++) {
-		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], 100*error_tolerance);
+		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], 2*error_tolerance);
 	}
 	// Cleanup
 	delete sys;
