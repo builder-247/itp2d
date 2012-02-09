@@ -299,7 +299,7 @@ There are several libraries for accessing HDF5 data from [Python][] scripts.
 The one used in the bundled helper scripts is [h5py][], which imports HDF5 data
 as [NumPy][] arrays.
 
-Here is an example of importing a datafile called `itp2d.h`, listing all the
+Here is an example of importing a datafile called `itp2d.h5`, listing all the
 data it contains, and printing the final energies with h5py:
 
 	import h5py
