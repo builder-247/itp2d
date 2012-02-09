@@ -274,9 +274,8 @@ be this beautiful?
 The potential types known to itp2d are defined in the header file `src/potentialtypes.hpp`. You
 can create new potential types by creating our own class derived from `PotentialType` and
 implementing the required functions. This should be easy to do just by imitating how the existing
-potentials are implemented. To use your potential from the command line you should also edit
-`src/potentialparser.cpp`. Again, if you know C or C++, the required changes
-are obvious by looking at how the existing parsers are implemented.
+potentials are implemented. To include your potential in the in-line documentation you should also edit
+`src/commandlineparser.cpp`.
 
 ### Reading datafiles created by itp2d with MATLAB
 
