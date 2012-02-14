@@ -238,19 +238,19 @@ class HenonHeiles : public PotentialType {
 		}
 };
 
-// A Gaussian blob with a prescribed amplitude and width, centered at (x0,y0)
-class Gaussian : public PotentialType {
+// A GaussianPotential blob with a prescribed amplitude and width, centered at (x0,y0)
+class GaussianPotential : public PotentialType {
 	public:
 		static const double default_amplitude;
 		static const double default_width;
 		static const double default_x0;
 		static const double default_y0;
-		Gaussian(double _amplitude=default_amplitude, double _width=default_width,
+		GaussianPotential(double _amplitude=default_amplitude, double _width=default_width,
 				double _x0=default_x0, double _y0=default_y0) :
 				amplitude(_amplitude), width(_width), x0(_x0), y0(_y0) {
 			init();
 		}
-		Gaussian(std::vector<double> params) {
+		GaussianPotential(std::vector<double> params) {
 			if (params.empty()) {
 				amplitude = default_amplitude;
 				width = default_width;

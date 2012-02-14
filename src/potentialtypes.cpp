@@ -26,10 +26,10 @@ const double HarmonicPotential::default_y0 = 0;
 const double PrettyHardSquare::default_exponent = 8;
 const double HenonHeiles::default_a = 205.0/42.0;
 const double HenonHeiles::default_b = -13.0/3.0;
-const double Gaussian::default_amplitude = 1;
-const double Gaussian::default_width = 1;
-const double Gaussian::default_x0 = 0;
-const double Gaussian::default_y0 = 0;
+const double GaussianPotential::default_amplitude = 1;
+const double GaussianPotential::default_width = 1;
+const double GaussianPotential::default_x0 = 0;
+const double GaussianPotential::default_y0 = 0;
 
 // The parser delegator
 
@@ -58,7 +58,7 @@ PotentialType const* parse_potential_description(std::string const& str) {
 	if (name == "henonheiles" or name == "henon")
 		return new HenonHeiles(params);
 	if (name == "gaussian" or name == "gaussianblob")
-		return new Gaussian(params);
+		return new GaussianPotential(params);
 	else
 		throw UnknownPotentialType(str);
 	return NULL;
