@@ -48,8 +48,8 @@ TEST(laplacian, laplacian_of_gaussian) {
 	State R(dl, test_laplacian_reference::referencefunc);
 	const double rmsdist = rms_distance(G,R);
 	const double maxdist = max_distance(G,R);
-	ASSERT_LT(rmsdist, 100*machine_epsilon);
-	ASSERT_LT(maxdist, 1000*machine_epsilon);
+	EXPECT_LT(rmsdist, 100*machine_epsilon);
+	EXPECT_LT(maxdist, 1000*machine_epsilon);
 	if (dump_data) {
 		Datafile file("data/test_laplacian.h5", dl, true);
 		file.write_state(0, 0, G);

@@ -43,7 +43,7 @@ void test_hamiltonian_skeleton(ITPSystem* sys, double rmsdist_tolerance,
 		sys->step();
 	}
 	sys->finish();
-	EXPECT_TRUE(sys->get_error_flag() == false);
+	ASSERT_TRUE(sys->get_error_flag() == false);
 	State const& groundstate = sys->get_state(sys->get_sorted_index(0));
 	const double groundstateenergy = sys->get_sorted_energy(0);
 	OperatorSum const& H = sys->get_hamiltonian();

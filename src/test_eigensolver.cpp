@@ -31,12 +31,12 @@ TEST(eigensolver, eigenvalues_2x2) {
 	matrix[2] = 2;
 	matrix[3] = 4;
 	E.solve(matrix);
-	ASSERT_EQ(E.eigenvalue(0), 0);
-	ASSERT_EQ(E.eigenvalue(1), 5);
-	ASSERT_EQ(E.eigenvector(matrix, 0, 0), comp(-2/sqrt(5)));
-	ASSERT_EQ(E.eigenvector(matrix, 0, 1), comp(1/sqrt(5)));
-	ASSERT_EQ(E.eigenvector(matrix, 1, 0), comp(1/sqrt(5)));
-	ASSERT_EQ(E.eigenvector(matrix, 1, 1), comp(2/sqrt(5)));
+	EXPECT_EQ(E.eigenvalue(0), 0);
+	EXPECT_EQ(E.eigenvalue(1), 5);
+	EXPECT_EQ(E.eigenvector(matrix, 0, 0), comp(-2/sqrt(5)));
+	EXPECT_EQ(E.eigenvector(matrix, 0, 1), comp(1/sqrt(5)));
+	EXPECT_EQ(E.eigenvector(matrix, 1, 0), comp(1/sqrt(5)));
+	EXPECT_EQ(E.eigenvector(matrix, 1, 1), comp(2/sqrt(5)));
 	delete[] matrix;
 }
 
@@ -70,5 +70,5 @@ TEST(eigensolver, spectral_decomposition) {
 	delete[] matrix;
 	delete[] orig_matrix;
 	delete[] diff_matrix;
-	ASSERT_LT(diff,  300*machine_epsilon);
+	EXPECT_LT(diff,  300*machine_epsilon);
 }

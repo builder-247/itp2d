@@ -38,25 +38,25 @@ public:
 
 TEST_F(statearray, construction) {
 	StateArray A(3, dl);
-	ASSERT_TRUE(&A.datalayout == &dl);
-	ASSERT_TRUE(A.get_dataptr() != NULL);
-	ASSERT_EQ(A.size(), 3u);
+	EXPECT_TRUE(&A.datalayout == &dl);
+	EXPECT_TRUE(A.get_dataptr() != NULL);
+	EXPECT_EQ(A.size(), 3u);
 	StateArray B(3, dl, dataptr);
-	ASSERT_EQ(B.size(), 3u);
-	ASSERT_TRUE(&B.datalayout == &dl);
-	ASSERT_EQ(B.get_dataptr(), dataptr);
-	ASSERT_EQ(B[0](0,0), comp(0,pi));
-	ASSERT_EQ(B[0](1,0), comp(1,pi));
-	ASSERT_EQ(B[0](0,1), comp(2,pi));
-	ASSERT_EQ(B[0](1,1), comp(3,pi));
-	ASSERT_EQ(B[1](0,0), comp(4,pi));
-	ASSERT_EQ(B[1](1,0), comp(5,pi));
-	ASSERT_EQ(B[1](0,1), comp(6,pi));
-	ASSERT_EQ(B[1](1,1), comp(7,pi));
-	ASSERT_EQ(B[2](0,0), comp(8,pi));
-	ASSERT_EQ(B[2](1,0), comp(9,pi));
-	ASSERT_EQ(B[2](0,1), comp(10,pi));
-	ASSERT_EQ(B[2](1,1), comp(11,pi));
+	EXPECT_EQ(B.size(), 3u);
+	EXPECT_TRUE(&B.datalayout == &dl);
+	EXPECT_EQ(B.get_dataptr(), dataptr);
+	EXPECT_EQ(B[0](0,0), comp(0,pi));
+	EXPECT_EQ(B[0](1,0), comp(1,pi));
+	EXPECT_EQ(B[0](0,1), comp(2,pi));
+	EXPECT_EQ(B[0](1,1), comp(3,pi));
+	EXPECT_EQ(B[1](0,0), comp(4,pi));
+	EXPECT_EQ(B[1](1,0), comp(5,pi));
+	EXPECT_EQ(B[1](0,1), comp(6,pi));
+	EXPECT_EQ(B[1](1,1), comp(7,pi));
+	EXPECT_EQ(B[2](0,0), comp(8,pi));
+	EXPECT_EQ(B[2](1,0), comp(9,pi));
+	EXPECT_EQ(B[2](0,1), comp(10,pi));
+	EXPECT_EQ(B[2](1,1), comp(11,pi));
 }
 
 TEST_F(statearray, slicing) {
@@ -65,18 +65,18 @@ TEST_F(statearray, slicing) {
 	StateArray S1(A,1);
 	StateArray S2(A,2);
 	StateArray S3(A,3);
-	ASSERT_EQ(S0.size(), A.size());
-	ASSERT_EQ(S1.size(), A.size()-1);
-	ASSERT_EQ(S2.size(), A.size()-2);
-	ASSERT_EQ(S3.size(), A.size()-3);
-	ASSERT_TRUE(A[0] != A[1]);
-	ASSERT_EQ(A[0].data_ptr(), S0[0].data_ptr());
-	ASSERT_EQ(A[1].data_ptr(), S0[1].data_ptr());
-	ASSERT_EQ(A[2].data_ptr(), S0[2].data_ptr());
-	ASSERT_EQ(A[1].data_ptr(), S1[0].data_ptr());
-	ASSERT_EQ(A[2].data_ptr(), S1[1].data_ptr());
-	ASSERT_EQ(A[2].data_ptr(), S2[0].data_ptr());
+	EXPECT_EQ(S0.size(), A.size());
+	EXPECT_EQ(S1.size(), A.size()-1);
+	EXPECT_EQ(S2.size(), A.size()-2);
+	EXPECT_EQ(S3.size(), A.size()-3);
+	EXPECT_TRUE(A[0] != A[1]);
+	EXPECT_EQ(A[0].data_ptr(), S0[0].data_ptr());
+	EXPECT_EQ(A[1].data_ptr(), S0[1].data_ptr());
+	EXPECT_EQ(A[2].data_ptr(), S0[2].data_ptr());
+	EXPECT_EQ(A[1].data_ptr(), S1[0].data_ptr());
+	EXPECT_EQ(A[2].data_ptr(), S1[1].data_ptr());
+	EXPECT_EQ(A[2].data_ptr(), S2[0].data_ptr());
 	StateArray S11(A,1,1);
-	ASSERT_EQ(S11.size(), 1u);
-	ASSERT_EQ(A[1].data_ptr(), S11[0].data_ptr());
+	EXPECT_EQ(S11.size(), 1u);
+	EXPECT_EQ(A[1].data_ptr(), S11[0].data_ptr());
 }

@@ -84,7 +84,7 @@ TEST_F(itp, harmonic_oscillator) {
 	}
 	// Compare
 	for (size_t n=0; n<params.get_needed_to_converge(); n++) {
-		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
+		EXPECT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
 	}
 	// Cleanup
 	delete sys;
@@ -121,7 +121,7 @@ TEST_F(itp, harmonic_oscillator_dirichlet) {
 	}
 	// Compare
 	for (size_t n=0; n<params.get_needed_to_converge(); n++) {
-		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
+		EXPECT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
 	}
 	// Cleanup
 	delete sys;
@@ -158,7 +158,7 @@ TEST_F(itp, harmonic_oscillator_nonsquare_simulation_box) {
 	}
 	// Compare
 	for (size_t n=0; n<params.get_needed_to_converge(); n++) {
-		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
+		EXPECT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
 	}
 	// Cleanup
 	delete sys;
@@ -191,7 +191,7 @@ TEST_F(itp, particle_in_a_box) {
 	reference_energies.resize(params.get_needed_to_converge());
 	// Compare
 	for (size_t n=0; n<params.get_needed_to_converge(); n++) {
-		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
+		EXPECT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
 	}
 	// Cleanup
 	delete sys;
@@ -224,7 +224,7 @@ TEST_F(itp, particle_in_a_nonsquare_box) {
 	reference_energies.resize(params.get_needed_to_converge());
 	// Compare
 	for (size_t n=0; n<params.get_needed_to_converge(); n++) {
-		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
+		EXPECT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
 	}
 	// Cleanup
 	delete sys;
@@ -257,7 +257,7 @@ TEST_F(itp, particle_in_a_nonsquare_box_otherway) {
 	reference_energies.resize(params.get_needed_to_converge());
 	// Compare
 	for (size_t n=0; n<params.get_needed_to_converge(); n++) {
-		ASSERT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
+		EXPECT_NEAR(sys->get_sorted_energy(n), reference_energies[n], error_tolerance);
 	}
 	// Cleanup
 	delete sys;

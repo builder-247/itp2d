@@ -44,8 +44,8 @@ TEST(rng, gaussianity_of_gaussian_rand) {
 		sum += (mean-membuf[i])*(mean-membuf[i]);
 	}
 	const double variance = sum/N;
-	ASSERT_LT(fabs(mean), tolerance);
-	ASSERT_NEAR(variance, 1.0, 100*tolerance);
+	EXPECT_LT(fabs(mean), tolerance);
+	EXPECT_NEAR(variance, 1.0, 100*tolerance);
 	if (dump_data) {
 		// Save the random numbers for more careful analysis.
 		const char filename[] = "data/test_rng_gaussian.h5";
@@ -79,7 +79,7 @@ TEST(rng, uniformity_of_uniform_rand) {
 		sum += (mean-membuf[i])*(mean-membuf[i]);
 	}
 	const double variance = sum/N;
-	ASSERT_NEAR(variance, 0.0, 100*tolerance);
+	EXPECT_NEAR(variance, 0.0, 100*tolerance);
 	if (dump_data) {
 		// Save the random numbers for more careful analysis.
 		const char filename[] = "data/test_rng_uniform.h5";
@@ -109,7 +109,7 @@ TEST_P(BernoulliTest, is_bernoulli) {
 		if (rng.bernoulli_trial(p))
 			n++;
 	}
-	ASSERT_NEAR(p*N, n, tolerance*N);
+	EXPECT_NEAR(p*N, n, tolerance*N);
 }
 
 INSTANTIATE_TEST_CASE_P(rng, BernoulliTest, testing::Range(0.1, 0.9, 0.1));

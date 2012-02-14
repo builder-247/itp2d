@@ -60,12 +60,12 @@ TEST_F(transformer, kvalues) {
 	const int sx = static_cast<int>(dl.sizex);
 	const int sy = static_cast<int>(dl.sizey);
 	for (int x=0; x<sx; x++) {
-		ASSERT_EQ(tr.fft_kx(x), (2*M_PI/dl.lenx)*static_cast<double>((x < sx/2)? x : x-sx));
-		ASSERT_EQ(tr.dsct_kx(x), (M_PI/dl.lenx)*static_cast<double>(x+1));
+		EXPECT_EQ(tr.fft_kx(x), (2*M_PI/dl.lenx)*static_cast<double>((x < sx/2)? x : x-sx));
+		EXPECT_EQ(tr.dsct_kx(x), (M_PI/dl.lenx)*static_cast<double>(x+1));
 	}
 	for (int y=0; y<sy; y++) {
-		ASSERT_EQ(tr.fft_ky(y), (2*M_PI/dl.leny)*static_cast<double>((y < sy/2)? y : y-sy));
-		ASSERT_EQ(tr.dsct_ky(y), (M_PI/dl.leny)*static_cast<double>(y+1));
+		EXPECT_EQ(tr.fft_ky(y), (2*M_PI/dl.leny)*static_cast<double>((y < sy/2)? y : y-sy));
+		EXPECT_EQ(tr.dsct_ky(y), (M_PI/dl.leny)*static_cast<double>(y+1));
 	}
 }
 
@@ -85,7 +85,7 @@ TEST_P(transform_type, inverse_transform) {
 	T.transform(type, tr);
 	T.transform(inverse_transform_of(type), tr);
 	T *= tr.normalization_factor(type);
-	ASSERT_LT(rms_distance(A, T), machine_epsilon);
+	EXPECT_LT(rms_distance(A, T), machine_epsilon);
 }
 
 INSTANTIATE_TEST_CASE_P(inverse, transform_type, testing::Values(FFT, FFTx, FFTy, DST, DSTx, DSTy, DCT, DCTx, DCTy));
@@ -96,7 +96,7 @@ TEST_F(transformer, dirac_delta_idst) {
 	T(0,0) = comp(1.0, -1.0);
 	T.transform(iDST, tr);
 	const State T2(dl, test_transformer_reference::sine_blob);
-	ASSERT_LT(rms_distance(T, T2), 10*machine_epsilon);
+	EXPECT_LT(rms_distance(T, T2), 10*machine_epsilon);
 	if (dump_data) {
 		Datafile datafile("data/test_transformer_dirac_delta_idst.h5", dl, true);
 		datafile.write_state(0, 0, T);
@@ -110,7 +110,7 @@ TEST_F(transformer, dirac_delta_ifft) {
 	T(1,1) = 1.0;
 	T.transform(iFFT, tr);
 	const State T2(dl, test_transformer_reference::unit_wave);
-	ASSERT_LT(rms_distance(T, T2), 10*machine_epsilon);
+	EXPECT_LT(rms_distance(T, T2), 10*machine_epsilon);
 	if (dump_data) {
 		Datafile datafile("data/test_transformer_dirac_delta_ifft.h5", dl, true);
 		datafile.write_state(0, 0, T);
@@ -125,7 +125,7 @@ TEST_F(transformer, sine_blob_dst) {
 	State T2(dl);
 	T2.zero();
 	T2(0,0) = comp(1.0, -1.0);
-	ASSERT_LT(rms_distance(T, T2), 10*machine_epsilon);
+	EXPECT_LT(rms_distance(T, T2), 10*machine_epsilon);
 	if (dump_data) {
 		Datafile datafile("data/test_transformer_sine_blob_dst.h5", dl, true);
 		datafile.write_state(0, 0, T);
@@ -140,7 +140,7 @@ TEST_F(transformer, unit_wave_fft) {
 	State T2(dl);
 	T2.zero();
 	T2(1,1) = 1.0;
-	ASSERT_LT(rms_distance(T, T2), 10*machine_epsilon);
+	EXPECT_LT(rms_distance(T, T2), 10*machine_epsilon);
 	if (dump_data) {
 		Datafile datafile("data/test_transformer_unit_wave_fft.h5", dl, true);
 		datafile.write_state(0, 0, T);

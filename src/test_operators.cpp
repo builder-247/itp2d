@@ -41,7 +41,7 @@ public:
 TEST_F(operators, nulloperator) {
 	NullOperator I;
 	I(A, work);
-	ASSERT_EQ(A, OriginalA);
+	EXPECT_EQ(A, OriginalA);
 }
 
 TEST_F(operators, zerooperator) {
@@ -49,17 +49,17 @@ TEST_F(operators, zerooperator) {
 	O(A, work);
 	State Zero(dl);
 	Zero.zero();
-	ASSERT_EQ(A, Zero);
+	EXPECT_EQ(A, Zero);
 }
 
 TEST_F(operators, constantoperator) {
 	ConstantOperator Two(2);
 	Two(A, work);
-	ASSERT_EQ(A, 2*OriginalA);
+	EXPECT_EQ(A, 2*OriginalA);
 	A = OriginalA;
 	ConstantOperator I(comp(0,1));
 	I(A, work);
-	ASSERT_EQ(A, comp(0,1)*OriginalA);
+	EXPECT_EQ(A, comp(0,1)*OriginalA);
 }
 
 TEST_F(operators, operatorproduct) {
@@ -67,7 +67,7 @@ TEST_F(operators, operatorproduct) {
 	ConstantOperator I(comp(0,1));
 	OperatorProduct Prod = Two*Two*I;
 	Prod(A, work);
-	ASSERT_EQ(A, comp(0,4)*OriginalA);
+	EXPECT_EQ(A, comp(0,4)*OriginalA);
 }
 
 TEST_F(operators, operatorsum) {
@@ -75,12 +75,12 @@ TEST_F(operators, operatorsum) {
 	ConstantOperator I(comp(0,1));
 	OperatorSum Sum = Two+Two+I;
 	Sum(A, work);
-	ASSERT_EQ(A, 2*OriginalA + 2*OriginalA + comp(0,1)*OriginalA);
+	EXPECT_EQ(A, 2*OriginalA + 2*OriginalA + comp(0,1)*OriginalA);
 }
 
 TEST_F(operators, matrixelement) {
 	ConstantOperator Two(2);
 	ConstantOperator I(comp(0,1));
-	ASSERT_EQ(Two.matrixelement(A, A, work)/A.dot(A), comp(2));
-	ASSERT_EQ(I.matrixelement(A, A, work)/A.dot(A), comp(0,1));
+	EXPECT_EQ(Two.matrixelement(A, A, work)/A.dot(A), comp(2));
+	EXPECT_EQ(I.matrixelement(A, A, work)/A.dot(A), comp(0,1));
 }

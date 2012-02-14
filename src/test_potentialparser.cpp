@@ -24,34 +24,34 @@
 
 TEST(potentialparser, potentialparser_harmonic) {
 	PotentialType const* p= parse_potential_description("harmonic");
-	ASSERT_EQ(p->get_description(), "harmonic(1)");
-	ASSERT_EQ((*p)(0,0), 0.0);
-	ASSERT_EQ((*p)(1,1), 1.0);
+	EXPECT_EQ(p->get_description(), "harmonic(1)");
+	EXPECT_EQ((*p)(0,0), 0.0);
+	EXPECT_EQ((*p)(1,1), 1.0);
 	delete p;
 }
 
 TEST(potentialparser, potentialparser_harmonic_05) {
 	PotentialType const* p= parse_potential_description("harmonic(0.5)");
-	ASSERT_EQ(p->get_description(), "harmonic(0.5)");
-	ASSERT_EQ((*p)(0,0), 0.0);
-	ASSERT_EQ((*p)(1,1), 0.5);
+	EXPECT_EQ(p->get_description(), "harmonic(0.5)");
+	EXPECT_EQ((*p)(0,0), 0.0);
+	EXPECT_EQ((*p)(1,1), 0.5);
 	delete p;
 }
 
 TEST(potentialparser, potentialparser_zero) {
 	PotentialType const* p= parse_potential_description("zero");
-	ASSERT_EQ(p->get_description(), "zero");
+	EXPECT_EQ(p->get_description(), "zero");
 	delete p;
 }
 
 TEST(potentialparser, potentialparser_prettyhardsquare) {
 	PotentialType const* p= parse_potential_description("prettyhardsquare");
-	ASSERT_EQ(p->get_description(), "prettyhardsquare(8)");
+	EXPECT_EQ(p->get_description(), "prettyhardsquare(8)");
 	delete p;
 }
 
 TEST(potentialparser, potentialparser_prettyhardsquare_628) {
 	PotentialType const* p= parse_potential_description("prettyhardsquare(6.28)");
-	ASSERT_EQ(p->get_description(), "prettyhardsquare(6.28)");
+	EXPECT_EQ(p->get_description(), "prettyhardsquare(6.28)");
 	delete p;
 }
