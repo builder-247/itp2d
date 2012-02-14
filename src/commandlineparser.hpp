@@ -37,6 +37,41 @@ class CommandLineParser {
 		CommandLineParser();										// The basic usage:
 		void parse(std::vector<std::string>& args);					// parse a string of command line arguments
 		Parameters const& get_params() const { return params; }		// ...and return the corresponding Parameters instance
+		// Documentation strings for each command line parameter. These are printed with --help
+		static const char help_highmem[];
+		static const char help_wisdom_file_name[];
+		static const char help_noise[];
+		static const char help_recover[];
+		static const char help_rngseed[];
+		static const char help_min_time_step[];
+		static const char help_max_steps[];
+		static const char help_exhaust_eps_values[];
+		static const char help_eps_divisor[];
+		static const char help_eps_values[];
+		static const char help_order[];
+		static const char help_N[];
+		static const char help_dirichlet[];
+		static const char help_pi[];
+		static const char help_lenx[];
+		static const char help_sizey[];
+		static const char help_sizex[];
+		static const char help_size[];
+		static const char help_B[];
+		static const char help_ignore_lowest[];
+		static const char help_needed_to_converge[];
+		static const char help_num_threads[];
+		static const char help_quietness[];
+		static const char help_verbosity[];
+		static const char help_save_onlyenergies[];
+		static const char help_save_everything[];
+		static const char help_clobber[];
+		static const char help_copy_from[];
+		static const char help_datafile_name[];
+		static const char help_timestep_convtest[];
+		static const char help_final_convtest[];
+		static const char help_potential[];
+		// Epilogue to be printed after the command line parameter descriptions
+		static const char help_epilogue[];
 	private:
 		template <typename Type> inline void throw_if_nonpositive(Type value, std::string const& name);
 		template <typename Type> inline void throw_if_nonpositive(TCLAP::ValueArg<Type>& arg);

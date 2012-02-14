@@ -18,41 +18,188 @@
 
 #include "commandlineparser.hpp"
 
+// Documentation strings
+
+const char CommandLineParser::help_highmem[] = "\
+Use a different orthonormalization algorithm, which doubles the memory usage but *possibly* offers \
+better performance.";
+
+const char CommandLineParser::help_wisdom_file_name[] = "\
+File name to use for FFTW wisdom.";
+
+const char CommandLineParser::help_noise[] = "\
+Description of possible noise added to the potential. Valid descriptions:\n\
+Gaussian spikes with the prescribed density and normally distributed amplitude and width:\n\
+\tgaussians(density,amp_mean,width_mean)\n\
+\tgaussians(density,amp_mean,amp_stdev,width_mean,width_stdev)\n\
+See header noise.hpp for details.";
+
+const char CommandLineParser::help_recover[] = "\
+Restart simulation instead of quitting on some fatal errors.";
+
+const char CommandLineParser::help_rngseed[] = "\
+Provide a seed for the random number generator. If not set, one is generated based on the current time.";
+
+const char CommandLineParser::help_min_time_step[] = "\
+Bail out if the imaginary time step goes below this value.";
+
+const char CommandLineParser::help_max_steps[] = "\
+Bail out after this many iterations.";
+
+const char CommandLineParser::help_exhaust_eps_values[] = "\
+Exhaust user-specified (with argument --timestep) list of time step values before starting \
+convergence checking, i.e. do one iteration with each provided time step value.";
+
+const char CommandLineParser::help_eps_divisor[] = "\
+Divisor used to decrease the time step once all user-specified values have been used.";
+
+const char CommandLineParser::help_eps_values[] = "\
+A value for the initial imaginary time step. You can give this argument multiple times to specify a \
+list of values that will be used in the order you specify them.";
+
+const char CommandLineParser::help_order[] = "\
+Order of operator splitting. Has to be an even number.";
+
+const char CommandLineParser::help_N[] = "\
+Number of states to use in computations. If not set, defaults to the value of --states plus \
+additional 25%.";
+
+const char CommandLineParser::help_dirichlet[] = "\
+Use Dirichlet boundary conditions. By default itp2d uses periodic boundary conditions.";
+
+const char CommandLineParser::help_pi[] = "\
+Multiply grid length given by --lenx by pi, i.e., use '--pi -l 1.0' to get a pi by pi box.";
+
+const char CommandLineParser::help_lenx[] = "\
+Grid length in x-direction.";
+
+const char CommandLineParser::help_sizey[] = "\
+Number of grid points in the y-direction.";
+
+const char CommandLineParser::help_sizex[] = "\
+Number of grid points in the x-direction.";
+
+const char CommandLineParser::help_size[] = "\
+Number of grid points along each dimension. Sets the same value for x- and y-directions.";
+
+const char CommandLineParser::help_B[] = "\
+Strength of the external magnetic field.";
+
+const char CommandLineParser::help_ignore_lowest[] = "\
+Ignore this many lowest states in convergence checking.";
+
+const char CommandLineParser::help_needed_to_converge[] = "\
+Number of states wanted to converge.";
+
+const char CommandLineParser::help_num_threads[] = "\
+Use this many threads.";
+
+const char CommandLineParser::help_quietness[] = "\
+Decrease verbosity of output.";
+
+const char CommandLineParser::help_verbosity[] = "\
+Increase verbosity of output.";
+
+const char CommandLineParser::help_save_onlyenergies[] = "\
+Save only final state energies, not the states themselves.";
+
+const char CommandLineParser::help_save_everything[] = "\
+Save state data after each step. Causes MASSIVE datafiles.";
+
+const char CommandLineParser::help_clobber[] = "\
+Overwrite datafile if it exists.";
+
+const char CommandLineParser::help_copy_from[] = "\
+Copy state data from specified datafile.";
+
+const char CommandLineParser::help_datafile_name[] = "\
+File name to save data to.";
+
+const char CommandLineParser::help_timestep_convtest[] = "\
+Description of the test for timestep convergence. Valid descriptions:\n\
+No convergence checking:\n\
+\tnone\n\
+One-step timestep convergence:\n\
+\tonestep\n\
+Absolute energy change less than value:\n\
+\tabsEchange(value)\n\
+Relative energy change less than value:\n\
+\trelEchange(value)\n\
+Relative standard deviation of energy less than value or change of relative \
+standard deviation less than value2:\n\
+\tdeviation(value)\n\
+\tdeviation(value,value2)\n\
+In all cases 'change' means change between successive iterations.\n\
+See header convergence.hpp for details.";
+
+const char CommandLineParser::help_final_convtest[] = "\
+Description of the test for final convergence. \
+See the documentation for --timestep_convtest for details.";
+
+const char CommandLineParser::help_potential[] = "\
+Description of the potential. Valid descriptions:\n\
+Zero potential:\n\
+\tzero\n\
+Harmonic oscillator with frequency w, centered at (x0,y0):\n\
+\tharmonic(w)\n\
+\tharmonic(w,x0,y0)\n\
+Square box with power function walls:\n\
+\tprettyhardsquare(exponent)\n\
+Soft-walled pentagon:\n\
+\tsoftpentagon\n\
+The Henon-Heiles potential:\n\
+\thenonheiles(a,b)\n\
+Gaussian blob:\n\
+\tgaussian(amplitude,width)\n\
+\tgaussian(amplitude,width,x0,y0)\n\
+See header potential.hpp for details.";
+
+const char CommandLineParser::help_epilogue[] = "\
+All values given or received by itp2d are in SI-based Hartree atomic units.\n\
+Copyright 2012 Perttu Luukko\n\
+itp2d is free software: you can redistribute it and/or modify it under the terms of the GNU General \
+Public License as published by the Free Software Foundation, either version 3 of the License, or (at \
+your option) any later version. itp2d is distributed in the hope that it will be useful, but \
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A \
+PARTICULAR PURPOSE. See the GNU General Public License for more details.";
+
+// The constructor. Simply initialize all the argument instances with the help strings and default values.
+
 CommandLineParser::CommandLineParser() :
 	params(),
-	cmd("All values given or received by itp2d are in SI-based Hartree atomic units.\nCopyright 2012 Perttu Luukko\nitp2d is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. itp2d is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.", ' ', version_string),
-	arg_highmem("", "highmem", "Use a different orthonormalization algorithm, which doubles the memory usage but *possibly* offers better performance.", cmd),
-	arg_wisdom_file_name("", "wisdom", "File name to use for FFTW wisdom.", false, Parameters::default_wisdom_file_name, "FILENAME", cmd),
-	arg_noise("", "noise", "Description of possible noise added to the potential. Valid descriptions:\nGaussian spikes with the prescribed density and normally distributed amplitude and width:\n\tgaussians(density,amp_mean,width_mean)\n\tgaussians(density,amp_mean,amp_stdev,width_mean,width_stdev)\nSee header noise.hpp for details.", false, Parameters::default_noise_type, "STRING", cmd),
-	arg_recover("", "recover", "Restart simulation instead of quitting on some fatal errors.", cmd),
-	arg_rngseed("", "rngseed", "Provide a seed for the random number generator. If not set, one is generated based on the current time.", false, Parameters::default_rngseed, "NUM", cmd),
-	arg_min_time_step("", "mineps", "Bail out if the imaginary time step goes below this value.", false, Parameters::default_min_time_step, "FLOAT", cmd),
-	arg_max_steps("", "maxsteps", "Bail out after this many iterations.", false, Parameters::default_max_steps, "NUM", cmd),
-	arg_exhaust_eps_values("", "exhaust_eps", "Exhaust user-specified (with argument --timestep) list of time step values before starting convergence checking, i.e. do one iteration with each provided time step value.", cmd),
-	arg_eps_divisor("D", "eps_divisor", "Divisor used to decrease the time step once all user-specified values have been used.", false, Parameters::default_eps_divisor, "FLOAT", cmd),
-	arg_eps_values("e", "timestep", "A value for the initial imaginary time step. You can give this argument multiple times to specify a list of values that will be used in the order you specify them.", false, "FLOAT", cmd),
-	arg_order("d", "order", "Order of operator splitting. Has to be an even number.", false, 2*Parameters::default_halforder, "NUM", cmd),
-	arg_N("N", "totalstates", "Number of states to use in computations. If not set, defaults to the value of --states plus additional 25%.", false, Parameters::default_N, "NUM", cmd),
-	arg_dirichlet("", "dirichlet", "Use Dirichlet boundary conditions. By default itp2d uses periodic boundary conditions.", cmd),
-	arg_pi("", "pi", "Multiply grid length given by --lenx by pi, i.e., use '--pi -l 1.0' to get a pi by pi box.", cmd),
-	arg_lenx("l", "lenx", "Grid length in x-direction.", false, Parameters::default_lenx, "FLOAT", cmd),
-	arg_sizey("y", "sizey", "Number of grid points in the y-direction.", false, Parameters::default_sizey, "NUM", cmd),
-	arg_sizex("x", "sizex", "Number of grid points in the x-direction.", false, Parameters::default_sizex, "NUM", cmd),
-	arg_size("s", "size", "Number of grid points along each dimension. Sets the same value for x- and y-directions.", false, Parameters::default_sizex, "NUM", cmd),
-	arg_B("B", "magneticfield", "Strength of the external magnetic field.", false, Parameters::default_B, "FLOAT", cmd),
-	arg_ignore_lowest("", "ignorelow", "Ignore this many lowest states in convergence checking.", false, Parameters::default_ignore_lowest, "NUM", cmd),
-	arg_needed_to_converge("n", "states", "Number of states wanted to converge.", false, Parameters::default_needed_to_converge, "NUM", cmd),
-	arg_num_threads("t", "threads", "Use this many threads.", false, Parameters::default_num_threads, "NUM", cmd),
-	arg_quietness("q", "quiet", "Decrease verbosity of output.", cmd),
-	arg_verbosity("v", "verbose", "Increase verbosity of output.", cmd),
-	arg_save_onlyenergies("", "onlyenergies", "Save only final state energies, not the states themselves.", cmd),
-	arg_save_everything("", "everything", "Save state data after each step. Causes MASSIVE datafiles.", cmd),
-	arg_clobber("f", "force", "Overwrite datafile if it exists.", cmd),
-	arg_copy_from("", "copystates", "Copy state data from specified datafile.", false, "", "FILENAME", cmd),
-	arg_datafile_name("o", "datafile", "File name to save data to.", false, Parameters::default_datafile_name, "FILENAME", cmd),
-	arg_timestep_convtest("T", "timestep_convtest", "Description of the test for timestep convergence. Valid descriptions:\nNo convergence checking:\n\tnone\nOne-step timestep convergence:\n\tonestep\nAbsolute energy change less than value:\n\tabsEchange(value)\nRelative energy change less than value:\n\trelEchange(value)\nRelative standard deviation of energy less than value or change of relative standard deviation less than value2:\n\tdeviation(value)\n\tdeviation(value,value2)\nIn all cases 'change' means change between successive iterations.\nSee header convergence.hpp for details.", false, Parameters::default_timestep_convergence_test_string, "STRING", cmd),
-	arg_final_convtest("F", "final_convtest", "Description of the test for final convergence. See the documentation for --timestep_convtest for details.", false, Parameters::default_final_convergence_test_string, "STRING", cmd),
-	arg_potential("p", "potential", "Description of the potential. Valid descriptions:\nZero potential:\n\tzero\nHarmonic oscillator with frequency w, centered at (x0,y0):\n\tharmonic(w)\n\tharmonic(w,x0,y0)\nSquare box with power function walls:\n\tprettyhardsquare(exponent)\nSoft-walled pentagon:\n\tsoftpentagon\nThe Henon-Heiles potential:\n\thenonheiles(a,b)\nGaussian blob:\n\tgaussian(amplitude,width)\n\tgaussian(amplitude,width,x0,y0)\nSee header potential.hpp for details.", false, Parameters::default_potential_type, "STRING", cmd) {}
+	cmd(help_epilogue, ' ', version_string),
+	arg_highmem("", "highmem", help_highmem, cmd),
+	arg_wisdom_file_name("", "wisdom", help_wisdom_file_name, false, Parameters::default_wisdom_file_name, "FILENAME", cmd),
+	arg_noise("", "noise", help_noise, false, Parameters::default_noise_type, "STRING", cmd),
+	arg_recover("", "recover", help_recover, cmd),
+	arg_rngseed("", "rngseed", help_rngseed, false, Parameters::default_rngseed, "NUM", cmd),
+	arg_min_time_step("", "mineps", help_min_time_step, false, Parameters::default_min_time_step, "FLOAT", cmd),
+	arg_max_steps("", "maxsteps", help_max_steps, false, Parameters::default_max_steps, "NUM", cmd),
+	arg_exhaust_eps_values("", "exhaust_eps", help_exhaust_eps_values, cmd),
+	arg_eps_divisor("D", "eps_divisor", help_eps_divisor, false, Parameters::default_eps_divisor, "FLOAT", cmd),
+	arg_eps_values("e", "timestep", help_eps_values, false, "FLOAT", cmd),
+	arg_order("d", "order", help_order, false, 2*Parameters::default_halforder, "NUM", cmd),
+	arg_N("N", "totalstates", help_N, false, Parameters::default_N, "NUM", cmd),
+	arg_dirichlet("", "dirichlet", help_dirichlet, cmd),
+	arg_pi("", "pi", help_pi, cmd),
+	arg_lenx("l", "lenx", help_lenx, false, Parameters::default_lenx, "FLOAT", cmd),
+	arg_sizey("y", "sizey", help_sizey, false, Parameters::default_sizey, "NUM", cmd),
+	arg_sizex("x", "sizex", help_sizex, false, Parameters::default_sizex, "NUM", cmd),
+	arg_size("s", "size", help_size, false, Parameters::default_sizex, "NUM", cmd),
+	arg_B("B", "magneticfield", help_B, false, Parameters::default_B, "FLOAT", cmd),
+	arg_ignore_lowest("", "ignorelow", help_ignore_lowest, false, Parameters::default_ignore_lowest, "NUM", cmd),
+	arg_needed_to_converge("n", "states", help_needed_to_converge, false, Parameters::default_needed_to_converge, "NUM", cmd),
+	arg_num_threads("t", "threads", help_num_threads, false, Parameters::default_num_threads, "NUM", cmd),
+	arg_quietness("q", "quiet", help_quietness, cmd),
+	arg_verbosity("v", "verbose", help_verbosity, cmd),
+	arg_save_onlyenergies("", "onlyenergies", help_save_onlyenergies, cmd),
+	arg_save_everything("", "everything", help_save_everything, cmd),
+	arg_clobber("f", "force", help_clobber, cmd),
+	arg_copy_from("", "copystates", help_copy_from, false, "", "FILENAME", cmd),
+	arg_datafile_name("o", "datafile", help_datafile_name, false, Parameters::default_datafile_name, "FILENAME", cmd),
+	arg_timestep_convtest("T", "timestep_convtest", help_timestep_convtest, false, Parameters::default_timestep_convergence_test_string, "STRING", cmd),
+	arg_final_convtest("F", "final_convtest", help_final_convtest, false, Parameters::default_final_convergence_test_string, "STRING", cmd),
+	arg_potential("p", "potential", help_potential, false, Parameters::default_potential_type, "STRING", cmd) {}
 
 void CommandLineParser::parse(std::vector<std::string>& args) {
 	try {
