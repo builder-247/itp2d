@@ -29,7 +29,7 @@ TEST(stateset, orthonormalization) {
 	StateSet states(8, dl, Default);
 	states.init_to_gaussian_noise(rng);
 	states.orthonormalize();
-	EXPECT_LT(states.how_orthonormal(), 10*machine_epsilon);
+	EXPECT_LT(states.how_orthonormal(), 16*machine_epsilon);
 }
 
 TEST(stateset, orthonormalization_highmem) {
@@ -38,5 +38,5 @@ TEST(stateset, orthonormalization_highmem) {
 	StateSet states(8, dl, HighMem);
 	states.init_to_gaussian_noise(rng);
 	states.orthonormalize();
-	EXPECT_LT(states.how_orthonormal(), 10*machine_epsilon);
+	EXPECT_LT(states.how_orthonormal(), 16*machine_epsilon);
 }

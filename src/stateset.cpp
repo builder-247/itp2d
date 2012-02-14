@@ -244,18 +244,19 @@ bool StateSet::is_orthonormal(double epsilon) const {
 
 double StateSet::how_orthonormal() const {
 	double max = 0;
-	comp z;
 	for (size_t n=0; n<N; n++) {
-		for (size_t k=0; k<n; k++) {
-			z = dot(n,k);
-			if (fabs(imag(z)) > max)
-				max = fabs(imag(z));
+		for (size_t k=0; k<=n; k++) {
+			const comp z = dot(n,k);
+			const double i = imag(z);
+			const double r = real(z);
+			if (fabs(i) > max)
+				max = fabs(i);
 			if (n != k) {
-				if (fabs(real(z)) > max)
-					max = fabs(real(z));
+				if (fabs(r) > max)
+					max = fabs(r);
 			}
-			else if (fabs(real(z)-1) > max)
-				max = (fabs(real(z)-1) > max);
+			else if (fabs(r-1) > max)
+				max = fabs(r-1);
 		}
 	}
 	return max;
