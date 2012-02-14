@@ -50,84 +50,44 @@ ConvergenceTest const* parse_convergence_description(std::string const& str);
 // A simple no-op test that always fails, i.e., states are propagated until the maximum iteration count is reached.
 class NoConvergenceTest : public ConvergenceTest {
 	public:
-		NoConvergenceTest() {
-			init();
-		}
-		NoConvergenceTest(std::vector<double> const& params) {
-			if (not params.empty())
-				throw InvalidConvergenceType("Convergence test NoConvergenceTest does not take parameters");
-			init();
-		}
+		NoConvergenceTest() { init(); }
+		NoConvergenceTest(std::vector<double> const& params);
 		bool test(__attribute__((unused)) ITPSystem const& sys, __attribute__((unused)) size_t n) const { return false; }
 	private:
-		void init() {
-			description = "none";
-		}
+		void init() { description = "none"; }
 };
 
 // Consider a state completely converged when it reaches convergence w.r.t
 // current ltimestep size with one iteration.
 class OneStepConvergenceTest : public ConvergenceTest {
 	public:
-		OneStepConvergenceTest() {
-			init();
-		}
-		OneStepConvergenceTest(std::vector<double> const& params) {
-			if (not params.empty())
-				throw InvalidConvergenceType("One-step convergence test does not take parameters");
-			init();
-		}
+		OneStepConvergenceTest() { init(); }
+		OneStepConvergenceTest(std::vector<double> const& params);
 		bool test(ITPSystem const& sys, size_t n) const;
 	private:
-		void init() {
-			description = "one-step convergence";
-		}
+		void init() { description = "one-step convergence"; }
 };
 
 // Consider a state converged if the relative (or absolute) change in energy
 // between successive steps is less than a specified limit.
 class RelativeEnergyChangeTest : public ConvergenceTest {
 	public:
-		RelativeEnergyChangeTest(double _limit) : limit(_limit) {
-			init();
-		}
-		RelativeEnergyChangeTest(std::vector<double> const& params) {
-			if (params.size() == 1)
-				limit = params[0];
-			else
-				throw InvalidConvergenceType("Convergence test based on relative energy change takes exactly one parameter");
-			init();
-		}
+		RelativeEnergyChangeTest(double _limit) : limit(_limit) { init(); }
+		RelativeEnergyChangeTest(std::vector<double> const& params);
 		bool test(ITPSystem const& sys, size_t n) const;
 	private:
 		double limit;
-		void init() {
-			std::stringstream ss;
-			ss << "relative energy change < " << limit;
-			description = ss.str();
-		}
+		void init();
 };
 
 class AbsoluteEnergyChangeTest : public ConvergenceTest {
 	public:
-		AbsoluteEnergyChangeTest(double _limit) : limit(_limit) {
-			init();
-		}
-		AbsoluteEnergyChangeTest(std::vector<double> const& params) {
-			if (params.size() == 1)
-				limit = params[0];
-			else
-				throw InvalidConvergenceType("Convergence test based on absolute energy change takes exactly one parameter");
-			init();
-		}
+		AbsoluteEnergyChangeTest(double _limit) : limit(_limit) { init(); }
+		AbsoluteEnergyChangeTest(std::vector<double> const& params);
 		bool test(ITPSystem const& sys, size_t n) const;
 	private:
 		double limit;
-		void init() {
-			std::stringstream ss;
-			ss << "absolute energy change < " << limit;
-			description = ss.str();
-		}
+		void init();
 };
 
 // Calculate the variance of the state w.r.t the Hamiltonian, i.e., calculate
@@ -144,30 +104,12 @@ class EnergyDeviationChangeTest : public ConvergenceTest {
 				difference_limit(_difference_limit) {
 			init();
 		}
-		EnergyDeviationChangeTest(std::vector<double> const& params) {
-			if (params.size() == 1) {
-				relative_deviation_limit = params[0];
-				difference_limit = 0;
-			}
-			else if (params.size() == 2) {
-				relative_deviation_limit = params[0];
-				difference_limit = params[1];
-			}
-			else
-				throw InvalidConvergenceType("Convergence test based on relative standard deviation of energy takes either one or two parameters");
-			init();
-		}
+		EnergyDeviationChangeTest(std::vector<double> const& params);
 		bool test(ITPSystem const& sys, size_t n) const;
 	private:
 		double relative_deviation_limit;
 		double difference_limit;
-		void init() {
-			std::stringstream ss;
-			ss << "relative energy deviation < " << relative_deviation_limit
-				<< " or relative energy deviation change < " <<
-				difference_limit;
-			description = ss.str();
-		}
+		void init();
 };
 
 #endif // _CONVERGENCE_HPP_

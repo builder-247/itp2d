@@ -54,11 +54,37 @@ ConvergenceTest const* parse_convergence_description(std::string const& str) {
 
 /* Please see convergence.hpp for documentation of the different test functions */
 
+// NoConvergenceTest
+
+NoConvergenceTest::NoConvergenceTest(std::vector<double> const& params) {
+	if (not params.empty())
+		throw InvalidConvergenceType("Convergence test NoConvergenceTest does not take parameters");
+	init();
+}
+
+// OneStepConvergenceTest
+
+OneStepConvergenceTest::OneStepConvergenceTest(std::vector<double> const& params) {
+	if (not params.empty())
+		throw InvalidConvergenceType("One-step convergence test does not take parameters");
+	init();
+}
+
 bool OneStepConvergenceTest::test(ITPSystem const& sys, size_t n) const {
 	if (sys.get_step_counter() == 1 and sys.get_states().is_timestep_converged(n))
 		return true;
 	else
 		return false;
+}
+
+// RelativeEnergyChangeTest
+
+RelativeEnergyChangeTest::RelativeEnergyChangeTest(std::vector<double> const& params) {
+	if (params.size() == 1)
+		limit = params[0];
+	else
+		throw InvalidConvergenceType("Convergence test based on relative energy change takes exactly one parameter");
+	init();
 }
 
 bool RelativeEnergyChangeTest::test(ITPSystem const& sys, size_t n) const {
@@ -73,6 +99,22 @@ bool RelativeEnergyChangeTest::test(ITPSystem const& sys, size_t n) const {
 	return scaled_difference < limit;
 }
 
+void RelativeEnergyChangeTest::init() {
+	std::stringstream ss;
+	ss << "relative energy change < " << limit;
+	description = ss.str();
+}
+
+// AbsoluteEnergyChangeTest
+
+AbsoluteEnergyChangeTest::AbsoluteEnergyChangeTest(std::vector<double> const& params) {
+	if (params.size() == 1)
+		limit = params[0];
+	else
+		throw InvalidConvergenceType("Convergence test based on absolute energy change takes exactly one parameter");
+	init();
+}
+
 bool AbsoluteEnergyChangeTest::test(ITPSystem const& sys, size_t n) const {
 	if (sys.get_energies().size() < 2)
 		return false;
@@ -85,6 +127,28 @@ bool AbsoluteEnergyChangeTest::test(ITPSystem const& sys, size_t n) const {
 	return absolute_difference < limit;
 }
 
+void AbsoluteEnergyChangeTest::init() {
+	std::stringstream ss;
+	ss << "absolute energy change < " << limit;
+	description = ss.str();
+}
+
+// EnergyDeviationChangeTest
+
+EnergyDeviationChangeTest::EnergyDeviationChangeTest(std::vector<double> const& params) {
+	if (params.size() == 1) {
+		relative_deviation_limit = params[0];
+		difference_limit = 0;
+	}
+	else if (params.size() == 2) {
+		relative_deviation_limit = params[0];
+		difference_limit = params[1];
+	}
+	else
+		throw InvalidConvergenceType("Convergence test based on relative standard deviation of energy takes either one or two parameters");
+	init();
+}
+
 bool EnergyDeviationChangeTest::test(ITPSystem const& sys, size_t n) const {
 	if (sys.get_energies().size() < 2)
 		return false;
@@ -95,4 +159,12 @@ bool EnergyDeviationChangeTest::test(ITPSystem const& sys, size_t n) const {
 	const double prevstep = stds[last-1][n]/energies[last-1][n];
 	const bool good = (thisstep < relative_deviation_limit) or (fabs(thisstep - prevstep) < difference_limit);
 	return good;
+}
+
+void EnergyDeviationChangeTest::init() {
+	std::stringstream ss;
+	ss << "relative energy deviation < " << relative_deviation_limit
+		<< " or relative energy deviation change < " <<
+		difference_limit;
+	description = ss.str();
 }
