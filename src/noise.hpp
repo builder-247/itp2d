@@ -69,23 +69,23 @@ class NoNoise : public Noise {
 
 /* Randomly distributed gaussian spikes with normally distributed width
  * and normally distributed amplitude. */
-class GaussianSpikes : public Noise {
+class GaussianNoise : public Noise {
 	public:
 		static const double default_relative_amplitude_stdev;
 		static const double default_relative_width_stdev;
-		GaussianSpikes(double _density, double _amplitude_mean, double _width_mean) :
+		GaussianNoise(double _density, double _amplitude_mean, double _width_mean) :
 				density(_density), amplitude_mean(_amplitude_mean), width_mean(_width_mean) {
 				amplitude_stdev = default_relative_amplitude_stdev * amplitude_mean;
 				width_stdev = default_relative_width_stdev * width_mean;
 			init();
 		}
-		GaussianSpikes(double _density, double _amplitude_mean, double _amplitude_stdev, double _width_mean, double _width_stdev) :
+		GaussianNoise(double _density, double _amplitude_mean, double _amplitude_stdev, double _width_mean, double _width_stdev) :
 				density(_density), amplitude_mean(_amplitude_mean),
 				amplitude_stdev(_amplitude_stdev), width_mean(_width_mean),
 				width_stdev(_width_stdev) {
 			init();
 		}
-		GaussianSpikes(std::vector<double> params) {
+		GaussianNoise(std::vector<double> params) {
 			if (params.size() == 3) {
 				density = params[0];
 				amplitude_mean = params[1];
@@ -101,7 +101,7 @@ class GaussianSpikes : public Noise {
 				width_stdev = params[4];
 			}
 			else
-				throw InvalidNoiseType("Noise type GaussianSpikes takes either 3 or 5 parameters");
+				throw InvalidNoiseType("Noise type GaussianNoise takes either 3 or 5 parameters");
 			init();
 		}
 		void add_noise(DataLayout const& dl, double* pot_values, RNG& rng) const;

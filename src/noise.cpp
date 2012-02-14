@@ -20,8 +20,8 @@
 
 // default parameters
 
-const double GaussianSpikes::default_relative_amplitude_stdev = 0.20;
-const double GaussianSpikes::default_relative_width_stdev = 0.20;
+const double GaussianNoise::default_relative_amplitude_stdev = 0.20;
+const double GaussianNoise::default_relative_width_stdev = 0.20;
 
 // noise parser function
 
@@ -42,12 +42,12 @@ Noise const* parse_noise_description(std::string const& str) {
 	if (name == "no" or name == "none" or name == "zero")
 		return new NoNoise(params);
 	else if (name == "gaussian" or name == "gaussiannoise")
-		return new GaussianSpikes(params);
+		return new GaussianNoise(params);
 	else
 		throw UnknownNoiseType(str);
 }
 
-void GaussianSpikes::add_noise(DataLayout const& dl, double* pot_values, RNG& rng) const {
+void GaussianNoise::add_noise(DataLayout const& dl, double* pot_values, RNG& rng) const {
 	// Probability that a grid point has a spike. This should be quite small,
 	// so that the probability of two spikes landing on the same grid point is
 	// negligible, as we will neglect this scenario.
