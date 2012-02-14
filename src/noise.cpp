@@ -47,6 +47,36 @@ Noise const* parse_noise_description(std::string const& str) {
 		throw UnknownNoiseType(str);
 }
 
+// NoNoise
+
+NoNoise::NoNoise(std::vector<double> params) {
+	if (not params.empty())
+		throw InvalidNoiseType("Noise type NoNoise does not take parameters");
+	init();
+}
+
+// GaussianNoise
+
+GaussianNoise::GaussianNoise(std::vector<double> params) {
+	if (params.size() == 3) {
+		density = params[0];
+		amplitude_mean = params[1];
+		width_mean = params[2];
+		amplitude_stdev = default_relative_amplitude_stdev * amplitude_mean;
+		width_stdev = default_relative_width_stdev * width_mean;
+	}
+	else if (params.size() == 5) {
+		density = params[0];
+		amplitude_mean = params[1];
+		amplitude_stdev = params[2];
+		width_mean = params[3];
+		width_stdev = params[4];
+	}
+	else
+		throw InvalidNoiseType("Noise type GaussianNoise takes either 3 or 5 parameters");
+	init();
+}
+
 void GaussianNoise::add_noise(DataLayout const& dl, double* pot_values, RNG& rng) const {
 	// Probability that a grid point has a spike. This should be quite small,
 	// so that the probability of two spikes landing on the same grid point is
@@ -85,4 +115,11 @@ void GaussianNoise::add_noise(DataLayout const& dl, double* pot_values, RNG& rng
 			}
 		}
 	}
+}
+
+void GaussianNoise::init() {
+	std::stringstream ss;
+	ss << "gaussian spikes, density = " << density << ", amplitude ~ N(" << amplitude_mean
+		<< "," << amplitude_stdev << "^2), width ~ N(" << width_mean << "," << width_stdev << "^2)";
+	description = ss.str();
 }

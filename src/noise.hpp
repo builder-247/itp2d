@@ -52,19 +52,11 @@ Noise const* parse_noise_description(std::string const& str);
 /* The simple case of no noise at all */
 class NoNoise : public Noise {
 	public:
-		NoNoise() {
-			init();
-		}
-		NoNoise(std::vector<double> params) {
-			if (not params.empty())
-				throw InvalidNoiseType("Noise type NoNoise does not take parameters");
-			init();
-		}
+		NoNoise() { init(); }
+		NoNoise(std::vector<double> params);
 		void add_noise(__attribute__((unused)) DataLayout const& dl, __attribute__((unused))double* pot_values, __attribute__((unused))RNG& rng) const {}
 	private:
-		void init() {
-			description = "none";
-		}
+		void init() { description = "none"; }
 };
 
 /* Randomly distributed gaussian spikes with normally distributed width
@@ -85,25 +77,7 @@ class GaussianNoise : public Noise {
 				width_stdev(_width_stdev) {
 			init();
 		}
-		GaussianNoise(std::vector<double> params) {
-			if (params.size() == 3) {
-				density = params[0];
-				amplitude_mean = params[1];
-				width_mean = params[2];
-				amplitude_stdev = default_relative_amplitude_stdev * amplitude_mean;
-				width_stdev = default_relative_width_stdev * width_mean;
-			}
-			else if (params.size() == 5) {
-				density = params[0];
-				amplitude_mean = params[1];
-				amplitude_stdev = params[2];
-				width_mean = params[3];
-				width_stdev = params[4];
-			}
-			else
-				throw InvalidNoiseType("Noise type GaussianNoise takes either 3 or 5 parameters");
-			init();
-		}
+		GaussianNoise(std::vector<double> params);
 		void add_noise(DataLayout const& dl, double* pot_values, RNG& rng) const;
 	private:
 		double density;
@@ -111,12 +85,7 @@ class GaussianNoise : public Noise {
 		double amplitude_stdev;
 		double width_mean;
 		double width_stdev;
-		void init() {
-			std::stringstream ss;
-			ss << "gaussian spikes, density = " << density << ", amplitude ~ N(" << amplitude_mean
-				<< "," << amplitude_stdev << "^2), width ~ N(" << width_mean << "," << width_stdev << "^2)";
-			description = ss.str();
-		}
+		void init();
 };
 
 #endif // _NOISE_HPP_
