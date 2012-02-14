@@ -29,7 +29,6 @@
 
 #include "state.hpp"
 #include "statearray.hpp"
-#include "potentialtypes.hpp"
 
 class Operator {
 	public:

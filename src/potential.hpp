@@ -20,6 +20,7 @@
 #define _POTENTIAL_HPP_
 
 #include "operators.hpp"
+#include "potentialtypes.hpp"
 #include "noise.hpp"
 
 // A local potential operator, based on the potential definition given by the PotentialType class, and with
