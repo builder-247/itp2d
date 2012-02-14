@@ -70,19 +70,11 @@ PotentialType const* parse_potential_description(std::string const& str);
 
 class ZeroPotential : public PotentialType {
 	public:
-		ZeroPotential() {
-			init();
-		}
-		ZeroPotential(std::vector<double> params) {
-			if (not params.empty())
-				throw InvalidPotentialType("zero potential does not take parameters");
-			init();
-		}
+		ZeroPotential() { init(); }
+		ZeroPotential(std::vector<double> params);
 		inline double operator()(__attribute__((unused)) double x, __attribute__((unused)) double y) const { return 0; }
 	private:
-		void init() {
-			description = "zero";
-		}
+		void init() { description = "zero"; }
 };
 
 // This potential type is not used at the moment, but it is implemented here in
@@ -105,29 +97,8 @@ class HarmonicPotential : public PotentialType {
 		static const double default_frequency;
 		static const double default_x0;
 		static const double default_y0;
-		HarmonicPotential(double omega=default_frequency) : w(omega) {
-			init();
-		}
-		HarmonicPotential(std::vector<double> params) {
-			if (params.empty()) {
-				w = default_frequency;
-				x0 = default_x0;
-				y0 = default_y0;
-			}
-			else if (params.size() == 1) {
-				w = params[0];
-				x0 = default_x0;
-				y0 = default_y0;
-			}
-			else if (params.size() == 3) {
-				w = params[0];
-				x0 = params[1];
-				y0 = params[2];
-			}
-			else
-				throw InvalidPotentialType("harmonic oscillator potential takes either zero, one or three parameters");
-			init();
-		}
+		HarmonicPotential(double omega=default_frequency) : w(omega) { init(); }
+		HarmonicPotential(std::vector<double> params);
 		inline double operator()(double x, double y) const {
 			const double px = x-x0;
 			const double py = y-y0;
@@ -137,31 +108,15 @@ class HarmonicPotential : public PotentialType {
 		double w;
 		double x0;
 		double y0;
-		void init() {
-			if (w < 0)
-				throw InvalidPotentialType("harmonic oscillator with negative frequency");
-			std::stringstream ss;
-			ss << "harmonic(" << w << ")";
-			description = ss.str();
-		}
+		void init();
 };
 
 // A pretty hard square of length pi
 class PrettyHardSquare : public PotentialType {
 	public:
 		static const double default_exponent;
-		PrettyHardSquare(double e=default_exponent) : exponent(e) {
-			init();
-		}
-		PrettyHardSquare(std::vector<double> params) {
-			if (params.empty())
-				exponent = default_exponent;
-			else if (params.size() == 1)
-				exponent = params[0];
-			else
-				throw InvalidPotentialType("pretty hard square potential only takes one parameter");
-			init();
-		}
+		PrettyHardSquare(double e=default_exponent) : exponent(e) { init(); }
+		PrettyHardSquare(std::vector<double> params);
 		inline double operator()(double x, double y) const {
 			const double ax = fabs(2*x/pi);
 			const double ay = fabs(2*y/pi);
@@ -170,33 +125,21 @@ class PrettyHardSquare : public PotentialType {
 		}
 	private:
 		double exponent;
-		void init() {
-			std::stringstream ss;
-			ss << "prettyhardsquare(" << exponent << ")";
-			description = ss.str();
-		}
+		void init();
 };
 
 // A soft potential with a pentagon shape
 class SoftPentagon : public PotentialType {
 	public:
-		SoftPentagon() {
-			init();
-		}
-		SoftPentagon(std::vector<double> params) {
-			if (not params.empty())
-				throw InvalidPotentialType("soft pentagon potential does not take parameters");
-			init();
-		}
+		SoftPentagon() { init(); }
+		SoftPentagon(std::vector<double> params);
 		inline double operator()(double x, double y) const {
 			const double r2 = x*x+y*y;
 			const double t = atan2(y,x);
 			return 0.5*r2*(1 + 0.5*sin(5*t));
 		}
 	private:
-		void init() {
-			description = "softpentagon";
-		}
+		void init() { description = "softpentagon"; }
 };
 
 // A Hénon-Heiles type potential, modified so that all trajectories are bounded and generalized
@@ -205,22 +148,8 @@ class HenonHeiles : public PotentialType {
 	public:
 		static const double default_a;
 		static const double default_b;
-		HenonHeiles(double _a=default_a, double _b=default_b) : a(_a), b(_b) {
-			init();
-		}
-		HenonHeiles(std::vector<double> params) {
-			if (params.empty()) {
-				a = default_a;
-				b = default_b;
-			}
-			else if (params.size() == 2) {
-				a = params[0];
-				b = params[1];
-			}
-			else
-				throw InvalidPotentialType("Henon Heiles potential takes either two parameters or none");
-			init();
-		}
+		HenonHeiles(double _a=default_a, double _b=default_b) : a(_a), b(_b) { init(); }
+		HenonHeiles(std::vector<double> params);
 		inline double operator()(double x, double y) const {
 			const double r2 = x*x+y*y;
 			const double r3 = pow(r2, 3.0/2.0);
@@ -231,11 +160,7 @@ class HenonHeiles : public PotentialType {
 	private:
 		double a;
 		double b;
-		void init() {
-			std::stringstream ss;
-			ss << "henonheiles(" << a << "," << b << ")";
-			description = ss.str();
-		}
+		void init();
 };
 
 // A GaussianPotential blob with a prescribed amplitude and width, centered at (x0,y0)
@@ -250,29 +175,7 @@ class GaussianPotential : public PotentialType {
 				amplitude(_amplitude), width(_width), x0(_x0), y0(_y0) {
 			init();
 		}
-		GaussianPotential(std::vector<double> params) {
-			if (params.empty()) {
-				amplitude = default_amplitude;
-				width = default_width;
-				x0 = default_x0;
-				y0 = default_y0;
-			}
-			else if (params.size() == 2) {
-				amplitude = params[0];
-				width = params[1];
-				x0 = default_x0;
-				y0 = default_y0;
-			}
-			else if (params.size() == 4) {
-				amplitude = params[0];
-				width = params[1];
-				x0 = params[2];
-				y0 = params[3];
-			}
-			else
-				throw InvalidPotentialType("gaussian potential takes 0, 2 or 4 parameters");
-			init();
-		}
+		GaussianPotential(std::vector<double> params);
 		inline double operator()(double x, double y) const {
 			const double xp = x-x0;
 			const double yp = y-y0;
@@ -284,15 +187,7 @@ class GaussianPotential : public PotentialType {
 		double width;
 		double x0;
 		double y0;
-		void init() {
-			if (amplitude < 0)
-				throw InvalidPotentialType("gaussian potential with negative amplitude");
-			if (width == 0)
-				throw InvalidPotentialType("gaussian potential with zero width");
-			std::stringstream ss;
-			ss << "gaussian(" << amplitude << "," << width << "," << x0 << "," << y0 << ")";
-			description = ss.str();
-		}
-};
+		void init();
+	};
 
 #endif // _POTENTIALTYPES_HPP_

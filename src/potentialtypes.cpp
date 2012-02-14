@@ -63,3 +63,127 @@ PotentialType const* parse_potential_description(std::string const& str) {
 		throw UnknownPotentialType(str);
 	return NULL;
 }
+
+// Zero potential
+
+ZeroPotential::ZeroPotential(std::vector<double> params) {
+	if (not params.empty())
+		throw InvalidPotentialType("zero potential does not take parameters");
+	init();
+}
+
+// The harmonic potential
+
+HarmonicPotential::HarmonicPotential(std::vector<double> params) {
+	if (params.empty()) {
+		w = default_frequency;
+		x0 = default_x0;
+		y0 = default_y0;
+	}
+	else if (params.size() == 1) {
+		w = params[0];
+		x0 = default_x0;
+		y0 = default_y0;
+	}
+	else if (params.size() == 3) {
+		w = params[0];
+		x0 = params[1];
+		y0 = params[2];
+	}
+	else
+		throw InvalidPotentialType("harmonic oscillator potential takes either zero, one or three parameters");
+	init();
+}
+
+void HarmonicPotential::init() {
+	if (w < 0)
+		throw InvalidPotentialType("harmonic oscillator with negative frequency");
+	std::stringstream ss;
+	ss << "harmonic(" << w << ")";
+	description = ss.str();
+}
+
+// PrettyHardSquare
+
+PrettyHardSquare::PrettyHardSquare(std::vector<double> params) {
+	if (params.empty())
+		exponent = default_exponent;
+	else if (params.size() == 1)
+		exponent = params[0];
+	else
+		throw InvalidPotentialType("pretty hard square potential only takes one parameter");
+	init();
+}
+
+void PrettyHardSquare::init() {
+	std::stringstream ss;
+	ss << "prettyhardsquare(" << exponent << ")";
+	description = ss.str();
+}
+
+// SoftPentagon
+
+SoftPentagon::SoftPentagon(std::vector<double> params) {
+	if (not params.empty())
+		throw InvalidPotentialType("soft pentagon potential does not take parameters");
+	init();
+}
+
+// HenonHeiles
+
+HenonHeiles::HenonHeiles(std::vector<double> params) {
+	if (params.empty()) {
+		a = default_a;
+		b = default_b;
+	}
+	else if (params.size() == 2) {
+		a = params[0];
+		b = params[1];
+	}
+	else
+		throw InvalidPotentialType("Henon Heiles potential takes either two parameters or none");
+	init();
+}
+
+void HenonHeiles::init() {
+	std::stringstream ss;
+	ss << "henonheiles(" << a << "," << b << ")";
+	description = ss.str();
+}
+
+// GaussianPotential
+
+GaussianPotential::GaussianPotential(std::vector<double> params) {
+	if (params.empty()) {
+		amplitude = default_amplitude;
+		width = default_width;
+		x0 = default_x0;
+		y0 = default_y0;
+	}
+	else if (params.size() == 2) {
+		amplitude = params[0];
+		width = params[1];
+		x0 = default_x0;
+		y0 = default_y0;
+	}
+	else if (params.size() == 4) {
+		amplitude = params[0];
+		width = params[1];
+		x0 = params[2];
+		y0 = params[3];
+	}
+	else
+		throw InvalidPotentialType("gaussian potential takes 0, 2 or 4 parameters");
+	init();
+}
+
+void GaussianPotential::init() {
+	if (amplitude < 0)
+		throw InvalidPotentialType("gaussian potential with negative amplitude");
+	if (width == 0)
+		throw InvalidPotentialType("gaussian potential with zero width");
+	std::stringstream ss;
+	ss << "gaussian(" << amplitude << "," << width << "," << x0 << "," << y0 << ")";
+	description = ss.str();
+}
+
