@@ -117,6 +117,9 @@ obj:
 .deps/%.o.d: src/%.cpp scripts/depmunger.py | .deps
 	$(CXX) -MM -MT obj/$*.o $< -MF $@
 
+.deps/gtest-all.o.d: $(gtest_srcs) scripts/depmunger.py | .deps
+	$(CXX) $(test_flags) -MM -MT obj/gtest-all.o $< -MF $@
+
 .deps/itp2d.d: src/itp2d.cpp scripts/depmunger.py | .deps
 	$(CXX) -MM -MT itp2d $< | scripts/depmunger.py > $@
 

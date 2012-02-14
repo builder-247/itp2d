@@ -85,6 +85,7 @@ obj/transformer.o
 .deps/exceptions.o.d
 .deps/expkinetic.o.d
 .deps/exppotential.o.d
+.deps/gtest-all.o.d
 .deps/itp2d.d
 .deps/itp2d.o.d
 .deps/itpsystem.o.d
