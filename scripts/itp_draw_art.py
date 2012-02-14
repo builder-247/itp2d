@@ -88,7 +88,9 @@ if __name__ == "__main__":
         # Normalize
         Z /= Z.max()
         # Flatten the data array, map each value to a color, and write to the image
-        state_im.putdata([ colorfunc(x) for x in Z.flat ])
+        # It seems that PIL writes data in reverse order (bottom up), so we need to
+        # flip the data array with flipud
+        state_im.putdata([ colorfunc(x) for x in flipud(Z).flat ])
         if options.combined:
             paste_corner = ((counter % columns)*Mx, (counter // columns)*My)
             full_im.paste(state_im, paste_corner)
