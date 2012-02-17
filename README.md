@@ -313,8 +313,13 @@ accessing itp2d data from Python.
 [h5py]: http://alfven.org/wp/hdf5-for-python/
 [NumPy]: http://numpy.scipy.org/
 
-### Providing patches
+### Providing patches & getting involved
 
-If you make some changes to itp2d you consider could be of wider use, please send a patch by
-uploading you changes to [GitHub][webpage] and sending the author a pull request. You can also simply send
-your patch by email directly to the [author][]. All contributions are welcome!
+If you make some changes to itp2d you consider could be of wider use, please
+send a patch by uploading you changes to [GitHub][webpage] and sending the
+author a pull request. You can also simply send your patch by email directly to
+the [author][]. All contributions are welcome! You can also help by improving
+the documentation of itp2d, such as this README or the [itp2d wiki][] found in
+the [webpage][].
+
+[itp2d wiki]: https://github.com/nuteater/itp2d/wiki
