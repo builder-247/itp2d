@@ -89,7 +89,8 @@ In order to build itp2d you must have:
 - The [Templatized C++ Command Line Parser Library][TCLAP].
 - [FFTW][] 3.x, which is used for computing discrete Fourier transforms.
 - The [HDF5][] library, version 1.8.x, which itp2d uses for saving data on
-  disk. The library must be compiled with C++ support.
+  disk. The library must be compiled with C++ support (i.e., you must pass
+  `--enable-cxx` to the `configure`-script when installing HDF5 from source).
 - A linear algebra library with a [CBLAS][] and [LAPACK][] interfaces. Possible alternatives are,
   e.g., [ATLAS][], Intel's [MKL][] or AMD's [ACML][]
 - [Python][], which is used in generating dependencies automatically during the build.
