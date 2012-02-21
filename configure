@@ -36,7 +36,7 @@ if sys.version_info < (2,5):
                 return True
         return False
 
-import os, optparse, subprocess, platform
+import os, re, optparse, subprocess, platform
 from subprocess import PIPE
 
 include_paths = ["/include", "/usr/include", "/usr/local/include",
@@ -108,12 +108,13 @@ class Compiler(Requirement):
                 raise RequirementWarning("You seem to be attempting to compile itp2d with something else besides g++.")
             else:
                 # In the case of g++, also check version
-                version_string = idline.split()[2]
+                version_re = re.compile(r"(\d+)\.(\d+)\.(\d+)")
                 print "Checking g++ version...",
-                try:
-                    version = tuple([ int(s) for s in version_string.split(".") ])
-                except:
-                    raise RequirementWarning("Could not parse compiler version from received string '%s'" % version_string)
+                m = version_re.search(idline)
+                if m == None:
+                    raise RequirementWarning("Could not parse compiler version from received string '%s'" % idline)
+                version_string = ".".join(m.groups())
+                version = tuple([ int(i) for i in m.groups() ])
                 print version_string
                 if (version < (4,3,0)):
                     raise RequirementWarning("g++ version is very old. At least 4.3 is probably required for itp2d to compile.")
