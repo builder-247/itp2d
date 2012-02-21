@@ -102,8 +102,9 @@ class Compiler(Requirement):
         else:
             idline = p.stdout.readline().strip()
             print idline
+            # The first word of --version should contain 'g++', otherwise it's probably not g++
             id = idline.split()[0]
-            if id != "g++":
+            if (id.find("g++") == -1):
                 raise RequirementWarning("You seem to be attempting to compile itp2d with something else besides g++.")
             else:
                 # In the case of g++, also check version
