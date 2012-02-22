@@ -69,26 +69,26 @@ class RequirementFail(Exception):
         sys.stdout.write("\n")
         sys.stderr.write("\nError: %s\n\n" % self.msg)
 
-class RequirementWarning(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-    def report(self):
-        sys.stdout.write("\n")
-        sys.stderr.write("\nWarning: %s\n\n" % self.msg)
-
 class Requirement(object):
     """Something that needs to exist and fulfill some requirements for itp2d to
     compile correctly"""
+    def __init__(self):
+        self.warnings_flag = False
     def check(self):
         pass
     def print_summary(self):
         pass
     def makefile_changes(self):
         return ""
+    def warn(self, msg):
+        self.warnings_flag = True
+        sys.stdout.write("\n")
+        sys.stderr.write("Warning: %s\n\n" % msg)
 
 class Compiler(Requirement):
     def __init__(self, options):
         self.path = options.cxx_compiler
+        Requirement.__init__(self)
 
     def check(self):
         # First check that compiler is found
@@ -104,26 +104,26 @@ class Compiler(Requirement):
         p = subprocess.Popen(self.path+" --version", shell=True, stdout=PIPE, stderr=PIPE)
         returncode = p.wait()
         if returncode != 0:
-            raise RequirementWarning("Could not identify compiler: " + p.stderr.read())
+            self.warn("Could not identify compiler: " + p.stderr.read())
         else:
             idline = p.stdout.readline().strip()
             print idline
             # The first word of --version should contain 'g++', otherwise it's probably not g++
             id = idline.split()[0]
             if (id.find("g++") == -1):
-                raise RequirementWarning("You seem to be attempting to compile itp2d with something else besides g++.")
+                self.warn("You seem to be attempting to compile itp2d with something else besides g++.")
             else:
                 # In the case of g++, also check version
                 version_re = re.compile(r"(\d+)\.(\d+)\.(\d+)")
                 print "Checking g++ version...",
                 m = version_re.search(idline)
                 if m == None:
-                    raise RequirementWarning("Could not parse compiler version from received string '%s'" % idline)
+                    self.warn("Could not parse compiler version from received string '%s'" % idline)
                 version_string = ".".join(m.groups())
                 version = tuple([ int(i) for i in m.groups() ])
                 print version_string
                 if (version < (4,3,0)):
-                    raise RequirementWarning("g++ version is very old. At least 4.3 is probably required for itp2d to compile.")
+                    self.warn("g++ version is very old. At least 4.3 is probably required for itp2d to compile.")
 
     def print_summary(self):
         print "C++ compiler:", self.path
@@ -134,6 +134,7 @@ class Compiler(Requirement):
 class Markdown(Requirement):
     def __init__(self, options):
         self.path = options.markdown_compiler
+        Requirement.__init__(self)
     
     def check(self):
         if self.path:
@@ -178,6 +179,7 @@ class Library(Requirement):
         self.cflags = []
         self.libflags = []
         self.includeflags = []
+        Requirement.__init__(self)
 
     def find_file(self, name, paths=[], possible_subpaths=[]):
         search_paths = paths[:]
@@ -236,7 +238,7 @@ class Library(Requirement):
                 self.library_found(name, libname, p, add_link_flag)
                 # Warn if using a static library
                 if libname[-2:] == ".a":
-                    raise RequirementWarning("Linking against a static library '%s'. Static libraries might depend on other libraries, and there is no easy way to test for this. If you get linking errors because of 'unresolved symbols' you need to find out what library is missing and add it to Makefile.local manually" % libname)
+                    self.warn("Linking against a static library '%s'. Static libraries might depend on other libraries, and there is no easy way to test for this. If you get linking errors because of 'unresolved symbols' you need to find out what library is missing and add it to Makefile.local manually" % libname)
                 return
         raise RequirementFail("Library '%s' not found under any of the following directories: %s" % (name, paths))
 
@@ -400,7 +402,7 @@ class gtest(Library):
                 print "NOT FOUND"
                 fail = True
         if fail:
-            raise RequirementWarning("Could not find unpacked gtest source. Unit tests cannot be built.\n\
+            self.warn("Could not find unpacked gtest source. Unit tests cannot be built.\n\
 The helper script `scripts/fetch_gtest.h` can fetch the source for you.")
 
     def makefile_changes(self):
@@ -464,14 +466,13 @@ not make it produce incorrect results.")
     for req in requirements:
         try:
             req.check()
-        except RequirementWarning, e:
-            e.report()
-            warnings = True
         except RequirementFail, e:
             e.report()
             errors = True
+        if req.warnings_flag:
+            warnings = True
     if errors:
-        print "There were errors."
+        print "\nThere were errors."
         sys.exit(1)
     if warnings:
         print "\nThere were warnings. Proceed with caution!\n"
