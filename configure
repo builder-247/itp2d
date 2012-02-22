@@ -278,18 +278,21 @@ class LinearAlgebraLibs(Library):
             print "Deciding which linear algebra package to use..."
             # Try LAPACK
             try:
+                print "Trying plain LAPACK and CBLAS..."
                 self.check_plain()
                 print "Using plain LAPACK and CBLAS"
                 self.lalib = "plain"
             except RequirementFail, e:
                 print e.msg
                 try:
+                    print "Trying MKL..."
                     self.check_mkl()
                     print "Using MKL"
                     self.lalib = "mkl"
                 except RequirementFail, e:
                     print e.msg
                     try:
+                        print "Trying ACML..."
                         self.check_acml()
                         print "Using ACML"
                         self.lalib = "acml"
