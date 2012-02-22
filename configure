@@ -256,6 +256,7 @@ class Library(Requirement):
 
 class LinearAlgebraLibs(Library):
     def __init__(self, options):
+        self.blas_path = options.with_blas
         self.cblas_path = options.with_cblas
         self.lapack_path = options.with_lapack
         self.mkl_path = options.with_mkl
@@ -302,10 +303,13 @@ class LinearAlgebraLibs(Library):
         self.check_cblas()
         self.check_lapack()
 
+    def check_blas(self):
+        self.check_for_library("blas", self.blas_path, ["atlas"], add_link_flag=True)
+
     def check_cblas(self):
         self.check_for_include("cblas.h", self.cblas_path, ["atlas"])
-        self.check_for_library("blas", self.cblas_path, ["atlas"], add_link_flag=True)
         self.check_for_library("cblas", self.cblas_path, ["atlas"], add_link_flag=True)
+        self.check_blas()
 
     def check_lapack(self):
         self.check_for_library("lapack", self.lapack_path, ["atlas"], add_link_flag=True)
@@ -414,6 +418,8 @@ def main():
     parser.add_option("--markdown-compiler", type="string",
             help="Specify which Markdown compiler to use for building HTML documentation",
             default="", metavar="PATH")
+    parser.add_option("--with-blas", type="string",
+            help="Specify install directory of BLAS.", default="", metavar="DIR")
     parser.add_option("--with-cblas", type="string",
             help="Specify install directory of CBLAS.", default="", metavar="DIR")
     parser.add_option("--with-lapack", type="string",
