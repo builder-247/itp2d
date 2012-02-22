@@ -234,6 +234,9 @@ class Library(Requirement):
                     possible_subpaths=possible_subpaths)
             if p:
                 self.library_found(name, libname, p, add_link_flag)
+                # Warn if using a static library
+                if libname[-2:] == ".a":
+                    raise RequirementWarning("Linking against a static library '%s'. Static libraries might depend on other libraries, and there is no easy way to test for this. If you get linking errors because of 'unresolved symbols' you need to find out what library is missing and add it to Makefile.local manually" % libname)
                 return
         raise RequirementFail("Library '%s' not found under any of the following directories: %s" % (name, paths))
 
