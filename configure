@@ -338,9 +338,11 @@ class LinearAlgebraLibs(Library):
         self.cflags.append("-DUSE_MKL")
 
     def check_acml(self):
+        self.check_for_library("acml", self.acml_path, add_link_flag=True)
         self.check_for_include("cblas.h", self.cblas_path, ["atlas"])
         self.check_for_library("cblas", self.cblas_path, ["atlas"], add_link_flag=True)
-        self.check_for_library("acml", self.acml_path, add_link_flag=True)
+        # Always warn about CBLAS when using ACML
+        self.warn("ACML does not provide a CBLAS interface. Instead it requires a CBLAS library built specifically against ACML's implementation of BLAS. You need to make sure that the CBLAS library found above is built in such a way. Otherwise CBLAS calls might not be handled by ACML, but instead by some less optimized library. Please consult the README for more information")
 
     def print_summary(self):
         print "Linear algebra library:",

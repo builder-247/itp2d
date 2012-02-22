@@ -169,6 +169,12 @@ are found. If you wish to force the script to use Intel's [MKL][] or AMD's
 [ACML][] library, you can use the options `--with-mkl=PATH` or
 `--with-acml=PATH` to tell the script where these libraries can be found.
 
+Please note that ACML does not provide a CBLAS interface on its own. If you
+want to use ACML you need to build the CBLAS library manually and link it to
+ACML, as instructed by [this post in AMD's user forums][acmlnote].
+
+[acmlnote]: http://devgurus.amd.com/message/859414#859414
+
 ### Command line parameters
 
 Please run `itp2d --help` to access the embedded documentation about the possible command line
