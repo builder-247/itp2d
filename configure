@@ -309,7 +309,9 @@ class LinearAlgebraLibs(Library):
     def check_cblas(self):
         self.check_for_include("cblas.h", self.cblas_path, ["atlas"])
         self.check_for_library("cblas", self.cblas_path, ["atlas"], add_link_flag=True)
-        self.check_blas()
+        # Only check for and link BLAS if --with-blas was explicitly used
+        if self.blas_path:
+            self.check_blas()
 
     def check_lapack(self):
         self.check_for_library("lapack", self.lapack_path, ["atlas"], add_link_flag=True)
