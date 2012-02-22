@@ -189,23 +189,22 @@ class Library(Requirement):
                 return path
         return ""
 
-    def check_for_include(self, name, path="", possible_subpaths=[]):
+    def check_for_include(self, name, path, possible_subpaths=[]):
         print "Checking for header %s..." % name,
         if not path:
             # Try to find the file
-            p = self.find_file(name, paths=include_paths, possible_subpaths=possible_subpaths)
-            if p:
-                self.include_found(name, p)
-                return
-            raise RequirementFail("Header '%s' not found under any of the following directories: %s" % (name, include_paths))
+            self.check_for_include_in_paths(name, paths=include_paths, possible_subpaths=possible_subpaths)
         else:
-            # path was specified
-            p = self.find_file(name, paths=[path, os.path.join(path, "include")],
-                    possible_subpaths=possible_subpaths)
-            if p:
-                self.include_found(name, p)
-                return
-            raise RequirementFail("Header '%s' not found under directory %s" % (name, path))
+            # Path was specified, so only check it and a few subdirs
+            paths = [path, os.path.join(path, "include")]
+            self.check_for_include_in_paths(name, paths=paths, possible_subpaths=possible_subpaths)
+
+    def check_for_include_in_paths(self, name, paths, possible_subpaths):
+        p = self.find_file(name, paths=paths, possible_subpaths=possible_subpaths)
+        if p:
+            self.include_found(name, p)
+            return
+        raise RequirementFail("Header '%s' not found under any of the following directories: %s" % (name, paths))
 
     def include_found(self, name, path):
         print os.path.join(path, name)
@@ -217,23 +216,26 @@ class Library(Requirement):
         print "Checking for library %s..." % name,
         if not path:
             # Try to find the file
-            for libname in ["lib%s.so" % name, "lib%s.a" % name]:
-                p = self.find_file(libname, paths=lib_paths,
-                        possible_subpaths=possible_subpaths)
-                if p:
-                    self.library_found(name, libname, p, add_link_flag)
-                    return
-            raise RequirementFail("Library '%s' not found under any of the following directories: %s" % (name, lib_paths))
+            self.check_for_library_in_paths(name, paths=lib_paths,
+                    possible_subpaths=possible_subpaths,
+                    add_link_flag=add_link_flag)
         else:
-            # path was specified
-            for libname in ["lib%s.so" % name, "lib%s.a" % name]:
-                p = self.find_file(libname, paths=[path, os.path.join(path,
-                    "lib"), os.path.join(path, "lib64")],
+            # Path was specified, so only check it and a few subdirs
+            paths = [path, os.path.join(path, "lib"), os.path.join(path,
+                "lib64")]
+            self.check_for_library_in_paths(name, paths=paths,
+                    possible_subpaths=possible_subpaths,
+                    add_link_flag=add_link_flag)
+
+    def check_for_library_in_paths(self, name, paths, possible_subpaths=[], add_link_flag=False):
+        # Try to find the file
+        for libname in ["lib%s.so" % name, "lib%s.a" % name]:
+            p = self.find_file(libname, paths=paths,
                     possible_subpaths=possible_subpaths)
-                if p:
-                    self.library_found(name, libname, p, add_link_flag)
-                    return
-            raise RequirementFail("Library '%s' not found under directory %s" % (name, path))
+            if p:
+                self.library_found(name, libname, p, add_link_flag)
+                return
+        raise RequirementFail("Library '%s' not found under any of the following directories: %s" % (name, paths))
 
     def library_found(self, name, libname, path, add_link_flag):
         print os.path.join(path, libname)
