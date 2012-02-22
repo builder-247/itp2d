@@ -230,7 +230,7 @@ class Library(Requirement):
     def library_found(self, name, libname, path, add_link_flag):
         print os.path.join(path, libname)
         self.libflags.append("-L%s" % path)
-        self.libflags.append("-Wl,-R%s" % path)
+        self.libflags.append("-Wl,-rpath %s" % path)
         if add_link_flag:
             self.libflags.append("-l%s" % name)
 
