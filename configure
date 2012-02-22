@@ -28,13 +28,19 @@ if sys.version_info < (2,4):
     print "Sorry, but your Python interpreter is too old to run this script. At least 2.4 is required"
     sys.exit(1)
 
-# Define standard builtin 'any' for Python < 2.5
+# Define standard builtins 'any' and 'all' for Python < 2.5
 if sys.version_info < (2,5):
     def any(iterable):
         for element in iterable:
             if element:
                 return True
         return False
+
+    def all(iterable):
+        for element in iterable:
+            if not element:
+                return False
+        return True
 
 import os, re, optparse, subprocess, platform
 from subprocess import PIPE
@@ -203,7 +209,9 @@ class Library(Requirement):
 
     def include_found(self, name, path):
         print os.path.join(path, name)
-        self.includeflags.append("-I%s" % path)
+        apath = os.path.abspath(path)
+        if all([ (os.path.abspath(p) != apath) for p in include_paths ]):
+            self.includeflags.append("-I%s" % path)
 
     def check_for_library(self, name, path, possible_subpaths=[], add_link_flag=False):
         print "Checking for library %s..." % name,
@@ -229,8 +237,10 @@ class Library(Requirement):
 
     def library_found(self, name, libname, path, add_link_flag):
         print os.path.join(path, libname)
-        self.libflags.append("-L%s" % path)
-        self.libflags.append("-Wl,-rpath %s" % path)
+        apath = os.path.abspath(path)
+        if all([ (os.path.abspath(p) != apath) for p in lib_paths ]):
+            self.libflags.append("-L%s" % path)
+            self.libflags.append("-Wl,-rpath %s" % path)
         if add_link_flag:
             self.libflags.append("-l%s" % name)
 
