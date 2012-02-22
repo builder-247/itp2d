@@ -96,9 +96,10 @@ In order to build itp2d you must have:
 - A linear algebra library with a [CBLAS][] and [LAPACK][] interfaces. Possible alternatives are,
   e.g., [ATLAS][], Intel's [MKL][] or AMD's [ACML][].
 - [Python][], which is used for the build scripts.
-- To build the unit test functions distributed with itp2d you'll also need
-  the [Google C++ Testing Framework (gtest)][gtest]. There is a helper script
-  distributed with itp2d which can take care of the installation of gtest.
+- To build the unit test functions distributed with itp2d you'll also need the
+  source code of [the Google C++ Testing Framework (gtest)][gtest]. If you
+  want, you can run `scripts/fetch_gtest.sh` to fetch the gtest source code
+  automatically.
 
 itp2d also comes with several helper scripts for data analysis and plotting. These scripts can be
 found in the `scripts` subfolder. The scripts are written in [Python][], and they require various
