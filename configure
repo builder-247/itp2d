@@ -266,6 +266,7 @@ class LinearAlgebraLibs(Library):
         self.lapack_path = options.with_lapack
         self.mkl_path = options.with_mkl
         self.acml_path = options.with_acml
+        self.lalib = "?"
         Library.__init__(self)
 
     def check(self):
