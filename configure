@@ -430,6 +430,26 @@ The helper script `scripts/fetch_gtest.h` can fetch the source for you.")
     def makefile_changes(self):
         return "gtest_dir := %s\n" % self.path
 
+class SystemIncludes(Library):
+    def __init__(self, options):
+        Library.__init__(self)
+
+    def check(self):
+        print "Checking for standard system headers..."
+        warn_flag = False
+        for header in [ "algorithm", "cassert", "cmath", "complex", "cstdlib",
+                "cstring", "ctime", "exception", "iomanip", "iostream",
+                "iterator", "limits", "list", "map", "omp.h", "ostream",
+                "signal.h", "sstream", "stdexcept", "string", "sys/time.h",
+                "tr1/random", "tr1/tuple", "typeinfo", "utility", "vector" ]:
+            try:
+                self.check_for_include(header, path="")
+            except RequirementFail:
+                print "NOT FOUND"
+                warn_flag = True
+        if warn_flag:
+            self.warn("All required system headers not found in the search path. The compiler might still find them though, especially if querying the compiler for search paths failed.")
+
 def main():
     # Set defaults that will be overridden by the command line arguments
     try:
@@ -478,7 +498,7 @@ not make it produce incorrect results.")
     if (len(args) != 0):
         parser.error("unrecognized command line arguments: " + str(args))
     # Parsing done
-    requirements = [ Compiler(options), Markdown(options),
+    requirements = [ Compiler(options), Markdown(options), SystemIncludes(options),
             LinearAlgebraLibs(options), HDF5(options), FFTW3(options),
             TCLAP(options), gtest(options) ]
     # Try to query the compiler for search paths for header files. For some
