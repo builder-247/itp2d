@@ -45,22 +45,39 @@ if sys.version_info < (2,5):
 import os, re, optparse, subprocess, platform
 from subprocess import PIPE
 
-include_paths = ["/include", "/usr/include", "/usr/local/include",
+# These two will be queried later
+compiler_include_paths = []
+
+compiler_lib_paths = []
+
+# Some extra directories to search for
+extra_include_paths = ["/include", "/usr/include", "/usr/local/include",
         "/opt/include", "/opt/local/include"]
-lib_paths = ["/lib64", "/usr/lib64", "/usr/local/lib64", "/opt/lib64", "/opt/local/lib64",
+extra_lib_paths = ["/lib64", "/usr/lib64", "/usr/local/lib64", "/opt/lib64", "/opt/local/lib64",
     "/lib", "/usr/lib", "/usr/local/lib/", "/opt/lib", "/opt/local/lib"]
 
-def add_from_environment(list, varname):
+# These two will contain the compiler search paths plus the extra directories, duplicates removed
+
+include_paths = []
+
+lib_paths = []
+
+def add_paths_from_environment(l, varname):
     """Read the environment variable called varname, split it at colons, and
     add the resulting strings to list, ignoring duplicate entries."""
     try:
-        vars = os.environ[varname]
-        for var in vars.split(":"):
-            if not var in list:
-                list.append(var)
+        add_paths_from_separated_string(l, os.environ[varname], separator=":")
     except KeyError:
         pass
-    return list
+
+def add_paths_from_separated_string(l, s, separator=":"):
+    add_paths_from_list(l, s.split(separator))
+
+def add_paths_from_list(l1, l2):
+    for path in l2:
+        apath = os.path.abspath(path)
+        if not apath in l1:
+            l1.append(apath)
 
 class RequirementFail(Exception):
     def __init__(self, msg):
@@ -211,7 +228,7 @@ class Library(Requirement):
     def include_found(self, name, path):
         print os.path.join(path, name)
         apath = os.path.abspath(path)
-        if all([ (os.path.abspath(p) != apath) for p in include_paths ]):
+        if apath not in compiler_include_paths:
             self.includeflags.append("-I%s" % path)
 
     def check_for_library(self, name, path, possible_subpaths=[], add_link_flag=False):
@@ -245,7 +262,7 @@ class Library(Requirement):
     def library_found(self, name, libname, path, add_link_flag):
         print os.path.join(path, libname)
         apath = os.path.abspath(path)
-        if all([ (os.path.abspath(p) != apath) for p in lib_paths ]):
+        if apath not in compiler_lib_paths:
             self.libflags.append("-L%s" % path)
             self.libflags.append("-Wl,-rpath %s" % path)
         if add_link_flag:
@@ -419,9 +436,6 @@ def main():
         default_cxx_compiler = os.environ["CXX"]
     except KeyError:
         default_cxx_compiler = "g++"
-    # Add contents of CPATH and LIBRARY_PATH to search paths
-    add_from_environment(include_paths, "CPATH")
-    add_from_environment(lib_paths, "LIBRARY_PATH")
     # Parse command line arguments
     parser = optparse.OptionParser()
     parser.set_defaults(debug=True, seatbelts=True)
@@ -465,6 +479,41 @@ not make it produce incorrect results.")
     requirements = [ Compiler(options), Markdown(options),
             LinearAlgebraLibs(options), HDF5(options), FFTW3(options),
             TCLAP(options), gtest(options) ]
+    # Try to query the compiler for search paths for header files. For some
+    # reason g++ makes this a lot more difficult than querying for library
+    # paths
+    try:
+        p = subprocess.Popen(options.cxx_compiler+" -E -v -x c++ -", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        (out, err) = p.communicate()
+        lines = err.splitlines()
+        # Find lines between the two delimiting lines
+        startlineno = lines.index("#include <...> search starts here:")
+        endlineno = lines.index("End of search list.", startlineno)
+        pathlines = lines[startlineno+1:endlineno]
+        # Strip whitespace from each
+        pathlines = [ l.strip() for l in pathlines ]
+        # Add to compiler indlude paths
+        add_paths_from_list(compiler_include_paths, pathlines)
+    # If it fails, just use contents of CPATH plus /usr/include
+    except:
+        add_paths_from_list(compiler_include_paths, ["/usr/include"])
+        add_paths_from_environment(compiler_include_paths, "CPATH")
+    # Add whatever is found with -print-search-dirs to list of library paths,
+    # or if it fails, add contents of LIBRARY_PATH
+    try:
+        p = subprocess.Popen(options.cxx_compiler+" -print-search-dirs", shell=True, stdout=PIPE, stderr=PIPE)
+        (out, err) = p.communicate()
+        liblist_re = re.compile(r"libraries: =(.*)")
+        m = liblist_re.search(out)
+        if m != None:
+            add_paths_from_separated_string(compiler_lib_paths, m.group(1))
+    except:
+        add_paths_from_environment(compiler_lib_paths, "LIBRARY_PATH")
+    # Form the combined lists include_paths and lib_paths
+    add_paths_from_list(include_paths, compiler_include_paths)
+    add_paths_from_list(include_paths, extra_include_paths)
+    add_paths_from_list(lib_paths, compiler_lib_paths)
+    add_paths_from_list(lib_paths, extra_lib_paths)
     # Run checks
     errors = False
     warnings = False
