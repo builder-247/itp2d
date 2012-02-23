@@ -439,6 +439,8 @@ def main():
     # Parse command line arguments
     parser = optparse.OptionParser()
     parser.set_defaults(debug=True, seatbelts=True)
+    parser.add_option("-v", "--verbose", action="store_true",
+            help="Produce more output from this script.")
     parser.add_option("-n", "--dry-run", action="store_true",
             help="Only check what is found. Do not write configuration.")
     parser.add_option("--cxx-compiler", type="string",
@@ -514,6 +516,14 @@ not make it produce incorrect results.")
     add_paths_from_list(include_paths, extra_include_paths)
     add_paths_from_list(lib_paths, compiler_lib_paths)
     add_paths_from_list(lib_paths, extra_lib_paths)
+    # Print the search path if options.verbose
+    if options.verbose:
+        print "Directories to search for header files:"
+        for path in include_paths:
+            print "\t", path
+        print "Directories to search for library files:"
+        for path in lib_paths:
+            print "\t", path
     # Run checks
     errors = False
     warnings = False
