@@ -484,6 +484,7 @@ not make it produce incorrect results.")
     # Try to query the compiler for search paths for header files. For some
     # reason g++ makes this a lot more difficult than querying for library
     # paths
+    print "Querying compiler '%s' for header file search paths..." % options.cxx_compiler,
     try:
         p = subprocess.Popen(options.cxx_compiler+" -E -v -x c++ -", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         (out, err) = p.communicate()
@@ -496,10 +497,13 @@ not make it produce incorrect results.")
         pathlines = [ l.strip() for l in pathlines ]
         # Add to compiler indlude paths
         add_paths_from_list(compiler_include_paths, pathlines)
-    # If it fails, just use contents of CPATH plus /usr/include
+        print "OK"
     except:
+        # If it fails, just use contents of CPATH plus /usr/include
         add_paths_from_list(compiler_include_paths, ["/usr/include"])
         add_paths_from_environment(compiler_include_paths, "CPATH")
+        print "Failed, using CPATH and /usr/include"
+    print "Querying compiler '%s' for library file search paths..." % options.cxx_compiler,
     # Add whatever is found with -print-search-dirs to list of library paths,
     # or if it fails, add contents of LIBRARY_PATH
     try:
@@ -509,8 +513,10 @@ not make it produce incorrect results.")
         m = liblist_re.search(out)
         if m != None:
             add_paths_from_separated_string(compiler_lib_paths, m.group(1))
+        print "OK"
     except:
         add_paths_from_environment(compiler_lib_paths, "LIBRARY_PATH")
+        print "Failed, using LIBRARY_PATH"
     # Form the combined lists include_paths and lib_paths
     add_paths_from_list(include_paths, compiler_include_paths)
     add_paths_from_list(include_paths, extra_include_paths)
