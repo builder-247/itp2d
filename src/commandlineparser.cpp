@@ -30,8 +30,8 @@ File name to use for FFTW wisdom.";
 const char CommandLineParser::help_noise[] = "\
 Description of possible noise added to the potential. Valid descriptions:\n\
 Gaussian spikes with the prescribed density and normally distributed amplitude and width:\n\
-\tgaussians(density,amp_mean,width_mean)\n\
-\tgaussians(density,amp_mean,amp_stdev,width_mean,width_stdev)\n\
+\tgaussian(density,amp_mean,width_mean)\n\
+\tgaussian(density,amp_mean,amp_stdev,width_mean,width_stdev)\n\
 See header noise.hpp for details.";
 
 const char CommandLineParser::help_recover[] = "\

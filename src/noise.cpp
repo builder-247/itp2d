@@ -41,7 +41,7 @@ Noise const* parse_noise_description(std::string const& str) {
 	// Simply delegate to the individual constructors based on name
 	if (name == "no" or name == "none" or name == "zero")
 		return new NoNoise(params);
-	else if (name == "gaussian" or name == "gaussiannoise")
+	else if (name == "gaussian" or name == "gaussians" or name == "gaussiannoise")
 		return new GaussianNoise(params);
 	else
 		throw UnknownNoiseType(str);
