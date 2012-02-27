@@ -10,7 +10,8 @@ from PIL import Image, ImageFilter
 
 colorschemes = {
     "default" : ("RGB", lambda x: (int(256*x), 0, int(256*x*(1-x)))),
-    "finland" : ("RGB", lambda x: (int(256*x**2), int(256*x**2), int(256*x**0.75))),
+    "cold" : ("RGB", lambda x: (int(256*x**2), int(256*x**2), int(256*x**0.75))),
+    "finland" : ("RGB", lambda x: (int(256*(1-x)), int(256*(1-x)), 256)),
     "bow" :     ("L",   lambda x: int(256*(1-x)))
 }
 
