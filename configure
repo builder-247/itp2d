@@ -247,26 +247,35 @@ class Library(Requirement):
                     add_link_flag=add_link_flag)
 
     def check_for_library_in_paths(self, name, paths, possible_subpaths=[], add_link_flag=False):
-        # Try to find the file
-        for libname in ["lib%s.so" % name, "lib%s.a" % name]:
-            p = self.find_file(libname, paths=paths,
-                    possible_subpaths=possible_subpaths)
-            if p:
-                self.library_found(name, libname, p, add_link_flag)
-                # Warn if using a static library
-                if libname[-2:] == ".a":
-                    self.warn("Linking against a static library '%s'. Static libraries might depend on other libraries, and there is no easy way to test for this. If you get linking errors because of 'unresolved symbols' you need to find out what library is missing and add it to Makefile.local manually" % libname)
-                return
+        # Try to find the file, trying a dynamic library first
+        libname = "lib%s.so" % name
+        p = self.find_file(libname, paths=paths,
+                possible_subpaths=possible_subpaths)
+        if p:
+            self.library_found(name, False, libname, p, add_link_flag)
+            return
+        # Then try a static library
+        libname = "lib%s.a" % name
+        p = self.find_file(libname, paths=paths,
+                possible_subpaths=possible_subpaths)
+        if p:
+            self.library_found(name, True, libname, p, add_link_flag)
+            return
         raise RequirementFail("Library '%s' not found under any of the following directories: %s" % (name, paths))
 
-    def library_found(self, name, libname, path, add_link_flag):
+    def library_found(self, name, static, libname, path, add_link_flag):
         print os.path.join(path, libname)
         apath = os.path.abspath(path)
-        if apath not in compiler_lib_paths:
+        if apath not in compiler_lib_paths and not static:
             self.libflags.append("-L%s" % path)
             self.libflags.append("-Wl,-rpath %s" % path)
         if add_link_flag:
-            self.libflags.append("-l%s" % name)
+            # Use exact file and warn if using a static library
+            if static:
+                self.warn("Linking against a static library '%s'. Static libraries might depend on other libraries, and there is no easy way to test for this. If you get linking errors because of 'unresolved symbols' you need to find out what library is missing and add it to Makefile.local manually" % libname)
+                self.libflags.append(os.path.join(path, libname))
+            else:
+                self.libflags.append("-l%s" % name)
 
     def makefile_changes(self):
         changes = ""
