@@ -90,6 +90,8 @@ class Requirement(object):
     """Something that needs to exist and fulfill some requirements for itp2d to
     compile correctly"""
     def __init__(self):
+        self.reset()
+    def reset(self):
         self.warnings_flag = False
     def check(self):
         pass
@@ -193,10 +195,14 @@ class Markdown(Requirement):
 
 class Library(Requirement):
     def __init__(self):
+        self.reset()
+        Requirement.__init__(self)
+
+    def reset(self):
         self.cflags = []
         self.libflags = []
         self.includeflags = []
-        Requirement.__init__(self)
+        Requirement.reset(self)
 
     def find_file(self, name, paths=[], possible_subpaths=[]):
         search_paths = paths[:]
@@ -310,6 +316,7 @@ class LinearAlgebraLibs(Library):
                 self.lalib = "plain"
             except RequirementFail, e:
                 print e.msg
+                self.reset()
                 try:
                     print "Trying MKL..."
                     self.check_mkl()
@@ -317,6 +324,7 @@ class LinearAlgebraLibs(Library):
                     self.lalib = "mkl"
                 except RequirementFail, e:
                     print e.msg
+                    self.reset()
                     try:
                         print "Trying ACML..."
                         self.check_acml()
