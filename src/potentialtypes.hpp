@@ -190,4 +190,32 @@ class GaussianPotential : public PotentialType {
 		void init();
 	};
 
+// The quartic oscillator, frequently studied in quantum chaos.
+// The potential is P(x,y) = (x^2 * y^2)/2 + b(x^4 + y^4)/4,
+// but it is rotated by pi/4 to make maximal use of the rectangular
+// grid.
+// For references please see e.g.
+// 	* Eckhardt et al, Phys Rev A 39 3776 (1989)
+//	* de Polavieja et al, Phys Rev Lett 73 1613 (1994)
+class QuarticPotential : public PotentialType {
+	public:
+		static const double default_b;
+		QuarticPotential(double _b = default_b) : b(_b) { init(); }
+		QuarticPotential(std::vector<double> params);
+		inline double operator()(double xp, double yp) const {
+			// rotate first
+			const double x = (xp - yp)/sqrt(2);
+			const double y = (xp + yp)/sqrt(2);
+			// then use the simple formula
+			const double x2 = x*x;
+			const double y2 = y*y;
+			const double x4 = x2*x2;
+			const double y4 = y2*y2;
+			return (x2*y2)/2 + b*(x4+y4)/4;
+		}
+	private:
+		double b;
+		void init();
+};
+
 #endif // _POTENTIALTYPES_HPP_

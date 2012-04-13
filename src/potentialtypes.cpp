@@ -30,6 +30,7 @@ const double GaussianPotential::default_amplitude = 1;
 const double GaussianPotential::default_width = 1;
 const double GaussianPotential::default_x0 = 0;
 const double GaussianPotential::default_y0 = 0;
+const double QuarticPotential::default_b = 0.01;
 
 // The parser delegator
 
@@ -59,6 +60,8 @@ PotentialType const* parse_potential_description(std::string const& str) {
 		return new HenonHeiles(params);
 	if (name == "gaussian" or name == "gaussianblob")
 		return new GaussianPotential(params);
+	if (name == "quartic" or name == "quarticoscillator")
+		return new QuarticPotential(params);
 	else
 		throw UnknownPotentialType(str);
 	return NULL;
@@ -187,3 +190,24 @@ void GaussianPotential::init() {
 	description = ss.str();
 }
 
+// QuarticPotential
+
+QuarticPotential::QuarticPotential(std::vector<double> params) {
+	if (params.empty()) {
+		b = default_b;
+	}
+	else if (params.size() == 1) {
+		b = params[0];
+	}
+	else
+		throw InvalidPotentialType("quartic potential only takes one parameter");
+	init();
+}
+
+void QuarticPotential::init() {
+	if (b < 0)
+		throw InvalidPotentialType("quartic potential with negative parameter");
+	std::stringstream ss;
+	ss << "quartic(" << b << ")";
+	description = ss.str();
+}
