@@ -113,7 +113,7 @@ class Compiler(Requirement):
     def check(self):
         # First check that compiler is found
         print "Checking if compiler '%s' is found..." % self.path,
-        p = subprocess.Popen(self.path, shell=True, stderr=PIPE)
+        p = subprocess.Popen(self.path, stderr=PIPE)
         returncode = p.wait()
         if returncode != 0 and returncode != 1:
             raise RequirementFail("Compiler not found: " + p.stderr.read())
@@ -121,7 +121,7 @@ class Compiler(Requirement):
             print "OK"
         # Identify which compiler it is
         print "Identifying compiler with --version...",
-        p = subprocess.Popen(self.path+" --version", shell=True, stdout=PIPE, stderr=PIPE)
+        p = subprocess.Popen([self.path, "--version"], stdout=PIPE, stderr=PIPE)
         returncode = p.wait()
         if returncode != 0:
             self.warn("Could not identify compiler: " + p.stderr.read())
@@ -149,7 +149,7 @@ class Compiler(Requirement):
                 # paths
                 print "Querying compiler '%s' for header file search paths..." % self.path,
                 try:
-                    p = subprocess.Popen(self.path+" -E -v -x c++ -", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+                    p = subprocess.Popen([self.path, "-E", "-v", "-x", "c++", "/dev/null"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
                     (out, err) = p.communicate()
                     lines = err.splitlines()
                     # Find lines between the two delimiting lines
@@ -170,7 +170,7 @@ class Compiler(Requirement):
                 # Add whatever is found with -print-search-dirs to list of library paths,
                 # or if it fails, add contents of LIBRARY_PATH
                 try:
-                    p = subprocess.Popen(self.path+" -print-search-dirs", shell=True, stdout=PIPE, stderr=PIPE)
+                    p = subprocess.Popen([self.path,"-print-search-dirs"], stdout=PIPE, stderr=PIPE)
                     (out, err) = p.communicate()
                     liblist_re = re.compile(r"libraries: =(.*)")
                     m = liblist_re.search(out)
@@ -224,7 +224,7 @@ class Markdown(Requirement):
             print "none found"
 
     def try_command(self, command):
-        p = subprocess.Popen(command, shell=True, stdin=PIPE, stderr=PIPE)
+        p = subprocess.Popen(command, stdin=PIPE, stderr=PIPE)
         (out, err) = p.communicate("")
         returncode = p.wait()
         if returncode != 0 and returncode != 1:
