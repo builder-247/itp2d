@@ -128,10 +128,13 @@ class Compiler(Requirement):
         else:
             idline = p.stdout.readline().strip()
             print idline
-            # The first word of --version should contain 'g++', otherwise it's probably not g++
-            id = idline.split()[0]
-            if (id.find("g++") == -1):
-                self.warn("You seem to be attempting to compile itp2d with something else besides g++.")
+            # The first word of --version should contain '++', otherwise it's
+            # probably not a C++ compiler at all
+            if (idline.split()[0].find("++") == -1):
+                self.warn("Are you sure '%s' is a C++ compiler?" % self.path)
+            # The second word should be (GCC) for g++
+            if (idline.split()[1] != "(GCC)"):
+                self.warn("You seem to be using some other compiler besides g++. Be careful.")
             else:
                 # In the case of g++, also check version
                 version_re = re.compile(r"(\d+)\.(\d+)\.(\d+)")
