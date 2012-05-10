@@ -113,10 +113,11 @@ class Compiler(Requirement):
     def check(self):
         # First check that compiler is found
         print "Checking if compiler '%s' is found..." % self.path,
-        p = subprocess.Popen(self.path, stderr=PIPE)
-        returncode = p.wait()
-        if returncode != 0 and returncode != 1:
-            raise RequirementFail("Compiler not found: " + p.stderr.read())
+        try:
+            p = subprocess.Popen(self.path, stdout=PIPE, stderr=PIPE)
+            p.wait()
+        except OSError, e:
+            raise RequirementFail(e.strerror)
         else:
             print "OK"
         # Identify which compiler it is
