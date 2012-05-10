@@ -212,13 +212,13 @@ class Markdown(Requirement):
     def check(self):
         if self.path:
             print "Checking that Markdown compiler exists... ",
-            self.try_command(path)
+            self.try_command(self.path)
             print "OK"
         else:
             print "Searching for a Markdown compiler in PATH...",
             for command in ["markdown2", "Markdown.pl"]:
                 try:
-                   self. try_command(command)
+                   self.try_command(command)
                 except RequirementFail:
                     continue
                 else:
