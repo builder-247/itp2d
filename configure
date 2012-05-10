@@ -228,11 +228,12 @@ class Markdown(Requirement):
             print "none found"
 
     def try_command(self, command):
-        p = subprocess.Popen(command, stdin=PIPE, stderr=PIPE)
-        (out, err) = p.communicate("")
-        returncode = p.wait()
-        if returncode != 0 and returncode != 1:
-            raise RequirementFail("Specified Markdown compiler not found: " + err)
+        try:
+            p = subprocess.Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            p.communicate("")
+            p.wait()
+        except OSError, e:
+            raise RequirementFail("Specified Markdown compiler not found: " + e.strerror)
 
     def print_summary(self):
         print "Markdown compiler", 
