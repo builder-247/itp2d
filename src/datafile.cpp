@@ -51,6 +51,7 @@ Datafile::Datafile(std::string filename, DataLayout const& dl, bool clobber) :
 		throw;
 	}
 	root_group = hfile.openGroup("/");
+	add_description(root_group, "This is a datafile created by itp2d. All data is in Hartree atomic units, except for program timing data which is in seconds. The atomic unit of magnetic field strength follows the SI-based convention. Please see the corresponding descriptions of each dataset for more documentation.");
 	// Datatypes
 	complex_type = H5::CompType(sizeof(comp));
 	complex_type.insertMember("r", 0, double_type);
