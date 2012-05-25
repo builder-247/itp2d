@@ -64,6 +64,9 @@ class Datafile {
 		inline void flush() { hfile.flush(H5F_SCOPE_GLOBAL); }
 	private:
 		static inline void validate_selection(H5::DataSpace const& dataspace);
+		// template for adding a string as a HDF5 Attribute in order to provide
+		// documentation for DataSets and other HDF5 objects
+		template <typename Type> void add_description(Type& obj, std::string const& value);
 		void ensure_states_data();
 		void ensure_state_history_data();
 		void ensure_energies_data();
@@ -126,5 +129,22 @@ struct time_step_history_pair {
 	int step;
 	double time_step;
 };
+
+template <typename Type>
+void Datafile::add_description(Type& obj, std::string const& value) {
+	const size_t len = value.length();
+	try {
+			H5::AtomType string_type = H5::AtomType(H5::PredType::C_S1);
+			// setSize does not like zero sizes
+			if (len != 0)
+				string_type.setSize(len);
+			H5::Attribute attr = obj.createAttribute("description", string_type, H5S_SCALAR);
+			attr.write(string_type, value.c_str());
+		}
+		catch (H5::Exception& e) {
+			e.printError();
+			throw;
+		}
+}
 
 #endif // _DATAFILE_HPP_
