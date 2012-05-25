@@ -101,50 +101,66 @@ Datafile::~Datafile() {
  */
 
 void Datafile::ensure_states_data() {
-	if (states_data.getId() == 0)
+	if (states_data.getId() == 0) {
 		states_data = hfile.createDataSet("/states",
 				*state_type, null_space_2d, states_dset_props);
+		add_description(states_data, "A two-dimensional array. First index represents a generic \"slot\" where states can be saved -- for example for saving the states after each iteration or at some user-specified situations. The second index is the index of a single state in the whole set of states. States can be ordered according to their energy, but this is not enforced by the Datafile class. Each state is a two-dimensional array of complex numbers, representing the values of the wave-function on a common grid.");
+	}
 }
 
 void Datafile::ensure_state_history_data() {
-	if (state_history_data.getId() == 0)
+	if (state_history_data.getId() == 0) {
 		state_history_data = hfile.createDataSet("/state_history",
 				state_history_type, null_space_1d, state_history_props);
+		add_description(state_history_data, "A dataset for recording at which iteration steps the states were saved. The format is an array of (step, index) pairs, where \"step\" is the iteration step, and \"index\" is the corresponding first index in the \"states\" dataset.");
+	}
 }
 
 void Datafile::ensure_energies_data() {
-	if (energies_data.getId() == 0)
+	if (energies_data.getId() == 0) {
 		energies_data = hfile.createDataSet("/final_energies",
 				double_type, null_space_1d, energies_dset_props);
+		add_description(energies_data, "An array listing the latest value of energy for each state.");
+	}
 }
 
 void Datafile::ensure_time_step_history_data() {
-	if (time_step_history_data.getId() == 0)
+	if (time_step_history_data.getId() == 0) {
 		time_step_history_data = hfile.createDataSet("/time_step_history",
 				time_step_history_type, null_space_1d, time_step_history_props);
+		add_description(time_step_history_data, "A dataset for recording how the time step size changes during the iterations. The format is an array of (step, time step value) pairs. Each time the time step is changed, the iteration step and the new time step value is appended to this array.");
+
+	}
 }
 
 void Datafile::ensure_energy_history_data() {
-	if (energy_history_data.getId() == 0)
+	if (energy_history_data.getId() == 0) {
 		energy_history_data = hfile.createDataSet("/energy_history",
 				double_type, null_space_2d, energy_history_props);
+		add_description(energy_history_data, "A two-dimensional array recording the energy of each state at each iteration step. The first index is the iteration step, and the second index is the index of the state.");
+	}
 }
 
 void Datafile::ensure_energy_standard_deviations_data() {
-	if (energy_standard_deviations_data.getId() == 0)
+	if (energy_standard_deviations_data.getId() == 0) {
 		energy_standard_deviations_data = hfile.createDataSet("/final_energy_standard_deviations",
 				double_type, null_space_1d, energies_dset_props);
+		add_description(energy_standard_deviations_data, "An array listing the latest value of the standard deviation of energy for each state.");
+	}
 }
 
 void Datafile::ensure_deviation_history_data() {
-	if (deviation_history_data.getId() == 0)
+	if (deviation_history_data.getId() == 0) {
 		deviation_history_data = hfile.createDataSet("/deviation_history",
 				double_type, null_space_2d, energy_history_props);
+		add_description(deviation_history_data, "A two-dimensional array recording the standard deviation of energy of each state at each iteration step. The first index is the iteration step, and the second index is the index of the state.");
+	}
 }
 
 void Datafile::ensure_potential_data() {
 	if (potential_data.getId() == 0) {
 		potential_data = hfile.createDataSet("/potential_values", *potential_type, scalar_space, potential_dset_props);
+		add_description(potential_data, "Value of the external potential at each grid point.");
 	}
 }
 
