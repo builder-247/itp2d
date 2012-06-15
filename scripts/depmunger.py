@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 import sys, os, re
 
 # A helper script that generates automatic Makefile dependencies from gcc output.
