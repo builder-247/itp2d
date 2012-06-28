@@ -1,10 +1,10 @@
-itp2d – the fast Schrödinger equation solver for 2D systems
+itp2d – the fast Schrödinger equation solver for 2D quantum-dot systems
 =============================================================
 
 Introduction
 ------------
 
-itp2d is a fast Schrödinger equation solver for single-particle systems in
+itp2d is a fast Schrödinger equation solver for single-particle quantum-dot systems in
 two dimensions. It uses the imaginary time propagation (ITP) algorithm,
 combined with any-order operator factorization and exact, gauge-invariant
 factorization for magnetic fields. The program has been designed to be general,
@@ -16,17 +16,6 @@ an object-oriented design, implemented in C++. Computations are made fast by
 offloading as much work as possible to heavily optimized basic linear algebra
 subprograms via standard [CBLAS][] and [LAPACK][] interfaces, and to [FFTW][],
 the fastest discrete Fourier transform library in the West.
-
-A user intending to use itp2d for science should first read the [associated
-article][article] published in [Computer Physics Communications][CPC]. The
-article describes the underlying algorithms behind the program in more detail
-and from a scientific point of view, whereas the purpose of this document is to
-give a quick overview about the structure and use of the program.
-
-If you use itp2d for published scientific work, please cite the
-aforementioned [article][]. You are not bound by any license or user agreement
-to do so – this is only a kind wish from a scientist to another. We all have
-indices to increase and CVs to polish.
 
 [CBLAS]: http://netlib.org/blas
 [LAPACK]: http://www.netlib.org/lapack
