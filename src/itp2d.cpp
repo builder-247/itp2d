@@ -63,8 +63,24 @@ int main(int argc, char* argv[]) {
 	signal(SIGUSR1, sighandler);
 	// Parse parameters
 	vector<string> args(argv, argv+argc);
+	// TCLAP eats the first element of args
+	string program_name(args.front());
 	CommandLineParser parser;
-	parser.parse(args);
+	try {
+		parser.parse(args);
+	}
+	catch (TCLAP::ArgException &e) {
+		cerr << "Command line parsing error:" << endl
+			<< "\tError: " << e.error() << endl
+			<< "\t" << e.argId() << endl << endl
+			<< "For documentation on what command line arguments are available" << endl
+			<< "and what they mean, please type:" << endl
+			<< program_name << " --help" << endl;
+		return 2;
+	}
+	catch (TCLAP::ExitException &e) {
+		return e.getExitStatus();
+	}
 	Parameters params(parser.get_params());
 	// Import FFTW Wisdom if available
 	std::string const& fftw_wisdom_filename = params.get_wisdom_file_name();
