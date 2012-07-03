@@ -208,6 +208,7 @@ CommandLineParser::CommandLineParser() :
 	arg_potential("p", "potential", help_potential, false, Parameters::default_potential_type, "STRING", cmd) {}
 
 void CommandLineParser::parse(std::vector<std::string>& args) {
+	cmd.setExceptionHandling(false);
 	// Run command line parser
 	cmd.parse(args);
 	// Do some validations on the arguments given
