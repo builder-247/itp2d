@@ -97,14 +97,14 @@ class AbsoluteEnergyChangeTest : public ConvergenceTest {
 // converged if the change in this standard deviation is small enough between
 // successive steps, since this signals that the standard deviation is as small
 // as it will get.
-class EnergyDeviationChangeTest : public ConvergenceTest {
+class RelativeEnergyDeviationTest : public ConvergenceTest {
 	public:
-		EnergyDeviationChangeTest(double _relative_deviation_limit, double _difference_limit = 0) :
+		RelativeEnergyDeviationTest(double _relative_deviation_limit, double _difference_limit = 0) :
 				relative_deviation_limit(_relative_deviation_limit),
 				difference_limit(_difference_limit) {
 			init();
 		}
-		EnergyDeviationChangeTest(std::vector<double> const& params);
+		RelativeEnergyDeviationTest(std::vector<double> const& params);
 		bool test(ITPSystem const& sys, size_t n) const;
 	private:
 		double relative_deviation_limit;

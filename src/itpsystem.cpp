@@ -148,8 +148,8 @@ void ITPSystem::print_initial_message() {
 	// Warnings about incompatible or dangerous parameters
 	if (boundary_type == Dirichlet and params.get_B() != 0) {
 		err << "Warning: you are using Dirichlet boundary conditions with a magnetic field. This can cause slower convergence. Please see the README for more details." << std::endl;
-		if (typeid(params.get_timestep_convergence_test()) == typeid(EnergyDeviationChangeTest) or
-			typeid(params.get_final_convergence_test()) == typeid(EnergyDeviationChangeTest)) {
+		if (typeid(params.get_timestep_convergence_test()) == typeid(RelativeEnergyDeviationTest) or
+			typeid(params.get_final_convergence_test()) == typeid(RelativeEnergyDeviationTest)) {
 			err << "Warning: Convergence tests based on the standard deviation of energy become inaccurate when using Dirichlet boundary conditions and a magnetic field. You should use other convergence tests." << std::endl;
 		}
 	}

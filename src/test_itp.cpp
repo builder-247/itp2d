@@ -63,8 +63,8 @@ TEST_F(itp, harmonic_oscillator) {
 	params.set_num_states(14, 8);
 	params.add_eps_value(1.0);
 	params.define_external_field("harmonic(1)");
-	params.set_final_convergence_test(new EnergyDeviationChangeTest(error_tolerance));
-	params.set_timestep_convergence_test(new EnergyDeviationChangeTest(error_tolerance, 0.1*error_tolerance));
+	params.set_final_convergence_test(new RelativeEnergyDeviationTest(error_tolerance));
+	params.set_timestep_convergence_test(new RelativeEnergyDeviationTest(error_tolerance, 0.1*error_tolerance));
 	ITPSystem* sys = new ITPSystem(params);
 	while (not sys->is_finished()) {
 		sys->step();
@@ -100,8 +100,8 @@ TEST_F(itp, harmonic_oscillator_dirichlet) {
 	params.set_num_states(14, 8);
 	params.add_eps_value(1.0);
 	params.define_external_field("harmonic(1)");
-	params.set_final_convergence_test(new EnergyDeviationChangeTest(error_tolerance));
-	params.set_timestep_convergence_test(new EnergyDeviationChangeTest(error_tolerance, 0.1*error_tolerance));
+	params.set_final_convergence_test(new RelativeEnergyDeviationTest(error_tolerance));
+	params.set_timestep_convergence_test(new RelativeEnergyDeviationTest(error_tolerance, 0.1*error_tolerance));
 	ITPSystem* sys = new ITPSystem(params);
 	while (not sys->is_finished()) {
 		sys->step();
@@ -137,8 +137,8 @@ TEST_F(itp, harmonic_oscillator_nonsquare_simulation_box) {
 	params.set_num_states(14, 8);
 	params.add_eps_value(1.0);
 	params.define_external_field("harmonic(1)");
-	params.set_final_convergence_test(new EnergyDeviationChangeTest(error_tolerance));
-	params.set_timestep_convergence_test(new EnergyDeviationChangeTest(error_tolerance, 0.1*error_tolerance));
+	params.set_final_convergence_test(new RelativeEnergyDeviationTest(error_tolerance));
+	params.set_timestep_convergence_test(new RelativeEnergyDeviationTest(error_tolerance, 0.1*error_tolerance));
 	ITPSystem* sys = new ITPSystem(params);
 	while (not sys->is_finished()) {
 		sys->step();
@@ -174,8 +174,8 @@ TEST_F(itp, particle_in_a_box) {
 	params.set_num_states(16, 12);
 	params.define_external_field("zero");
 	params.add_eps_value(0.5);
-	params.set_final_convergence_test(new EnergyDeviationChangeTest(error_tolerance));
-	params.set_timestep_convergence_test(new EnergyDeviationChangeTest(error_tolerance, 0.1*error_tolerance));
+	params.set_final_convergence_test(new RelativeEnergyDeviationTest(error_tolerance));
+	params.set_timestep_convergence_test(new RelativeEnergyDeviationTest(error_tolerance, 0.1*error_tolerance));
 	ITPSystem* sys = new ITPSystem(params);
 	while (not sys->is_finished()) {
 		sys->step();
@@ -207,8 +207,8 @@ TEST_F(itp, particle_in_a_nonsquare_box) {
 	params.set_num_states(16, 12);
 	params.define_external_field("zero");
 	params.add_eps_value(0.5);
-	params.set_final_convergence_test(new EnergyDeviationChangeTest(error_tolerance));
-	params.set_timestep_convergence_test(new EnergyDeviationChangeTest(error_tolerance, 0.1*error_tolerance));
+	params.set_final_convergence_test(new RelativeEnergyDeviationTest(error_tolerance));
+	params.set_timestep_convergence_test(new RelativeEnergyDeviationTest(error_tolerance, 0.1*error_tolerance));
 	ITPSystem* sys = new ITPSystem(params);
 	while (not sys->is_finished()) {
 		sys->step();
@@ -240,8 +240,8 @@ TEST_F(itp, particle_in_a_nonsquare_box_otherway) {
 	params.set_num_states(16, 12);
 	params.define_external_field("zero");
 	params.add_eps_value(0.5);
-	params.set_final_convergence_test(new EnergyDeviationChangeTest(error_tolerance));
-	params.set_timestep_convergence_test(new EnergyDeviationChangeTest(error_tolerance, 0.1*error_tolerance));
+	params.set_final_convergence_test(new RelativeEnergyDeviationTest(error_tolerance));
+	params.set_timestep_convergence_test(new RelativeEnergyDeviationTest(error_tolerance, 0.1*error_tolerance));
 	ITPSystem* sys = new ITPSystem(params);
 	while (not sys->is_finished()) {
 		sys->step();
@@ -274,8 +274,8 @@ TEST_F(itp, harmonic_oscillator_magnetic) {
 	params.set_num_states(14, 8);
 	params.add_eps_value(1.0);
 	params.define_external_field("harmonic(1)", B);
-	params.set_final_convergence_test(new EnergyDeviationChangeTest(error_tolerance));
-	params.set_timestep_convergence_test(new EnergyDeviationChangeTest(error_tolerance, 0.1*error_tolerance));
+	params.set_final_convergence_test(new RelativeEnergyDeviationTest(error_tolerance));
+	params.set_timestep_convergence_test(new RelativeEnergyDeviationTest(error_tolerance, 0.1*error_tolerance));
 	ITPSystem* sys = new ITPSystem(params);
 	while (not sys->is_finished()) {
 		sys->step();
@@ -348,8 +348,8 @@ TEST_F(itp, harmonic_oscillator_magnetic_dirichlet) {
 	params.set_num_states(14, 8);
 	params.add_eps_value(1.0);
 	params.define_external_field("harmonic(1)", B);
-	params.set_final_convergence_test(new EnergyDeviationChangeTest(error_tolerance));
-	params.set_timestep_convergence_test(new EnergyDeviationChangeTest(error_tolerance, 0.1*error_tolerance));
+	params.set_final_convergence_test(new RelativeEnergyDeviationTest(error_tolerance));
+	params.set_timestep_convergence_test(new RelativeEnergyDeviationTest(error_tolerance, 0.1*error_tolerance));
 	ITPSystem* sys = new ITPSystem(params);
 	while (not sys->is_finished()) {
 		sys->step();

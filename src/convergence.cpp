@@ -47,7 +47,7 @@ ConvergenceTest const* parse_convergence_description(std::string const& str) {
 	if (name == "relEchange" or name == "relEdelta")
 		return new RelativeEnergyChangeTest(params);
 	if (name == "deviation")
-		return new EnergyDeviationChangeTest(params);
+		return new RelativeEnergyDeviationTest(params);
 	throw UnknownConvergenceType(str);
 	return NULL;
 }
@@ -133,9 +133,9 @@ void AbsoluteEnergyChangeTest::init() {
 	description = ss.str();
 }
 
-// EnergyDeviationChangeTest
+// RelativeEnergyDeviationTest
 
-EnergyDeviationChangeTest::EnergyDeviationChangeTest(std::vector<double> const& params) {
+RelativeEnergyDeviationTest::RelativeEnergyDeviationTest(std::vector<double> const& params) {
 	if (params.size() == 1) {
 		relative_deviation_limit = params[0];
 		difference_limit = 0;
@@ -149,7 +149,7 @@ EnergyDeviationChangeTest::EnergyDeviationChangeTest(std::vector<double> const& 
 	init();
 }
 
-bool EnergyDeviationChangeTest::test(ITPSystem const& sys, size_t n) const {
+bool RelativeEnergyDeviationTest::test(ITPSystem const& sys, size_t n) const {
 	if (sys.get_energies().size() < 2)
 		return false;
 	std::vector<std::vector<double> > const& energies = sys.get_energies();
@@ -161,7 +161,7 @@ bool EnergyDeviationChangeTest::test(ITPSystem const& sys, size_t n) const {
 	return good;
 }
 
-void EnergyDeviationChangeTest::init() {
+void RelativeEnergyDeviationTest::init() {
 	std::stringstream ss;
 	ss << "relative energy deviation < " << relative_deviation_limit
 		<< " or relative energy deviation change < " <<
