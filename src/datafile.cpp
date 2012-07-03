@@ -43,11 +43,12 @@ Datafile::Datafile(std::string filename, DataLayout const& dl, bool clobber) :
 		hfile = H5::H5File(filename, clobber? H5F_ACC_TRUNC : H5F_ACC_EXCL);
 	}
 	catch (H5::Exception& e) {
-		std::cerr << "Caught HDF5 error when trying to create datafile '" << filename << "'" << std::endl
-			<< "Did you try writing on an existing datafile, or write to" << std::endl
-			<< "a non-existant directory?" << std::endl
+		std::cerr << "Caught HDF5 error when trying to create datafile '" << filename << "'." << std::endl
+			<< "Did you try writing on an existing datafile (without --force), or write to" << std::endl
+			<< "a non-existant directory?" << std::endl << std::endl
 			<< "Detailed error report from HDF5:" << std::endl << std::endl;
 		e.printError();
+		std::cerr << std::endl;
 		throw;
 	}
 	root_group = hfile.openGroup("/");

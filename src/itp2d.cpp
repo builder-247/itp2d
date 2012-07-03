@@ -93,7 +93,12 @@ int main(int argc, char* argv[]) {
 	if (params.get_verbosity() >= 1) {
 		cout << "Initializing ITP system..." << endl;
 	}
-	sys = new ITPSystem(params);
+	try {
+		sys = new ITPSystem(params);
+	}
+	catch (H5::Exception) { // These report when originally caught in lower-level code
+		return 1;
+	}
 	if (params.get_verbosity() >= 1) {
 		sys->print_initial_message();
 		cout << "Initializations ready. Starting propagation." << endl;
