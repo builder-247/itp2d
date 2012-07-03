@@ -46,6 +46,7 @@ ITPSystem::ITPSystem(Parameters const& given_params, std::ostream& arg_out, std:
 		datafile->add_attribute("program_version", version_string);
 		datafile->add_attribute("random_seed", params.get_random_seed());
 		datafile->add_attribute("start_time", timestring);
+		datafile->add_attribute("num_threads", params.get_num_threads());
 		datafile->add_attribute("num_states", static_cast<int>(params.get_N()));
 		datafile->add_attribute("num_wanted_to_converge", static_cast<int>(params.get_needed_to_converge()));
 		datafile->add_attribute("ignore_lowest", static_cast<int>(params.get_ignore_lowest()));
