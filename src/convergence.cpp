@@ -46,6 +46,8 @@ ConvergenceTest const* parse_convergence_description(std::string const& str) {
 		return new AbsoluteEnergyChangeTest(params);
 	if (name == "relEchange" or name == "relEdelta")
 		return new RelativeEnergyChangeTest(params);
+	if (name == "absdeviation")
+		return new AbsoluteEnergyDeviationTest(params);
 	if (name == "deviation")
 		return new RelativeEnergyDeviationTest(params);
 	throw UnknownConvergenceType(str);
@@ -130,6 +132,41 @@ bool AbsoluteEnergyChangeTest::test(ITPSystem const& sys, size_t n) const {
 void AbsoluteEnergyChangeTest::init() {
 	std::stringstream ss;
 	ss << "absolute energy change < " << limit;
+	description = ss.str();
+}
+
+// AbsoluteEnergyDeviationTest
+
+AbsoluteEnergyDeviationTest::AbsoluteEnergyDeviationTest(std::vector<double> const& params) {
+	if (params.size() == 1) {
+		absolute_deviation_limit = params[0];
+		difference_limit = 0;
+	}
+	else if (params.size() == 2) {
+		absolute_deviation_limit = params[0];
+		difference_limit = params[1];
+	}
+	else
+		throw InvalidConvergenceType("Convergence test based on absolute standard deviation of energy takes either one or two parameters");
+	init();
+}
+
+bool AbsoluteEnergyDeviationTest::test(ITPSystem const& sys, size_t n) const {
+	if (sys.get_standard_deviations().size() < 2)
+		return false;
+	std::vector<std::vector<double> > const& stds = sys.get_standard_deviations();
+	const size_t last = stds.size()-1;
+	const double thisstep = stds[last][n];
+	const double prevstep = stds[last-1][n];
+	const bool good = (thisstep < absolute_deviation_limit) or (fabs(thisstep - prevstep) < difference_limit);
+	return good;
+}
+
+void AbsoluteEnergyDeviationTest::init() {
+	std::stringstream ss;
+	ss << "absolute energy deviation < " << absolute_deviation_limit
+		<< " or absolute energy deviation change < " <<
+		difference_limit;
 	description = ss.str();
 }
 

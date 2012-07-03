@@ -97,6 +97,23 @@ class AbsoluteEnergyChangeTest : public ConvergenceTest {
 // converged if the change in this standard deviation is small enough between
 // successive steps, since this signals that the standard deviation is as small
 // as it will get.
+// This is also the standard residual value used in eigenvalue solving.
+class AbsoluteEnergyDeviationTest : public ConvergenceTest {
+	public:
+		AbsoluteEnergyDeviationTest(double _absolute_deviation_limit, double _difference_limit = 0) :
+				absolute_deviation_limit(_absolute_deviation_limit),
+				difference_limit(_difference_limit) {
+			init();
+		}
+		AbsoluteEnergyDeviationTest(std::vector<double> const& params);
+		bool test(ITPSystem const& sys, size_t n) const;
+	private:
+		double absolute_deviation_limit;
+		double difference_limit;
+		void init();
+};
+
+// The same as the previous case, but use a relative standard deviation.
 class RelativeEnergyDeviationTest : public ConvergenceTest {
 	public:
 		RelativeEnergyDeviationTest(double _relative_deviation_limit, double _difference_limit = 0) :
