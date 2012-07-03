@@ -31,7 +31,7 @@ class commandlineparser : public testing::Test {
 TEST_F(commandlineparser, highmem) {
 	std::vector<std::string> fakeargv(2);
 	fakeargv[0] = "test";
-	fakeargv[1] = "--highmem";
+	fakeargv[1] = "--highmem-orthonormalization";
 	parser.parse(fakeargv);
 	ASSERT_EQ(parser.get_params().get_ortho_algorithm(), HighMem);
 }
