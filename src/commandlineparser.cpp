@@ -208,101 +208,95 @@ CommandLineParser::CommandLineParser() :
 	arg_potential("p", "potential", help_potential, false, Parameters::default_potential_type, "STRING", cmd) {}
 
 void CommandLineParser::parse(std::vector<std::string>& args) {
-	try {
-		// Run command line parser
-		cmd.parse(args);
-		// Do some validations on the arguments given
-		{
-			int save_args_counter = 0;
-			if (arg_save_nothing.isSet())
-				save_args_counter++;
-			if (arg_save_onlyenergies.isSet())
-				save_args_counter++;
-			if (arg_save_everything.isSet())
-				save_args_counter++;
-		if (save_args_counter > 1)
-			throw TCLAP::CmdLineParseException("Arguments cannot be set together.",
-					arg_save_nothing.getName()+", "+
-					arg_save_onlyenergies.getName()+", "+
-					arg_save_everything.getName());
-		}
-		throw_if_nonpositive(arg_num_threads);
-		if (arg_size.isSet() and (arg_sizex.isSet() or arg_sizey.isSet()))
-			throw TCLAP::CmdLineParseException("Arguments cannot be set together.",
-				arg_size.getName()+" and ("+arg_sizey.getName()+" or "+arg_sizex.getName()+")");
-		throw_if_nonpositive(arg_size);
-		throw_if_nonpositive(arg_sizex);
-		throw_if_nonpositive(arg_sizey);
-		throw_if_nonpositive(arg_lenx);
-		std::vector<double> const& eps_values = arg_eps_values.getValue();
-		for (std::vector<double>::const_iterator it = eps_values.begin(); it != eps_values.end(); it++) {
-			throw_if_nonpositive(*it, arg_eps_values.getName());
-		}
-		throw_if_nonpositive(arg_eps_divisor);
-		throw_if_nonpositive(arg_N);
-		throw_if_nonpositive(arg_needed_to_converge);
-		if (arg_N.isSet() and arg_needed_to_converge.isSet() and arg_N.getValue() < (arg_ignore_lowest.getValue() + arg_needed_to_converge.getValue()))
-			throw TCLAP::CmdLineParseException("Number of states has to be large enough to include at least all the states wanted to converge!", arg_N.getName());
-		throw_if_nonpositive(arg_order);
-		if (arg_order.getValue() % 2 != 0)
-			throw TCLAP::CmdLineParseException("Has to be even.", arg_order.getName());
-		throw_if_negative(arg_min_time_step);
-		throw_if_nonpositive(arg_max_steps);
-		// Build the Parameters class instance based on the command line options given
-		params.recover = arg_recover.getValue();
-		if (arg_rngseed.isSet())
-			params.set_random_seed(arg_rngseed.getValue());
-		else
-			params.set_random_seed(RNG::produce_random_seed());
-		params.datafile_name = arg_datafile_name.getValue();
-		params.set_wisdom_file_name(arg_wisdom_file_name.getValue());
-		params.copy_from = arg_copy_from.getValue();
-		if (arg_copy_from.isSet())
-			params.initialstate_preset = Parameters::CopyFromFile;
-		params.potential_type = arg_potential.getValue();
-		params.set_timestep_convergence_test(arg_timestep_convtest.getValue());
-		params.set_final_convergence_test(arg_final_convtest.getValue());
-		params.set_noise(arg_noise.getValue());
-		if (arg_save_everything.getValue())
-			params.save_what = Parameters::Everything;
-		if (arg_save_onlyenergies.getValue())
-			params.save_what = Parameters::OnlyEnergies;
-		if (arg_save_nothing.getValue())
-			params.save_what = Parameters::Nothing;
-		params.clobber = arg_clobber.getValue();
-		params.verbosity = Parameters::default_verbosity + arg_verbosity.getValue() - arg_quietness.getValue();
-		params.num_threads = arg_num_threads.getValue();
-		params.sizex = arg_sizex.getValue();
-		params.sizey = arg_sizey.getValue();
-		if (arg_size.isSet()) {
-			params.sizex = arg_size.getValue();
-			params.sizey = arg_size.getValue();
-		}
-		params.lenx = ((arg_pi.isSet())? pi : 1.0) *arg_lenx.getValue();
-		params.boundary = arg_dirichlet.getValue()? Dirichlet : Periodic;
-		params.ortho_alg = arg_highmem.getValue()? HighMem : Default;
-		for (std::vector<double>::const_iterator it = eps_values.begin(); it != eps_values.end(); it++) {
-			params.add_eps_value(*it);
-		}
-		params.eps_divisor = arg_eps_divisor.getValue();
-		params.exhaust_eps = arg_exhaust_eps_values.getValue();
-		if (not arg_needed_to_converge.isSet() and arg_N.isSet())
-			params.needed_to_converge = arg_N.getValue();
-		else
-			params.needed_to_converge = arg_needed_to_converge.getValue();
-		// If the total number of states is not given, set it to the number required to converge plus 25%
-		if (arg_needed_to_converge.isSet() and not arg_N.isSet())
-			params.N = static_cast<size_t>(static_cast<double>(arg_needed_to_converge.getValue())*1.25);
-		else
-			params.N = arg_N.getValue();
-		params.ignore_lowest = arg_ignore_lowest.getValue();
-		params.B = arg_B.getValue();
-		params.halforder = arg_order.getValue()/2;
-		params.min_time_step = arg_min_time_step.getValue();
-		params.max_steps = arg_max_steps.getValue();
+	// Run command line parser
+	cmd.parse(args);
+	// Do some validations on the arguments given
+	{
+		int save_args_counter = 0;
+		if (arg_save_nothing.isSet())
+			save_args_counter++;
+		if (arg_save_onlyenergies.isSet())
+			save_args_counter++;
+		if (arg_save_everything.isSet())
+			save_args_counter++;
+	if (save_args_counter > 1)
+		throw TCLAP::CmdLineParseException("Arguments cannot be set together.",
+				arg_save_nothing.getName()+", "+
+				arg_save_onlyenergies.getName()+", "+
+				arg_save_everything.getName());
 	}
-	catch (TCLAP::ArgException &e) {
-		std::cerr << "Command line parsing error: " << e.error() << " " << e.argId() << std::endl;
-		throw GeneralError("Command line parsing failed.");
+	throw_if_nonpositive(arg_num_threads);
+	if (arg_size.isSet() and (arg_sizex.isSet() or arg_sizey.isSet()))
+		throw TCLAP::CmdLineParseException("Arguments cannot be set together.",
+			arg_size.getName()+" and ("+arg_sizey.getName()+" or "+arg_sizex.getName()+")");
+	throw_if_nonpositive(arg_size);
+	throw_if_nonpositive(arg_sizex);
+	throw_if_nonpositive(arg_sizey);
+	throw_if_nonpositive(arg_lenx);
+	std::vector<double> const& eps_values = arg_eps_values.getValue();
+	for (std::vector<double>::const_iterator it = eps_values.begin(); it != eps_values.end(); it++) {
+		throw_if_nonpositive(*it, arg_eps_values.getName());
 	}
+	throw_if_nonpositive(arg_eps_divisor);
+	throw_if_nonpositive(arg_N);
+	throw_if_nonpositive(arg_needed_to_converge);
+	if (arg_N.isSet() and arg_needed_to_converge.isSet() and arg_N.getValue() < (arg_ignore_lowest.getValue() + arg_needed_to_converge.getValue()))
+		throw TCLAP::CmdLineParseException("Number of states has to be large enough to include at least all the states wanted to converge!", arg_N.getName());
+	throw_if_nonpositive(arg_order);
+	if (arg_order.getValue() % 2 != 0)
+		throw TCLAP::CmdLineParseException("Has to be even.", arg_order.getName());
+	throw_if_negative(arg_min_time_step);
+	throw_if_nonpositive(arg_max_steps);
+	// Build the Parameters class instance based on the command line options given
+	params.recover = arg_recover.getValue();
+	if (arg_rngseed.isSet())
+		params.set_random_seed(arg_rngseed.getValue());
+	else
+		params.set_random_seed(RNG::produce_random_seed());
+	params.datafile_name = arg_datafile_name.getValue();
+	params.set_wisdom_file_name(arg_wisdom_file_name.getValue());
+	params.copy_from = arg_copy_from.getValue();
+	if (arg_copy_from.isSet())
+		params.initialstate_preset = Parameters::CopyFromFile;
+	params.potential_type = arg_potential.getValue();
+	params.set_timestep_convergence_test(arg_timestep_convtest.getValue());
+	params.set_final_convergence_test(arg_final_convtest.getValue());
+	params.set_noise(arg_noise.getValue());
+	if (arg_save_everything.getValue())
+		params.save_what = Parameters::Everything;
+	if (arg_save_onlyenergies.getValue())
+		params.save_what = Parameters::OnlyEnergies;
+	if (arg_save_nothing.getValue())
+		params.save_what = Parameters::Nothing;
+	params.clobber = arg_clobber.getValue();
+	params.verbosity = Parameters::default_verbosity + arg_verbosity.getValue() - arg_quietness.getValue();
+	params.num_threads = arg_num_threads.getValue();
+	params.sizex = arg_sizex.getValue();
+	params.sizey = arg_sizey.getValue();
+	if (arg_size.isSet()) {
+		params.sizex = arg_size.getValue();
+		params.sizey = arg_size.getValue();
+	}
+	params.lenx = ((arg_pi.isSet())? pi : 1.0) *arg_lenx.getValue();
+	params.boundary = arg_dirichlet.getValue()? Dirichlet : Periodic;
+	params.ortho_alg = arg_highmem.getValue()? HighMem : Default;
+	for (std::vector<double>::const_iterator it = eps_values.begin(); it != eps_values.end(); it++) {
+		params.add_eps_value(*it);
+	}
+	params.eps_divisor = arg_eps_divisor.getValue();
+	params.exhaust_eps = arg_exhaust_eps_values.getValue();
+	if (not arg_needed_to_converge.isSet() and arg_N.isSet())
+		params.needed_to_converge = arg_N.getValue();
+	else
+		params.needed_to_converge = arg_needed_to_converge.getValue();
+	// If the total number of states is not given, set it to the number required to converge plus 25%
+	if (arg_needed_to_converge.isSet() and not arg_N.isSet())
+		params.N = static_cast<size_t>(static_cast<double>(arg_needed_to_converge.getValue())*1.25);
+	else
+		params.N = arg_N.getValue();
+	params.ignore_lowest = arg_ignore_lowest.getValue();
+	params.B = arg_B.getValue();
+	params.halforder = arg_order.getValue()/2;
+	params.min_time_step = arg_min_time_step.getValue();
+	params.max_steps = arg_max_steps.getValue();
 }
