@@ -42,13 +42,13 @@ ConvergenceTest const* parse_convergence_description(std::string const& str) {
 		return new NoConvergenceTest(params);
 	if (name == "onestep" or name == "one-step")
 		return new OneStepConvergenceTest(params);
-	if (name == "absEchange" or name == "absEdelta")
+	if (name == "abschange" or name == "absEdelta")
 		return new AbsoluteEnergyChangeTest(params);
-	if (name == "relEchange" or name == "relEdelta")
+	if (name == "relchange" or name == "relEdelta")
 		return new RelativeEnergyChangeTest(params);
-	if (name == "absdeviation")
+	if (name == "absstdev" or name == "absresidual")
 		return new AbsoluteEnergyDeviationTest(params);
-	if (name == "deviation")
+	if (name == "relstdev" or name == "relresidual")
 		return new RelativeEnergyDeviationTest(params);
 	throw UnknownConvergenceType(str);
 	return NULL;

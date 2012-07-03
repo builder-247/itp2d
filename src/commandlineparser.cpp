@@ -125,17 +125,17 @@ No convergence checking:\n\
 One-step timestep convergence:\n\
 \tonestep\n\
 Absolute energy change less than value:\n\
-\tabsEchange(value)\n\
+\tabschange(value)\n\
 Relative energy change less than value:\n\
-\trelEchange(value)\n\
+\trelchange(value)\n\
 Standard deviation of energy less than value or change of standard \
 deviation less than value2:\n\
-\tabsdeviation(value)\n\
-\tabsdeviation(value,value2)\n\
+\tabsstdev(value)\n\
+\tabsstdev(value,value2)\n\
 Relative standard deviation of energy less than value or change of relative \
 standard deviation less than value2:\n\
-\tdeviation(value)\n\
-\tdeviation(value,value2)\n\
+\trelstdev(value)\n\
+\trelstdev(value,value2)\n\
 In all cases 'change' means change between successive iterations.\n\
 See header convergence.hpp for details.";
 
