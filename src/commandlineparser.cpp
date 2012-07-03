@@ -100,6 +100,9 @@ Decrease verbosity of output.";
 const char CommandLineParser::help_verbosity[] = "\
 Increase verbosity of output.";
 
+const char CommandLineParser::help_save_nothing[] = "\
+Run without saving anything on disk.";
+
 const char CommandLineParser::help_save_onlyenergies[] = "\
 Save only final state energies, not the states themselves.";
 
@@ -194,6 +197,7 @@ CommandLineParser::CommandLineParser() :
 	arg_num_threads("t", "threads", help_num_threads, false, Parameters::default_num_threads, "NUM", cmd),
 	arg_quietness("q", "quiet", help_quietness, cmd),
 	arg_verbosity("v", "verbose", help_verbosity, cmd),
+	arg_save_nothing("", "save-nothing", help_save_nothing, cmd),
 	arg_save_onlyenergies("", "onlyenergies", help_save_onlyenergies, cmd),
 	arg_save_everything("", "everything", help_save_everything, cmd),
 	arg_clobber("f", "force", help_clobber, cmd),
@@ -208,8 +212,20 @@ void CommandLineParser::parse(std::vector<std::string>& args) {
 		// Run command line parser
 		cmd.parse(args);
 		// Do some validations on the arguments given
-		if (arg_save_everything.isSet() and arg_save_onlyenergies.isSet())
-			throw TCLAP::CmdLineParseException("Both arguments cannot be set together.", arg_save_everything.getName()+" and "+arg_save_onlyenergies.getName());
+		{
+			int save_args_counter = 0;
+			if (arg_save_nothing.isSet())
+				save_args_counter++;
+			if (arg_save_onlyenergies.isSet())
+				save_args_counter++;
+			if (arg_save_everything.isSet())
+				save_args_counter++;
+		if (save_args_counter > 1)
+			throw TCLAP::CmdLineParseException("Arguments cannot be set together.",
+					arg_save_nothing.getName()+", "+
+					arg_save_onlyenergies.getName()+", "+
+					arg_save_everything.getName());
+		}
 		throw_if_nonpositive(arg_num_threads);
 		if (arg_size.isSet() and (arg_sizex.isSet() or arg_sizey.isSet()))
 			throw TCLAP::CmdLineParseException("Arguments cannot be set together.",
@@ -251,6 +267,8 @@ void CommandLineParser::parse(std::vector<std::string>& args) {
 			params.save_what = Parameters::Everything;
 		if (arg_save_onlyenergies.getValue())
 			params.save_what = Parameters::OnlyEnergies;
+		if (arg_save_nothing.getValue())
+			params.save_what = Parameters::Nothing;
 		params.clobber = arg_clobber.getValue();
 		params.verbosity = Parameters::default_verbosity + arg_verbosity.getValue() - arg_quietness.getValue();
 		params.num_threads = arg_num_threads.getValue();

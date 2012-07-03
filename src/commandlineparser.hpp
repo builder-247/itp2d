@@ -62,6 +62,7 @@ class CommandLineParser {
 		static const char help_num_threads[];
 		static const char help_quietness[];
 		static const char help_verbosity[];
+		static const char help_save_nothing[];
 		static const char help_save_onlyenergies[];
 		static const char help_save_everything[];
 		static const char help_clobber[];
@@ -102,6 +103,7 @@ class CommandLineParser {
 		TCLAP::ValueArg<size_t> arg_num_threads;
 		TCLAP::MultiSwitchArg arg_quietness;
 		TCLAP::MultiSwitchArg arg_verbosity;
+		TCLAP::SwitchArg arg_save_nothing;
 		TCLAP::SwitchArg arg_save_onlyenergies;
 		TCLAP::SwitchArg arg_save_everything;
 		TCLAP::SwitchArg arg_clobber;
