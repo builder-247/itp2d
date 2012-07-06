@@ -48,6 +48,7 @@
 
 class PotentialType {
 	public:
+		virtual inline ~PotentialType() {}
 		virtual double operator()(double x, double y) const = 0;
 		inline std::string const& get_description() const { return description; }
 	protected:
