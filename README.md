@@ -182,6 +182,28 @@ The scripts are not required to access the data created by itp2d, since the data
 itp2d are standard [HDF5][] files with a simple layout. You should be able to access them
 easily with any program cabable of reading [HDF5][] files, such as Python or MATLAB.
 
+Common issues
+-------------
+
+### "python2: No such file or directory"
+
+Python scripts distributed with itp2d are currently written in the older, version 2 dialect of the
+language. There is also a newer version, Python 3, but these versions are not compatible with each
+other. This poses a problem for sharing Python scripts, since the interpreter program `python` could
+be either version 2 or version 3, depending on the system. The Python developers [recommend][pep394]
+that scripts specify either `python2` or `python3` as the interpreter, depending on which version of
+Python they are written in. However, some systems do not have the `python2` command, either because
+they are too old, or because they do not follow the recommendation. If you are using such a system
+you can either:
+
+1. Upgrade your system and/or complain to your software distributor that they are disobeying
+   official recommendations.
+1. Make a symbolic link `python2` somewhere in your `PATH`, pointing to the Python 2 interpreter.
+1. Specify the interpreter explicitly, for example by typing `python configure` instead of
+   `./configure`.
+
+[pep394]: http://www.python.org/dev/peps/pep-0394/
+
 Examples & use cases
 --------------------
 
