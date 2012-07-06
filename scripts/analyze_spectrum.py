@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # vim: set fileencoding=utf8
 from __future__ import division, with_statement
 import sys, bisect, math, h5py, numpy
