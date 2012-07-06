@@ -1,0 +1,612 @@
+#!/usr/bin/env python
+#
+# Copyright 2012 Perttu Luukko
+#
+# This file is part of itp2d.
+#
+# itp2d is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# itp2d is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# itp2d.  If not, see <http://www.gnu.org/licenses/>.
+#
+#
+#
+# A simple configure-script to make installing itp2d easier. There are more
+# complete tools to do this job, such as GNU Autotools, but they are also very
+# complex.
+
+import sys
+# Check Python version
+if sys.version_info < (2,4):
+    print "Sorry, but your Python interpreter is too old to run this script. At least 2.4 is required"
+    sys.exit(1)
+
+# Define standard builtins 'any' and 'all' for Python < 2.5
+if sys.version_info < (2,5):
+    def any(iterable):
+        for element in iterable:
+            if element:
+                return True
+        return False
+
+    def all(iterable):
+        for element in iterable:
+            if not element:
+                return False
+        return True
+
+import os, re, optparse, subprocess, platform
+from subprocess import PIPE
+
+# These two will be queried later
+compiler_include_paths = []
+
+compiler_lib_paths = []
+
+# Some extra directories to search for
+extra_include_paths = ["/include", "/usr/include", "/usr/local/include",
+        "/opt/include", "/opt/local/include"]
+extra_lib_paths = ["/lib64", "/usr/lib64", "/usr/local/lib64", "/opt/lib64", "/opt/local/lib64",
+    "/lib", "/usr/lib", "/usr/local/lib/", "/opt/lib", "/opt/local/lib"]
+
+# These two will contain the compiler search paths plus the extra directories, duplicates removed
+
+include_paths = []
+
+lib_paths = []
+
+def add_paths_from_environment(l, varname):
+    """Read the environment variable called varname, split it at colons, and
+    add the resulting strings to list, ignoring duplicate entries."""
+    try:
+        add_paths_from_separated_string(l, os.environ[varname], separator=":")
+    except KeyError:
+        pass
+
+def add_paths_from_separated_string(l, s, separator=":"):
+    add_paths_from_list(l, s.split(separator))
+
+def add_paths_from_list(l1, l2):
+    for path in l2:
+        apath = os.path.abspath(path)
+        if not apath in l1:
+            l1.append(apath)
+
+class RequirementFail(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+    def report(self):
+        sys.stdout.write("\n")
+        sys.stderr.write("\nError: %s\n\n" % self.msg)
+
+class Requirement(object):
+    """Something that needs to exist and fulfill some requirements for itp2d to
+    compile correctly"""
+    def __init__(self):
+        self.reset()
+    def reset(self):
+        self.warnings_flag = False
+    def check(self):
+        pass
+    def print_summary(self):
+        pass
+    def makefile_changes(self):
+        return ""
+    def warn(self, msg):
+        self.warnings_flag = True
+        sys.stdout.write("\n")
+        sys.stderr.write("Warning: %s\n\n" % msg)
+
+class Compiler(Requirement):
+    def __init__(self, options):
+        self.path = options.cxx_compiler
+        self.verbose = options.verbose
+        Requirement.__init__(self)
+
+    def check(self):
+        # First check that compiler is found
+        print "Checking if compiler '%s' is found..." % self.path,
+        try:
+            p = subprocess.Popen(self.path, stdout=PIPE, stderr=PIPE)
+            p.wait()
+        except OSError, e:
+            raise RequirementFail(e.strerror)
+        else:
+            print "OK"
+        # Identify which compiler it is
+        print "Identifying compiler with --version...",
+        p = subprocess.Popen([self.path, "--version"], stdout=PIPE, stderr=PIPE)
+        returncode = p.wait()
+        if returncode != 0:
+            self.warn("Could not identify compiler: " + p.stderr.read())
+        else:
+            idline = p.stdout.readline().strip()
+            print idline
+            # The first word of --version should contain '++', otherwise it's
+            # probably not a C++ compiler at all
+            if (idline.split()[0].find("++") == -1):
+                self.warn("Are you sure '%s' is a C++ compiler?" % self.path)
+            # The second word should be (GCC) for g++
+            if (idline.split()[1] != "(GCC)"):
+                self.warn("You seem to be using some other compiler besides g++. Be careful.")
+            else:
+                # In the case of g++, also check version
+                version_re = re.compile(r"(\d+)\.(\d+)\.(\d+)")
+                print "Checking g++ version...",
+                m = version_re.search(idline)
+                if m == None:
+                    self.warn("Could not parse compiler version from received string '%s'" % idline)
+                version_string = ".".join(m.groups())
+                version = tuple([ int(i) for i in m.groups() ])
+                print version_string
+                if (version < (4,3,0)):
+                    self.warn("g++ version is very old. At least 4.3 is probably required for itp2d to compile.")
+                # Try to query the compiler for search paths for header files. For some
+                # reason g++ makes this a lot more difficult than querying for library
+                # paths
+                print "Querying compiler '%s' for header file search paths..." % self.path,
+                try:
+                    p = subprocess.Popen([self.path, "-E", "-v", "-x", "c++", "/dev/null"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+                    (out, err) = p.communicate()
+                    lines = err.splitlines()
+                    # Find lines between the two delimiting lines
+                    startlineno = lines.index("#include <...> search starts here:")
+                    endlineno = lines.index("End of search list.", startlineno)
+                    pathlines = lines[startlineno+1:endlineno]
+                    # Strip whitespace from each
+                    pathlines = [ l.strip() for l in pathlines ]
+                    # Add to compiler indlude paths
+                    add_paths_from_list(compiler_include_paths, pathlines)
+                    print "OK"
+                except:
+                    # If it fails, just use contents of CPATH plus /usr/include
+                    add_paths_from_list(compiler_include_paths, ["/usr/include"])
+                    add_paths_from_environment(compiler_include_paths, "CPATH")
+                    print "Failed, using CPATH and /usr/include"
+                print "Querying compiler '%s' for library file search paths..." % self.path,
+                # Add whatever is found with -print-search-dirs to list of library paths,
+                # or if it fails, add contents of LIBRARY_PATH
+                try:
+                    p = subprocess.Popen([self.path,"-print-search-dirs"], stdout=PIPE, stderr=PIPE)
+                    (out, err) = p.communicate()
+                    liblist_re = re.compile(r"libraries: =(.*)")
+                    m = liblist_re.search(out)
+                    if m != None:
+                        add_paths_from_separated_string(compiler_lib_paths, m.group(1))
+                    print "OK"
+                except:
+                    add_paths_from_environment(compiler_lib_paths, "LIBRARY_PATH")
+                    print "Failed, using LIBRARY_PATH"
+                # Form the combined lists include_paths and lib_paths
+                add_paths_from_list(include_paths, compiler_include_paths)
+                add_paths_from_list(include_paths, extra_include_paths)
+                add_paths_from_list(lib_paths, compiler_lib_paths)
+                add_paths_from_list(lib_paths, extra_lib_paths)
+                # Print the search path if options.verbose
+                if self.verbose:
+                    print "Directories to search for header files:"
+                    for path in include_paths:
+                        print "\t", path
+                    print "Directories to search for library files:"
+                    for path in lib_paths:
+                        print "\t", path
+
+    def print_summary(self):
+        print "C++ compiler:", self.path
+
+    def makefile_changes(self):
+        return "CXX := %s\n" % self.path
+
+class Markdown(Requirement):
+    def __init__(self, options):
+        self.path = options.markdown_compiler
+        Requirement.__init__(self)
+    
+    def check(self):
+        if self.path:
+            print "Checking that Markdown compiler exists... ",
+            self.try_command(self.path)
+            print "OK"
+        else:
+            print "Searching for a Markdown compiler in PATH...",
+            for command in ["markdown2", "Markdown.pl"]:
+                try:
+                   self.try_command(command)
+                except RequirementFail:
+                    continue
+                else:
+                    self.path = command
+                    print command
+                    return
+            print "none found"
+
+    def try_command(self, command):
+        try:
+            p = subprocess.Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            p.communicate("")
+            p.wait()
+        except OSError, e:
+            raise RequirementFail("Specified Markdown compiler not found: " + e.strerror)
+
+    def print_summary(self):
+        print "Markdown compiler", 
+        if self.path:
+            print self.path
+        else:
+            print "(none)"
+            
+    def makefile_changes(self):
+        if self.path:
+            return "markdown := %s\n" % self.path
+        else:
+            return ""
+
+class Library(Requirement):
+    def __init__(self):
+        self.reset()
+        Requirement.__init__(self)
+
+    def reset(self):
+        self.cflags = []
+        self.libflags = []
+        self.includeflags = []
+        Requirement.reset(self)
+
+    def find_file(self, name, paths=[], possible_subpaths=[]):
+        search_paths = paths[:]
+        for subpath in possible_subpaths:
+            for p in paths:
+                search_paths.append(os.path.join(p, subpath))
+        for path in search_paths:
+            if os.path.exists(os.path.join(path, name)):
+                return path
+        return ""
+
+    def check_for_include(self, name, path, possible_subpaths=[]):
+        print "Checking for header %s..." % name,
+        if not path:
+            # Try to find the file
+            self.check_for_include_in_paths(name, paths=include_paths, possible_subpaths=possible_subpaths)
+        else:
+            # Path was specified, so only check it and a few subdirs
+            paths = [path, os.path.join(path, "include")]
+            self.check_for_include_in_paths(name, paths=paths, possible_subpaths=possible_subpaths)
+
+    def check_for_include_in_paths(self, name, paths, possible_subpaths):
+        p = self.find_file(name, paths=paths, possible_subpaths=possible_subpaths)
+        if p:
+            self.include_found(name, p)
+            return
+        raise RequirementFail("Header '%s' not found under any of the following directories: %s" % (name, paths))
+
+    def include_found(self, name, path):
+        print os.path.join(path, name)
+        apath = os.path.abspath(path)
+        if apath not in compiler_include_paths:
+            self.includeflags.append("-I%s" % path)
+
+    def check_for_library(self, name, path, possible_subpaths=[], add_link_flag=False):
+        print "Checking for library %s..." % name,
+        if not path:
+            # Try to find the file
+            self.check_for_library_in_paths(name, paths=lib_paths,
+                    possible_subpaths=possible_subpaths,
+                    add_link_flag=add_link_flag)
+        else:
+            # Path was specified, so only check it and a few subdirs
+            paths = [path, os.path.join(path, "lib"), os.path.join(path,
+                "lib64")]
+            self.check_for_library_in_paths(name, paths=paths,
+                    possible_subpaths=possible_subpaths,
+                    add_link_flag=add_link_flag)
+
+    def check_for_library_in_paths(self, name, paths, possible_subpaths=[], add_link_flag=False):
+        # Try to find the file, trying a dynamic library first
+        libname = "lib%s.so" % name
+        p = self.find_file(libname, paths=paths,
+                possible_subpaths=possible_subpaths)
+        if p:
+            self.library_found(name, False, libname, p, add_link_flag)
+            return
+        # Then try a static library
+        libname = "lib%s.a" % name
+        p = self.find_file(libname, paths=paths,
+                possible_subpaths=possible_subpaths)
+        if p:
+            self.library_found(name, True, libname, p, add_link_flag)
+            return
+        raise RequirementFail("Library '%s' not found under any of the following directories: %s" % (name, paths))
+
+    def library_found(self, name, static, libname, path, add_link_flag):
+        print os.path.join(path, libname)
+        apath = os.path.abspath(path)
+        if apath not in compiler_lib_paths and not static:
+            self.libflags.append("-L%s" % path)
+            self.libflags.append("-Wl,-rpath %s" % path)
+        if add_link_flag:
+            # Use exact file and warn if using a static library
+            if static:
+                self.warn("Linking against a static library '%s'. Static libraries might depend on other libraries, and there is no easy way to test for this. If you get linking errors because of 'unresolved symbols' you need to find out what library is missing and add it to Makefile.local manually" % libname)
+                self.libflags.append(os.path.join(path, libname))
+            else:
+                self.libflags.append("-l%s" % name)
+
+    def makefile_changes(self):
+        changes = ""
+        if self.cflags:
+            changes += "flags += %s\n" % " ".join(self.cflags)
+        if self.libflags:
+            changes += "lib_flags += %s\n" % " ".join(self.libflags)
+        if self.includeflags:
+            changes += "inc_flags += %s\n" % " ".join(self.includeflags)
+        return changes
+
+class LinearAlgebraLibs(Library):
+    def __init__(self, options):
+        self.blas_path = options.with_blas
+        self.cblas_path = options.with_cblas
+        self.lapack_path = options.with_lapack
+        self.mkl_path = options.with_mkl
+        self.acml_path = options.with_acml
+        self.lalib = "?"
+        Library.__init__(self)
+
+    def check(self):
+        # First try to find out which combination of linear algebra libs to use
+        if not any([self.lapack_path, self.mkl_path, self.acml_path]):
+            # None of the paths was specified on command line
+            print "Deciding which linear algebra package to use..."
+            # Try LAPACK
+            try:
+                print "Trying plain LAPACK and CBLAS..."
+                self.check_plain()
+                print "Using plain LAPACK and CBLAS"
+                self.lalib = "plain"
+            except RequirementFail, e:
+                print e.msg
+                self.reset()
+                try:
+                    print "Trying MKL..."
+                    self.check_mkl()
+                    print "Using MKL"
+                    self.lalib = "mkl"
+                except RequirementFail, e:
+                    print e.msg
+                    self.reset()
+                    try:
+                        print "Trying ACML..."
+                        self.check_acml()
+                        print "Using ACML"
+                        self.lalib = "acml"
+                    except RequirementFail, e:
+                        print e.msg
+                        raise RequirementFail("Could not find any linear algebra package")
+        # Otherwise one of the --with -options was set. Try to use it
+        elif self.lapack_path:
+            self.check_plain()
+            self.lalib = "plain"
+        elif self.mkl_path:
+            self.check_mkl()
+            self.lalib = "mkl"
+        elif self.acml_path:
+            self.check_acml()
+            self.lalib = "acml"
+
+    def check_plain(self):
+        self.check_cblas()
+        self.check_lapack()
+
+    def check_blas(self):
+        self.check_for_library("blas", self.blas_path, ["atlas"], add_link_flag=True)
+
+    def check_cblas(self):
+        self.check_for_include("cblas.h", self.cblas_path, ["atlas"])
+        self.check_for_library("cblas", self.cblas_path, ["atlas"], add_link_flag=True)
+        # Only check for and link BLAS if --with-blas was explicitly used
+        if self.blas_path:
+            self.check_blas()
+
+    def check_lapack(self):
+        self.check_for_library("lapack", self.lapack_path, ["atlas"], add_link_flag=True)
+
+    def check_mkl(self):
+        self.check_for_include("mkl_cblas.h", self.mkl_path)
+        self.check_for_include("mkl_lapack.h", self.mkl_path)
+        self.check_for_library("mkl", self.mkl_path, add_link_flag=True)
+        # This is ugly: MKL uses a different library name for 32bit and 64bit
+        if platform.architecture()[0] == "64bit":
+            self.check_for_library("mkl_lapack64", self.mkl_path, add_link_flag=True)
+        else:
+            self.check_for_library("mkl_lapack32", self.mkl_path, add_link_flag=True)
+        # MKL also requires changes to some internal logic, which is triggered
+        # by macro USE_MKL
+        self.cflags.append("-DUSE_MKL")
+
+    def check_acml(self):
+        self.check_for_include("cblas.h", self.cblas_path, ["atlas"])
+        self.check_for_library("cblas", self.cblas_path, ["atlas"], add_link_flag=True)
+        self.check_for_library("acml", self.acml_path, add_link_flag=True)
+        # Always warn about CBLAS when using ACML
+        self.warn("ACML does not provide a CBLAS interface. Instead it requires a CBLAS library built specifically against ACML's implementation of BLAS. You need to make sure that the CBLAS library found above is built in such a way. Otherwise CBLAS calls might not be handled by ACML, but instead by some less optimized library. Please consult the README for more information")
+
+    def print_summary(self):
+        print "Linear algebra library:",
+        if self.lalib == "plain":
+            print "plain"
+        elif self.lalib == "mkl":
+            print "MKL"
+        elif self.lalib == "acml":
+            print "ACML"
+        else:
+            print "???"
+
+class HDF5(Library):
+    def __init__(self, options):
+        self.path = options.with_hdf5
+        Library.__init__(self)
+
+    def check(self):
+        self.check_for_library("hdf5", self.path)
+        try:
+            self.check_for_include("H5Cpp.h", self.path)
+        except RequirementFail:
+            print "Header H5Cpp.h not found. Make sure HDF5 was compiled with C++ support"
+            raise
+        self.check_for_library("hdf5_cpp", self.path)
+
+class FFTW3(Library):
+    def __init__(self, options):
+        self.path = options.with_fftw3
+        Library.__init__(self)
+
+    def check(self):
+        self.check_for_include("fftw3.h", self.path)
+        self.check_for_library("fftw3", self.path)
+
+class TCLAP(Library):
+    def __init__(self, options):
+        self.path = options.with_tclap
+        Library.__init__(self)
+
+    def check(self):
+        self.check_for_include(os.path.join("tclap", "CmdLine.h"), self.path)
+
+class gtest(Library):
+    def __init__(self, options):
+        self.path = options.with_gtest
+        Library.__init__(self)
+
+    def check(self):
+        print "Checking for unpacked gtest source in %s..." % self.path
+        gtest_inc = os.path.join(self.path, "include", "gtest", "gtest.h")
+        gtest_cc = os.path.join(self.path, "src", "gtest.cc")
+        fail = False
+        for f in [gtest_inc, gtest_cc]:
+            print "Checking for %s..." % f,
+            if os.path.exists(f):
+                print "OK"
+            else:
+                print "NOT FOUND"
+                fail = True
+        if fail:
+            self.warn("Could not find unpacked gtest source. Unit tests cannot be built.\n\
+The helper script `scripts/fetch_gtest.h` can fetch the source for you.")
+
+    def makefile_changes(self):
+        return "gtest_dir := %s\n" % self.path
+
+class SystemIncludes(Library):
+    def __init__(self, options):
+        Library.__init__(self)
+
+    def check(self):
+        print "Checking for standard system headers..."
+        warn_flag = False
+        for header in [ "algorithm", "cassert", "cmath", "complex", "cstdlib",
+                "cstring", "ctime", "exception", "iomanip", "iostream",
+                "iterator", "limits", "list", "map", "omp.h", "ostream",
+                "signal.h", "sstream", "stdexcept", "string", "sys/time.h",
+                "tr1/random", "tr1/tuple", "typeinfo", "utility", "vector" ]:
+            try:
+                self.check_for_include(header, path="")
+            except RequirementFail:
+                print "NOT FOUND"
+                warn_flag = True
+        if warn_flag:
+            self.warn("All required system headers not found in the search path. The compiler might still find them though, especially if querying the compiler for search paths failed.")
+
+def main():
+    # Set defaults that will be overridden by the command line arguments
+    try:
+        default_cxx_compiler = os.environ["CXX"]
+    except KeyError:
+        default_cxx_compiler = "g++"
+    # Parse command line arguments
+    parser = optparse.OptionParser()
+    parser.set_defaults(debug=True, seatbelts=True)
+    parser.add_option("-v", "--verbose", action="store_true",
+            help="Produce more output from this script.")
+    parser.add_option("-n", "--dry-run", action="store_true",
+            help="Only check what is found. Do not write configuration.")
+    parser.add_option("--cxx-compiler", type="string",
+            help="Specify which C++ compiler to use.", default=default_cxx_compiler,
+            metavar="PATH")
+    parser.add_option("--markdown-compiler", type="string",
+            help="Specify which Markdown compiler to use for building HTML documentation",
+            default="", metavar="PATH")
+    parser.add_option("--with-blas", type="string",
+            help="Specify install directory of BLAS.", default="", metavar="DIR")
+    parser.add_option("--with-cblas", type="string",
+            help="Specify install directory of CBLAS.", default="", metavar="DIR")
+    parser.add_option("--with-lapack", type="string",
+            help="Specify install directory of LAPACK.", default="", metavar="DIR")
+    parser.add_option("--with-mkl", type="string",
+            help="Specify install directory of MKL.", default="", metavar="DIR")
+    parser.add_option("--with-acml", type="string",
+            help="Specify install directory of ACML.", default="", metavar="DIR")
+    parser.add_option("--with-hdf5", type="string",
+            help="Specify install directory of HDF5.", default="", metavar="DIR")
+    parser.add_option("--with-fftw3", type="string",
+            help="Specify install directory of FFTW3.", default="", metavar="DIR")
+    parser.add_option("--with-tclap", type="string",
+            help="Specify install directory of TCLAP.", default="", metavar="DIR")
+    parser.add_option("--with-gtest", type="string",
+            help="Specify directory where unpacked gtest source can be found",
+            default=os.path.join("src", "gtest"), metavar="DIR")
+    parser.add_option("--no-debug", action="store_false", dest="debug",
+            help="Do not include debug information in compiled binaries.")
+    parser.add_option("--no-seatbelts", action="store_false", dest="seatbelts",
+            help="Skip sanity checks and use possibly dangerous compiler flags. \
+May or may not make the code run a tiny bit faster, and may or may \
+not make it produce incorrect results.")
+    (options, args) = parser.parse_args()
+    if (len(args) != 0):
+        parser.error("unrecognized command line arguments: " + str(args))
+    # Parsing done
+    requirements = [ Compiler(options), Markdown(options), SystemIncludes(options),
+            LinearAlgebraLibs(options), HDF5(options), FFTW3(options),
+            TCLAP(options), gtest(options) ]
+    # Run checks
+    errors = False
+    warnings = False
+    for req in requirements:
+        try:
+            req.check()
+        except RequirementFail, e:
+            e.report()
+            errors = True
+        if req.warnings_flag:
+            warnings = True
+    if errors:
+        print "\nThere were errors."
+        sys.exit(1)
+    if warnings:
+        print "\nThere were warnings. Proceed with caution!\n"
+    else:
+        print "\nAll checks OK!\n"
+    # Print summary
+    print "Summary of options:"
+    for req in requirements:
+        req.print_summary()
+    # Make changes to Makefile.local
+    print
+    if not options.dry_run:
+        f = open("Makefile.local", 'w')
+        for req in requirements:
+            f.write(req.makefile_changes())
+        if options.debug:
+            f.write("flags += -g\n")
+        if not options.seatbelts:
+            f.write("flags += -DNDEBUG -O3 -ffast-math\n")
+        f.close()
+        print "Options recorded in Makefile.local"
+
+if __name__ == "__main__":
+    main()

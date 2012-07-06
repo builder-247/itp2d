@@ -13,7 +13,7 @@ run_tests
 README.html
 
 # Local config file
-local.mk
+Makefile.local
 
 # FFTW wisdom file
 fftw_wisdom

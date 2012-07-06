@@ -61,15 +61,17 @@ Program structure
 
 #### Requirements
 
-itp2d is only tested on Linux computers and on x86 and x86-64 architectures, but it should
-work in any POSIX compliant, little endian system with the software specified below. Porting itp2d
-to non-POSIX systems should be easy (should the need ever arise), since itp2d includes very little
-platform-dependent code.
+At the moment itp2d is only tested on Linux computers and on x86 and x86-64
+architectures, but it should work in any POSIX compliant, little endian system
+as long as all the prerequisites specified below are available. Porting itp2d to
+non-POSIX systems should be relatively easy (should the need ever arise), since
+itp2d includes very little platform-dependent code.
 
 In order to build itp2d you must have:
 
 - A fairly recent C++ compiler. The program is written in standards-compliant
-  C++, but itp2d is only tested with the [GNU Compiler Collection][gcc]. The
+  C++, but itp2d is only tested with the [GNU Compiler Collection (GCC)][gcc],
+  and the scripts supplied for building itp2d are only designed for GCC. The
   program also uses some [TR1][] additions to C++, so your C++ standard library
   (which is usually bundled with the compiler) must have a sufficiently
   complete implementation of [TR1][]. If you wish to make use of several
@@ -81,11 +83,12 @@ In order to build itp2d you must have:
   disk. The library must be compiled with C++ support (i.e., you must pass
   `--enable-cxx` to the `configure`-script when installing HDF5 from source).
 - A linear algebra library with a [CBLAS][] and [LAPACK][] interfaces. Possible alternatives are,
-  e.g., [ATLAS][], Intel's [MKL][] or AMD's [ACML][]
-- [Python][], which is used in generating dependencies automatically during the build.
-- To build the unit test functions distributed with itp2d you'll also need
-  the [Google C++ Testing Framework (gtest)][gtest]. There is a helper script
-  distributed with itp2d which can take care of the installation of gtest.
+  e.g., [ATLAS][], Intel's [MKL][] or AMD's [ACML][].
+- [Python][], which is used for the build scripts.
+- To build the unit test functions distributed with itp2d you'll also need the
+  source code of [the Google C++ Testing Framework (gtest)][gtest]. If you
+  want, you can run `scripts/fetch_gtest.sh` to fetch the gtest source code
+  automatically.
 
 itp2d also comes with several helper scripts for data analysis and plotting. These scripts can be
 found in the `scripts` subfolder. The scripts are written in [Python][], and they require various
@@ -105,45 +108,61 @@ itp2d.
 
 #### Compiling itp2d
 
-The program comes with a GNU Makefile, so you can compile itp2d simply by
-running the command `make` in the directory where the Makefile resides. The
-Makefile assumes you are using the `g++` compiler from the GNU Compiler
-Collection. If you wish to compile itp2d with some other compiler, you need
-to adjust some command line flags used in the Makefile. Please note that the
-compiler used should not make a dramatic difference in the performance of itp2d,
-since most heavy lifting is delegated to external routines.
+The compilation of itp2d is governed by a GNU Makefile distributed with itp2d.
+The program is also distributed with a custom `configure`-script, written in
+[Python][], which checks that all the requirements for compiling itp2d are
+fulfilled. The script also tries to locate the library files for you. If you
+have libraries installed in nonstandard locations (i.e., not in your compiler's
+standard search path), you can inform the `configure`-script where the libraries
+are found. Please see `configure --help` for various options you can pass to the
+script. The `configure`-script writes the configuration options to a file called
+`Makefile.local` which is then read by the main Makefile. After the
+`configure`-script is succesfully finished, you can compile itp2d simply by
+running the command `make` in the directory where the Makefile resides. Please
+note that these build tools are only designed for GCC's C++ compiler `g++` – if
+you wish to compile itp2d with some other compiler, you need to modify the
+Makefile by hand. Please note that the compiler used should not make a dramatic
+difference in the performance of itp2d, since most heavy lifting is delegated to
+external routines.
 
-You can also build and run the unit test suite by running `make check` and
-convert this README file to HTML by running `make doc`. For compiling the unit
-tests you need to have the source code of gtest. [The developers of gtest do
-not recommend installing gtest as a library][gtestnote] – the gtest source code
-should be compiled for all projects using gtest separately. The Makefile
-supplied with itp2d assumes you have the gtest source code unpacked to
-directory `src/gtest`. Instead of manually unpacking, you can use the provided
+You can also build and run the unit test suite distributed with itp2d by running
+`make check`. For compiling the unit tests you need to have the source code of
+[gtest][]. [The developers of gtest do not recommend installing gtest as a
+library][gtestnote] – the gtest source code should be compiled for all projects
+using gtest separately. The `configure`-script supplied with itp2d tries by
+default to search for the gtest source code from directory `src/gtest`, but you
+can change this path by supplying `--with-gtest=PATH` to `configure`. Instead of
+manually downloading and unpacking the source code, you can use the provided
 script `scripts/fetch_gtest.sh`.
 
 [gtestnote]: http://groups.google.com/group/googletestframework/browse_thread/thread/668eff1cebf5309d
 
-If you have trouble compiling itp2d, for example because one of the required
-libraries is not found even though you have it installed, please look into the
-Makefile and modify the compiler flags if needed. The Makefile respects your
-choice of command line arguments to the C++ compiler, as specified by the
-`CXXFLAGS` environment variable.
+You can also convert this documentation file to HTML by running `make doc`. For
+this you need a [Markdown][] compiler. The `configure`-script tries to search
+for a suitable compiler, trying both [Markdown.pl][] and [markdown2][].
+
+[Markdown]: http://en.wikipedia.org/wiki/Markdown
+[Markdown.pl]: http://daringfireball.net/projects/markdown
+[markdown2]: https://github.com/trentm/python-markdown2
+
+If you have trouble compiling itp2d please don't hesitate to ask for help or
+file an issue via the [itp2d website][webpage]. Your experiences, whether
+successful or unsuccessful, are crucial for making itp2d portable and easy to
+install.
 
 ##### Using MKL or ACML for linear algebra
 
-By default itp2d uses [CBLAS][] and [LAPACK][] for linear algebra. If you wish to use Intel's
-[MKL][], edit the Makefile, or create a file with the name `local.mk` in the same directory as the
-Makefile with the following content:
+The `configure`-script attempts to detect which linear algebra libraries you
+have installed, defaulting to plain [CBLAS][] and [LAPACK][] if several options
+are found. If you wish to force the script to use Intel's [MKL][] or AMD's
+[ACML][] library, you can use the options `--with-mkl=PATH` or
+`--with-acml=PATH` to tell the script where these libraries can be found.
 
-	lalib := MKL
+Please note that ACML does not provide a CBLAS interface on its own. If you
+want to use ACML you need to build the CBLAS library manually and link it to
+ACML, as instructed by [this post in AMD's user forums][acmlnote].
 
-Similarly, a file with
-
-	lalib := ACML
-
-instructs the Makefile to compile against AMD's [ACML][] library. You need to recompile itp2d to
-this change to take effect.
+[acmlnote]: http://devgurus.amd.com/message/859414#859414
 
 ### Command line parameters
 
