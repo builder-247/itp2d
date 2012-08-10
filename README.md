@@ -26,14 +26,14 @@ the fastest discrete Fourier transform library in the West.
 Acquiring itp2d
 -----------------
 
-The easiest way to get up-to-date versions of itp2d is to use [GitHub][],
+The easiest way to get up-to-date versions of itp2d is to use [Bitbucket][],
 which is a site built for distributing software using the amazing version
-control system [Git][]. By using itp2d's [GitHub site][webpage] you can see
+control system [Git][]. By using itp2d's [Bitbucket site][webpage] you can see
 recent changes made to the program, report and track bugs found in the program,
 access user-generated documentation and even create your own versions of
 itp2d.
 
-[github]: https://github.com
+[bitbucket]: https://bitbucket.org
 [git]: http://git-scm.com
 
 Program license
@@ -52,7 +52,7 @@ You should have received a copy of the GNU General Public License along with
 itp2d.  If not, see <http://www.gnu.org/licenses/>.
 
 [author]: mailto:perttu.luukko@iki.fi
-[webpage]: https://github.com/nuteater/itp2d
+[webpage]: https://bitbucket.org/luukko/itp2d
 
 Program structure
 -----------------
@@ -210,7 +210,7 @@ Examples & use cases
 ### Getting help and reporting bugs
 
 If you have any questions about itp2d, please do not hesitate to contact the [author][]. For
-reporting bugs the [GitHub][] issue interface found on the itp2d main [webpage][] is preferable.
+reporting bugs the [Bitbucket][] issue interface found on the itp2d main [webpage][] is preferable.
 
 ### Running unit tests
 
@@ -347,10 +347,10 @@ accessing itp2d data from Python.
 ### Providing patches & getting involved
 
 If you make some changes to itp2d you consider could be of wider use, please
-send a patch by uploading you changes to [GitHub][webpage] and sending the
+send a patch by uploading you changes to [Bitbucket][webpage] and sending the
 author a pull request. You can also simply send your patch by email directly to
 the [author][]. All contributions are welcome! You can also help by improving
 the documentation of itp2d, such as this README or the [itp2d wiki][] found in
 the [webpage][].
 
-[itp2d wiki]: https://github.com/nuteater/itp2d/wiki
+[itp2d wiki]: https://bitbucket.org/luukko/itp2d/wiki
