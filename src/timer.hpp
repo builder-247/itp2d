@@ -27,7 +27,6 @@
 #define _TIMER_HPP_
 
 #include <cstdlib>
-#include <cassert>
 #include <sys/time.h>
 
 class Timer {
