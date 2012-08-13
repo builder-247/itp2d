@@ -26,8 +26,8 @@
 #ifndef _TIMER_HPP_
 #define _TIMER_HPP_
 
-#include <cstdlib>
 #include <sys/time.h>
+#include "exceptions.hpp"
 
 class Timer {
 public:
@@ -36,24 +36,30 @@ public:
 	inline void start();	// Starts the timer
 	inline double stop();	// Stops and returns elapsed time
 private:
-	timeval start_time;
-	timeval stop_time;
+	timespec start_time;
+	timespec stop_time;
 	bool running;
 };
 
 inline void Timer::start() {
-	gettimeofday(&start_time, NULL);
+	if (running)
+		throw GeneralError("Timer::start() called on a timer which was already started");
+	clock_gettime(CLOCK_MONOTONIC, &start_time);
 	running = true;
 }
 
 inline double Timer::stop() {
-	gettimeofday(&stop_time, NULL);
 	if (!running)
-		return 0;
+		throw GeneralError("Timer::stop() called on a timer which was never started");
+	clock_gettime(CLOCK_MONOTONIC, &stop_time);
 	running = false;
-	timeval diff;
-	timersub(&stop_time, &start_time, &diff);
-	return static_cast<double>(diff.tv_sec) + 1e-6*static_cast<double>(diff.tv_usec);
+	// Compute difference in nanoseconds
+	const long int sec_diff = stop_time.tv_sec - start_time.tv_sec;
+	const long int nsec_diff = stop_time.tv_nsec - start_time.tv_nsec;
+	const long int elapsed_nsec = (nsec_diff < 0)?
+		1000000000*(sec_diff-1) + (1000000000 + nsec_diff) :
+		1000000000*(sec_diff) + nsec_diff;
+	return 1e-9*static_cast<double>(elapsed_nsec);
 }
 
 #endif // _TIMER_HPP_

@@ -15,7 +15,7 @@ ifdef version
 	flags += -DVERSION=\"$(version)\"
 endif
 
-lib_flags := -fopenmp -lfftw3 -lhdf5 -lhdf5_cpp
+lib_flags := -fopenmp -lrt -lfftw3 -lhdf5 -lhdf5_cpp
 inc_flags :=
 # Path to unpacked gtest source
 gtest_dir = src/gtest

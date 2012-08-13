@@ -18,4 +18,11 @@
 
 #include "timer.hpp"
 
-Timer::Timer() : running(false) {}
+Timer::Timer() : running(false) {
+	// Test that CLOCK_MONOTONIC works
+	timespec* t = new timespec;
+	const int retval = clock_gettime(CLOCK_MONOTONIC, t);
+	if (retval != 0)
+		throw GeneralError("CLOCK_MONOTONIC not supported. Cannot get reliable timing data");
+	delete t;
+}
