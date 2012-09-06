@@ -208,7 +208,6 @@ void ITPSystem::propagate() {
 		// propagate the non-converged states. However, propagation is a cheap
 		// step when the number of states is large, so we'll propagate all
 		// states just for added precision and robustness.
-		//if (not states.is_timestep_converged(n))
 		(*T)(states[n], *(workslices[omp_get_thread_num()]));
 	}
 	prop_time += prop_timer.stop();
@@ -256,8 +255,8 @@ void ITPSystem::check_timestep_convergence() {
 	// Loop through states and check for timestep convergence
 	for (size_t n=0; n<params.get_N(); n++) {
 		size_t const& index = std::tr1::get<2>(Esn_tuples[n]);
-		const bool good = params.get_timestep_convergence_test().test(*this, n);
-		states.set_timestep_converged(index, good);
+		if (params.get_timestep_convergence_test().test(*this, n))
+			states.set_timestep_converged(index, true);
 	}
 	// Count how many where converged
 	bool flag = true;
