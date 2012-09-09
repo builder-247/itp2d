@@ -288,14 +288,14 @@ the standard deviation of the energy inaccurate, so we need to switch to another
 states converged in respect to the used time step value when the relative energy change between
 successive iterations is less than 0.0001, and completely converged when they converge w.r.t the
 timestep with a single iteration. This can be set from the itp2d command line interface with `-T
-"relEdelta(0.0001)" -F onestep` (the quotation marks are used only to tell the command shell to not
+"relchange(0.0001)" -F onestep` (the quotation marks are used only to tell the command shell to not
 interpret the parentheses). We'll also need to start with a shorter imaginary time step since the
 system is more complicated. To set the time step to 0.1 units we provide `-e 0.1`.
 
 All in all the command line to solve the first 100 states of a particle in a box with a strong
 magnetic field is
 
-	./itp2d -f -v -l 1.0 --pi -p zero --dirichlet -B 1.0 -T "relEdelta(0.0001)" -F onestep -n 100 -e 0.1
+	./itp2d -f -v -l 1.0 --pi -p zero --dirichlet -B 1.0 -T "relchange(0.0001)" -F onestep -n 100 -e 0.1
 
 If you run `itp_draw_art.py` know you'll get some beautiful images. Who knew a particle in a box can
 be this beautiful?
