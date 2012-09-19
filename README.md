@@ -185,6 +185,34 @@ easily with any program cabable of reading [HDF5][] files, such as Python or MAT
 Common issues
 -------------
 
+### Linking errors when using a statically linked CBLAS
+
+Static libraries (`.a` files) are troublesome, since they do not contain
+dependency information. Therefore the `configure` script cannot easily know
+whether a static library depends on some other libraries, or what those
+libraries may be. This problem is especially bad for libraries such as CBLAS,
+which have different implementations and thus very different dependencies. The
+`configure` script will warn you if you link against a static library, and it
+will remind that you need to take care of possible dependencies yourself.
+
+If your CBLAS or some other static library depends on some other libraries, but
+the linker is not informed about what these libraries are, you will get a
+linking error when compiling itp2d. In this case you need to look at what
+symbols the linker reports missing, and deduce from that what libraries these
+symbols might be found in. Then you need to add the linking flags of these
+libraries manually to the `lib_flags` variable in `Makefile.local`. For
+example, if you are using a static CBLAS library built from the reference CBLAS
+sources, your CBLAS library will likely depend on your BLAS library. In this
+case, after running `configure`, you need to add `-lblas` to `lib_flags`. If
+your BLAS is a Fortran library, you will also need to link to a Fortran runtime
+library, which is probably `-lgfortran`. These two are the most common missing
+dependencies of a static CBLAS, so adding `-lblas -lgfortran` to `lib_flags` is
+a good first guess for curing linking errors.
+
+A good way to avoid these issues once and for all is not using static
+libraries. Dynamic libraries contain dependency information, so the linker can
+find and include their dependencies on its own.
+
 ### "python2: No such file or directory"
 
 Python scripts distributed with itp2d are currently written in the older, version 2 dialect of the
