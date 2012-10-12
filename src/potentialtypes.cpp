@@ -31,6 +31,7 @@ const double GaussianPotential::default_width = 1;
 const double GaussianPotential::default_x0 = 0;
 const double GaussianPotential::default_y0 = 0;
 const double QuarticPotential::default_b = 0.01;
+const double SquareOscillator::default_alpha = 8;
 
 // The parser delegator
 
@@ -62,6 +63,8 @@ PotentialType const* parse_potential_description(std::string const& str) {
 		return new GaussianPotential(params);
 	if (name == "quartic" or name == "quarticoscillator")
 		return new QuarticPotential(params);
+	if (name == "squareoscillator")
+		return new SquareOscillator(params);
 	else
 		throw UnknownPotentialType(str);
 	return NULL;
@@ -209,5 +212,23 @@ void QuarticPotential::init() {
 		throw InvalidPotentialType("quartic potential with negative parameter");
 	std::stringstream ss;
 	ss << "quartic(" << b << ")";
+	description = ss.str();
+}
+
+// SquareOscillator
+
+SquareOscillator::SquareOscillator(std::vector<double> params) {
+	if (params.empty())
+		alpha = default_alpha;
+	else if (params.size() == 1)
+		alpha = params[0];
+	else
+		throw InvalidPotentialType("square oscillator potential only takes one parameter");
+	init();
+}
+
+void SquareOscillator::init() {
+	std::stringstream ss;
+	ss << "squareoscillator(" << alpha << ")";
 	description = ss.str();
 }

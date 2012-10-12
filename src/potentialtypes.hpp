@@ -219,4 +219,20 @@ class QuarticPotential : public PotentialType {
 		void init();
 };
 
+//
+class SquareOscillator : public PotentialType {
+	public:
+		static const double default_alpha;
+		SquareOscillator(double alpha_=default_alpha) : alpha(alpha_) { init(); }
+		SquareOscillator(std::vector<double> params);
+		inline double operator()(double x, double y) const {
+			const double ax = fabs(x);
+			const double ay = fabs(y);
+			return 0.5*(pow(ax,alpha) + pow(ay,alpha));
+		}
+	private:
+		double alpha;
+		void init();
+};
+
 #endif // _POTENTIALTYPES_HPP_
