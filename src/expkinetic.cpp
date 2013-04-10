@@ -85,8 +85,9 @@ void ExpKinetic::calculate_multipliers() {
 		const double normfacy = tr.normalization_factor_y(boundary_type);
 		const double z = B*time_step;
 		// Take care of singularities in the coefficients Cx and Cy for small fields
-		const double Cy = (fabs(z) < 1e-6)? 1 + pow(z,2)/6 + pow(z,4)/120			: sinh(z)/z;
-		const double Cx = (fabs(z) < 1e-6)? (0.5 + pow(z,2)/24 + pow(z,4)/720)/Cy	: (cosh(z)-1)/(z*sinh(z));
+		const double Cy = (fabs(z) < 1e-6)? 1 + pow(z,2)/6 + pow(z,4)/120		: sinh(z)/z;
+		const double Cx = (fabs(z) < 1e-6)? 0.5 - pow(z,2)/24 + pow(z,4)/240	: tanh(z/2)/z;
+		// The coefficient Cx is quoted in some papers as (cosh(z)-1)/(z*sinh(z)), which is the same
 		// Collect constants together
 		const double Ax = coefficient*time_step*0.5*Cx;
 		const double Ay = coefficient*time_step*0.5*Cy;
