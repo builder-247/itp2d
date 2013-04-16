@@ -37,10 +37,11 @@ src := $(wildcard src/*.cpp)
 hdr := $(wildcard src/*.hpp)
 obj := $(patsubst src/%.cpp,obj/%.o,$(src)) obj/gtest-all.o
 dep := $(patsubst obj/%.o,.deps/%.o.d,$(obj)) .deps/itp2d.d .deps/run_tests.d
+lib_objs := $(filter-out obj/itp2d.o obj/run_tests.o obj/test_% obj/gtest-%, $(obj))
 
 # Make targets and rules follow
 
-.PHONY: default check doc all clean depend internalchecks
+.PHONY: default check doc all lib clean depend internalchecks
 
 default: itp2d
 
@@ -50,6 +51,8 @@ check: run_tests
 doc: README.html
 
 all: itp2d run_tests
+
+lib: libitp2d.a
 
 clean:
 	rm -f $(progs) $(obj) $(dep)
@@ -105,6 +108,9 @@ itp2d: obj/itp2d.o .deps/itp2d.d | data internalchecks
 
 run_tests: obj/run_tests.o obj/gtest-all.o .deps/run_tests.d | data internalchecks
 	$(CXX) $(flags) $(filter %.o,$^) $(lib_flags) $(test_lib_flags) -o $@
+
+libitp2d.a: $(lib_objs) | internalchecks
+	$(AR) rcs $@ $^
 
 %.html: %.md
 ifdef markdown

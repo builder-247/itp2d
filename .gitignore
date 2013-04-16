@@ -8,6 +8,7 @@
 # Binaries
 itp2d
 run_tests
+libitp2d.a
 
 # Generated documentation
 README.html
