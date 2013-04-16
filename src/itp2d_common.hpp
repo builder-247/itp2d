@@ -32,7 +32,7 @@
 #define VERSION "unknown"
 #endif
 
-const char version_string[] = VERSION;
+extern const char version_string[];
 
 __attribute__((unused)) const double pi = M_PI;
 __attribute__((unused)) const double inf = std::numeric_limits<double>::infinity();

@@ -39,6 +39,7 @@ obj/expkinetic.o
 obj/exppotential.o
 obj/gtest-all.o
 obj/itp2d.o
+obj/itp2d_common.o
 obj/itpsystem.o
 obj/kinetic.o
 obj/laplacian.o
@@ -89,6 +90,7 @@ obj/transformer.o
 .deps/gtest-all.o.d
 .deps/itp2d.d
 .deps/itp2d.o.d
+.deps/itp2d_common.o.d
 .deps/itpsystem.o.d
 .deps/kinetic.o.d
 .deps/laplacian.o.d
