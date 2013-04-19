@@ -130,38 +130,50 @@ inline void State::normalize(double target_norm) {
 inline State& State::operator+=(const State& other) {
 	assert(datalayout == other.datalayout);
 	const comp mult = 1;
-	cblas_zaxpy(static_cast<int>(datalayout.N), &mult, other.memptr, 1, this->memptr, 1);
+	cblas_zaxpy(static_cast<int>(datalayout.N),
+			reinterpret_cast<const double*>(&mult),
+			reinterpret_cast<const double*>(other.memptr), 1,
+			reinterpret_cast<double*>(this->memptr), 1);
 	return *this;
 }
 
 inline State& State::operator-=(const State& other) {
 	assert(datalayout == other.datalayout);
 	const comp mult = -1;
-	cblas_zaxpy(static_cast<int>(datalayout.N), &mult, other.memptr, 1, this->memptr, 1);
+	cblas_zaxpy(static_cast<int>(datalayout.N),
+			reinterpret_cast<const double*>(&mult),
+			reinterpret_cast<const double*>(other.memptr), 1,
+			reinterpret_cast<double*>(this->memptr), 1);
 	return *this;
 }
 
 // Arithmetic with arrays
 
 inline State& State::operator*=(const double& other) {
-	cblas_zdscal(static_cast<int>(datalayout.N), other, this->memptr, 1);
+	cblas_zdscal(static_cast<int>(datalayout.N), other,
+			reinterpret_cast<double*>(this->memptr), 1);
 	return *this;
 }
 
 inline State& State::operator/=(const double& other) {
 	const double c = 1.0/other;
-	cblas_zdscal(static_cast<int>(datalayout.N), c, this->memptr, 1);
+	cblas_zdscal(static_cast<int>(datalayout.N), c,
+			reinterpret_cast<double*>(this->memptr), 1);
 	return *this;
 }
 
 inline State& State::operator*=(const comp& other) {
-	cblas_zscal(static_cast<int>(datalayout.N), &other, this->memptr, 1);
+	cblas_zscal(static_cast<int>(datalayout.N),
+			reinterpret_cast<const double*>(&other),
+			reinterpret_cast<double*>(this->memptr), 1);
 	return *this;
 }
 
 inline State& State::operator/=(const comp& other) {
 	const comp c = comp(1)/other;
-	cblas_zscal(static_cast<int>(datalayout.N), &c, this->memptr, 1);
+	cblas_zscal(static_cast<int>(datalayout.N),
+			reinterpret_cast<const double*>(&c),
+			reinterpret_cast<double*>(this->memptr), 1);
 	return *this;
 }
 
@@ -208,13 +220,17 @@ inline void State::pointwise_multiply_and_add(Type const* values, const State& a
 // Dot product and norm
 
 inline double State::norm() const {
-	return cblas_dznrm2(static_cast<int>(datalayout.N), this->memptr, 1)*datalayout.dx;
+	return cblas_dznrm2(static_cast<int>(datalayout.N),
+			reinterpret_cast<const double*>(this->memptr), 1)*datalayout.dx;
 }
 
 inline comp State::dot(const State& other) const {
 	assert(datalayout == other.datalayout);
 	comp sum;
-	cblas_zdotc_sub(static_cast<int>(datalayout.N), this->memptr, 1, other.memptr, 1, &sum);
+	cblas_zdotc_sub(static_cast<int>(datalayout.N),
+			reinterpret_cast<const double*>(this->memptr), 1,
+			reinterpret_cast<const double*>(other.memptr), 1,
+			reinterpret_cast<double _Complex*>(&sum));
 	return sum*datalayout.dx*datalayout.dx;
 }
 

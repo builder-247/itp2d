@@ -198,10 +198,15 @@ void StateSet::orthonormalize() throw(std::exception) {
 				#pragma omp for
 				for (size_t t=0; t<datalayout.N; t++) {
 					// Save old state values
-					cblas_zcopy(iN, statedata+t, iM, temp, 1);
+					cblas_zcopy(iN, reinterpret_cast<const double*>(statedata+t), iM,
+							reinterpret_cast<double*>(temp), 1);
 					// Note that now overlapmatrix holds the eigenvectors
-					cblas_zgemv(CblasRowMajor, CblasNoTrans, iN, iN, &one, overlapmatrix,
-							iN, temp, 1, &zero, statedata+t, iM);
+					cblas_zgemv(CblasRowMajor, CblasNoTrans, iN, iN,
+							reinterpret_cast<const double*>(&one),
+							reinterpret_cast<const double*>(overlapmatrix), iN,
+							reinterpret_cast<const double*>(temp), 1,
+							reinterpret_cast<const double*>(&zero),
+							reinterpret_cast<double*>(statedata+t), iM);
 				}
 			}
 			break;
@@ -212,8 +217,12 @@ void StateSet::orthonormalize() throw(std::exception) {
 			comp* const other_statedata = other_state_array->get_dataptr();
 			assert(statedata != NULL);
 			assert(other_statedata != NULL);
-			cblas_zgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, iN, iM, iN, &one,
-					overlapmatrix, iN, statedata, iM, &zero, other_statedata, iM);
+			cblas_zgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, iN, iM, iN,
+					reinterpret_cast<const double*>(&one),
+					reinterpret_cast<const double*>(overlapmatrix), iN,
+					reinterpret_cast<const double*>(statedata), iM,
+					reinterpret_cast<const double*>(&zero),
+					reinterpret_cast<double*>(other_statedata), iM);
 			switch_state_arrays();
 			break;
 	}

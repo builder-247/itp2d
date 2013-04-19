@@ -353,6 +353,7 @@ class LinearAlgebraLibs(Library):
         self.blas_path = options.with_blas
         self.cblas_path = options.with_cblas
         self.lapack_path = options.with_lapack
+        self.openblas_path = options.with_openblas
         self.mkl_path = options.with_mkl
         self.acml_path = options.with_acml
         self.lalib = "?"
@@ -360,35 +361,46 @@ class LinearAlgebraLibs(Library):
 
     def check(self):
         # First try to find out which combination of linear algebra libs to use
-        if not any([self.lapack_path, self.mkl_path, self.acml_path]):
+        if not any([self.lapack_path, self.openblas_path, self.mkl_path, self.acml_path]):
             # None of the paths was specified on command line
             print "Deciding which linear algebra package to use..."
-            # Try LAPACK
-            try:
-                print "Trying plain LAPACK and CBLAS..."
-                self.check_plain()
-                print "Using plain LAPACK and CBLAS"
-                self.lalib = "plain"
+            # With 4 libraries this is starting to look ugly...
+            try: 
+                print "Trying OpenBLAS"
+                self.check_openblas()
+                print "Using OpenBLAS"
+                self.lalib = "openblas"
             except RequirementFail, e:
                 print e.msg
-                self.reset()
+                # Try LAPACK
                 try:
-                    print "Trying MKL..."
-                    self.check_mkl()
-                    print "Using MKL"
-                    self.lalib = "mkl"
+                    print "Trying plain LAPACK and CBLAS..."
+                    self.check_plain()
+                    print "Using plain LAPACK and CBLAS"
+                    self.lalib = "plain"
                 except RequirementFail, e:
                     print e.msg
                     self.reset()
                     try:
-                        print "Trying ACML..."
-                        self.check_acml()
-                        print "Using ACML"
-                        self.lalib = "acml"
+                        print "Trying MKL..."
+                        self.check_mkl()
+                        print "Using MKL"
+                        self.lalib = "mkl"
                     except RequirementFail, e:
                         print e.msg
-                        raise RequirementFail("Could not find any linear algebra package")
+                        self.reset()
+                        try:
+                            print "Trying ACML..."
+                            self.check_acml()
+                            print "Using ACML"
+                            self.lalib = "acml"
+                        except RequirementFail, e:
+                            print e.msg
+                            raise RequirementFail("Could not find any linear algebra package")
         # Otherwise one of the --with -options was set. Try to use it
+        elif self.openblas_path:
+            self.check_openblas()
+            self.lalib = "openblas"
         elif self.lapack_path:
             self.check_plain()
             self.lalib = "plain"
@@ -415,6 +427,10 @@ class LinearAlgebraLibs(Library):
 
     def check_lapack(self):
         self.check_for_library("lapack", self.lapack_path, ["atlas"], add_link_flag=True)
+
+    def check_openblas(self):
+        self.check_for_library("openblas", self.openblas_path, add_link_flag=True)
+        self.check_for_include("cblas.h", self.openblas_path)
 
     def check_mkl(self):
         self.check_for_include("mkl_cblas.h", self.mkl_path)
@@ -547,6 +563,8 @@ def main():
             help="Specify install directory of CBLAS.", default="", metavar="DIR")
     parser.add_option("--with-lapack", type="string",
             help="Specify install directory of LAPACK.", default="", metavar="DIR")
+    parser.add_option("--with-openblas", type="string",
+            help="Specify install directory of OpenBLAS.", default="", metavar="DIR")
     parser.add_option("--with-mkl", type="string",
             help="Specify install directory of MKL.", default="", metavar="DIR")
     parser.add_option("--with-acml", type="string",

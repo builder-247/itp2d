@@ -74,7 +74,7 @@ class EigenSolver {
 };
 
 inline void EigenSolver::scale_eigenvector(comp* input_matrix, size_t n, double value) const {
-	cblas_zdscal(size, value, input_matrix+n*size, 1);
+	cblas_zdscal(size, value, reinterpret_cast<double*>(input_matrix+n*size), 1);
 }
 
 inline void EigenSolver::solve(comp* input_matrix) {

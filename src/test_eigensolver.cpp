@@ -66,7 +66,7 @@ TEST(eigensolver, spectral_decomposition) {
 			diff_matrix[N*j+i] = orig_matrix[N*j+i] - z;
 		}
 	}
-	const double diff = cblas_dznrm2(N*N, diff_matrix, 1);
+	const double diff = cblas_dznrm2(N*N, reinterpret_cast<const double*>(diff_matrix), 1);
 	delete[] matrix;
 	delete[] orig_matrix;
 	delete[] diff_matrix;
