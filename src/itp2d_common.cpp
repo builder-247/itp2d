@@ -18,4 +18,4 @@
 
 #include "itp2d_common.hpp"
 
-const char version_string[] = VERSION;
+const char version_string[] = ITP2D_VERSION;

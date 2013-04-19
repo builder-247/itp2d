@@ -28,8 +28,8 @@
 #include <complex>
 #include <fftw3.h>
 
-#ifndef VERSION
-#define VERSION "unknown"
+#ifndef ITP2D_VERSION
+#define ITP2D_VERSION "unknown"
 #endif
 
 extern const char version_string[];

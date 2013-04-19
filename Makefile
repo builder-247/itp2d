@@ -12,7 +12,7 @@ flags += -fopenmp
 # Add the version information if it is available
 version := $(shell git describe --always --dirty)
 ifdef version
-	flags += -DVERSION=\"$(version)\"
+	flags += -DITP2D_VERSION=\"$(version)\"
 endif
 
 lib_flags := -fopenmp -lrt -lfftw3 -lhdf5 -lhdf5_cpp
