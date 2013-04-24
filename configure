@@ -28,20 +28,6 @@ if sys.version_info < (2,4):
     print "Sorry, but your Python interpreter is too old to run this script. At least 2.4 is required"
     sys.exit(1)
 
-# Define standard builtins 'any' and 'all' for Python < 2.5
-if sys.version_info < (2,5):
-    def any(iterable):
-        for element in iterable:
-            if element:
-                return True
-        return False
-
-    def all(iterable):
-        for element in iterable:
-            if not element:
-                return False
-        return True
-
 import os, re, optparse, subprocess, platform
 from subprocess import PIPE
 
@@ -356,64 +342,36 @@ class LinearAlgebraLibs(Library):
         self.openblas_path = options.with_openblas
         self.mkl_path = options.with_mkl
         self.acml_path = options.with_acml
-        self.lalib = "?"
+        self.lalib = "(unset)"
         Library.__init__(self)
 
     def check(self):
-        # First try to find out which combination of linear algebra libs to use
-        if not any([self.lapack_path, self.openblas_path, self.mkl_path, self.acml_path]):
+        if self.openblas_path:
+            self.check_openblas()
+        elif self.lapack_path:
+            self.check_plain()
+        elif self.mkl_path:
+            self.check_mkl()
+        elif self.acml_path:
+            self.check_acml()
+        else:
             # None of the paths was specified on command line
             print "Deciding which linear algebra package to use..."
-            # With 4 libraries this is starting to look ugly...
-            try: 
-                print "Trying OpenBLAS"
-                self.check_openblas()
-                print "Using OpenBLAS"
-                self.lalib = "openblas"
-            except RequirementFail, e:
-                print e.msg
-                # Try LAPACK
+            for (testfunc, lalib) in [
+                    (self.check_openblas, "OpenBLAS"),
+                    (self.check_plain, "plain LAPACK and CBLAS"),
+                    (self.check_mkl, "MKL"),
+                    (self.check_acml, "ACML") ]:
                 try:
-                    print "Trying plain LAPACK and CBLAS..."
-                    self.check_plain()
-                    print "Using plain LAPACK and CBLAS"
-                    self.lalib = "plain"
+                    print "Trying", lalib
+                    testfunc()
                 except RequirementFail, e:
                     print e.msg
                     self.reset()
-                    try:
-                        print "Trying MKL..."
-                        self.check_mkl()
-                        print "Using MKL"
-                        self.lalib = "mkl"
-                    except RequirementFail, e:
-                        print e.msg
-                        self.reset()
-                        try:
-                            print "Trying ACML..."
-                            self.check_acml()
-                            print "Using ACML"
-                            self.lalib = "acml"
-                        except RequirementFail, e:
-                            print e.msg
-                            raise RequirementFail("Could not find any linear algebra package")
-        # Otherwise one of the --with -options was set. Try to use it
-        elif self.openblas_path:
-            self.check_openblas()
-            self.lalib = "openblas"
-        elif self.lapack_path:
-            self.check_plain()
-            self.lalib = "plain"
-        elif self.mkl_path:
-            self.check_mkl()
-            self.lalib = "mkl"
-        elif self.acml_path:
-            self.check_acml()
-            self.lalib = "acml"
-
-    def check_plain(self):
-        self.check_cblas()
-        self.check_lapack()
+                    continue
+                else:
+                    return
+            raise RequirementFail("Could not find any linear algebra package")
 
     def check_blas(self):
         self.check_for_library("blas", self.blas_path, ["atlas"], add_link_flag=True)
@@ -428,9 +386,17 @@ class LinearAlgebraLibs(Library):
     def check_lapack(self):
         self.check_for_library("lapack", self.lapack_path, ["atlas"], add_link_flag=True)
 
+    def check_plain(self):
+        self.check_cblas()
+        self.check_lapack()
+        print "Using plain LAPACK and CBLAS"
+        self.lalib = "plain"
+
     def check_openblas(self):
         self.check_for_library("openblas", self.openblas_path, add_link_flag=True)
         self.check_for_include("cblas.h", self.openblas_path)
+        print "Using OpenBLAS"
+        self.lalib = "OpenBLAS"
 
     def check_mkl(self):
         self.check_for_include("mkl_cblas.h", self.mkl_path)
@@ -444,6 +410,8 @@ class LinearAlgebraLibs(Library):
         # MKL also requires changes to some internal logic, which is triggered
         # by macro USE_MKL
         self.cflags.append("-DUSE_MKL")
+        print "Using MKL"
+        self.lalib = "MKL"
 
     def check_acml(self):
         self.check_for_include("cblas.h", self.cblas_path, ["atlas"])
@@ -451,17 +419,11 @@ class LinearAlgebraLibs(Library):
         self.check_for_library("acml", self.acml_path, add_link_flag=True)
         # Always warn about CBLAS when using ACML
         self.warn("ACML does not provide a CBLAS interface. Instead it requires a CBLAS library built specifically against ACML's implementation of BLAS. You need to make sure that the CBLAS library found above is built in such a way. Otherwise CBLAS calls might not be handled by ACML, but instead by some less optimized library. Please consult the README for more information")
+        print "Using ACML"
+        self.lalib = "ACML"
 
     def print_summary(self):
-        print "Linear algebra library:",
-        if self.lalib == "plain":
-            print "plain"
-        elif self.lalib == "mkl":
-            print "MKL"
-        elif self.lalib == "acml":
-            print "ACML"
-        else:
-            print "???"
+        print "Linear algebra library:", self.lalib
 
 class HDF5(Library):
     def __init__(self, options):
