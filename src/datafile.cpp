@@ -37,7 +37,7 @@ Datafile::Datafile(std::string filename, DataLayout const& dl, bool clobber) :
 		null_space_1d(1, zeroes, unlimited_dims),
 		null_space_2d(2, zeroes, unlimited_dims) {
 	H5::Exception::dontPrint(); // Turn off error printing from HDF5. Use exceptions.
-	const hsize_t state_dims[2] = {datalayout.sizex, datalayout.sizey};
+	const hsize_t state_dims[2] = {datalayout.sizey, datalayout.sizex};
 	// Try to open the file, overwriting it if clobber is set
 	try {
 		hfile = H5::H5File(filename, clobber? H5F_ACC_TRUNC : H5F_ACC_EXCL);
