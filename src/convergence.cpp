@@ -73,7 +73,8 @@ OneStepConvergenceTest::OneStepConvergenceTest(std::vector<double> const& params
 }
 
 bool OneStepConvergenceTest::test(ITPSystem const& sys, size_t n) const {
-	if (sys.get_step_counter() == 1 and sys.get_states().is_timestep_converged(n))
+	size_t const& index = sys.get_sorted_index(n);
+	if (sys.get_step_counter() == 1 and sys.get_states().is_timestep_converged(index))
 		return true;
 	else
 		return false;
