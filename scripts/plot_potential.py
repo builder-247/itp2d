@@ -44,9 +44,7 @@ if __name__=="__main__":
         fig = pyplot.figure(figsize=(12,12))
         ax = fig.add_subplot(1, 1, 1, projection=("rectilinear" if options.twodee else "3d"), aspect="equal")
         if options.twodee:
-            ax.xaxis.set_major_locator(ticker.NullLocator())
-            ax.yaxis.set_major_locator(ticker.NullLocator())
-            ax.imshow(potential, extent=extent, rasterized=True)
+            ax.imshow(potential, extent=extent, rasterized=True, origin='lower')
         else:
             ax.set_xlabel('$x$')
             ax.set_ylabel('$y$')
