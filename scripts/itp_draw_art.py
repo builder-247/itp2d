@@ -18,12 +18,13 @@ colorschemes = {
 if __name__ == "__main__":
     # parse command line arguments
     parser = OptionParser(usage="%prog [options] [datafile.h5] [indices]")
-    parser.set_defaults(verbose=True, combined=True, colorscheme="default", slot=-1)
+    parser.set_defaults(verbose=True, combined=True, colorscheme="default", slot=-1, margin=0)
     parser.add_option("-v", "--verbose", action="store_true")
     parser.add_option("-q", "--quiet", action="store_false", dest="verbose")
     parser.add_option("-o", "--output", type="string", metavar="FILENAME", help="Filename for the output image")
     parser.add_option("-a", "--all", action="store_true", help="Draw also the extra states not intended to converge")
     parser.add_option("-s", "--square", action="store_true", help="Discard states so that the resulting image is square")
+    parser.add_option("-m", "--margin", type="int", metavar="PIXELS", help="Add some empty space between states in the combined image")
     parser.add_option(      "--separate", action="store_true", help="Save separate images of each state")
     parser.add_option(      "--no-combined", action="store_false", dest="combined", help="Do not save a combined image of all the states")
     parser.add_option("-c", "--colorscheme", type="choice", choices=colorschemes.keys(), help="The colors. Valid choices: %s" % colorschemes.keys())
@@ -47,6 +48,7 @@ if __name__ == "__main__":
     else:
         out_filename = os.path.splitext(filename)[0]+".png"
     out_multifilename = os.path.splitext(out_filename)[0]+"%d.png"
+    margin = options.margin
     # Option parsing done. Read data.
     file = h5py.File(filename, 'r')
     N = file.attrs["num_states"]
@@ -78,8 +80,8 @@ if __name__ == "__main__":
     rows = int(ceil(num_to_draw/columns))
     mode, colorfunc = colorschemes[options.colorscheme]
     if options.combined:
-        full_im = Image.new(mode, (columns*Mx, rows*My))
-    state_im = Image.new(mode, (Mx, My))
+        full_im = Image.new(mode, (columns*Mx+(columns-1)*margin, rows*My+(rows-1)*margin), colorfunc(0))
+    state_im = Image.new(mode, (Mx, My), colorfunc(0))
     counter = 0
     # Loop through all states to be plotted
     for index in indices:
@@ -93,7 +95,7 @@ if __name__ == "__main__":
         # flip the data array with flipud
         state_im.putdata([ colorfunc(x) for x in flipud(Z).flat ])
         if options.combined:
-            paste_corner = ((counter % columns)*Mx, (counter // columns)*My)
+            paste_corner = ((counter % columns)*(Mx+margin), (counter // columns)*(My+margin))
             full_im.paste(state_im, paste_corner)
         if options.separate:
             out = out_multifilename % index
