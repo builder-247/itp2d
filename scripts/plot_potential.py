@@ -62,7 +62,5 @@ if __name__=="__main__":
         for light in lights:
             light.activate = True
             light.intensity = 0.5
-        X = transpose(X)
-        Y = transpose(Y)
-        s = mlab.surf(X, Y, potential, warp_scale='auto')
+        s = mlab.surf(X1d, Y1d, transpose(potential), warp_scale='auto')
         mlab.show()
