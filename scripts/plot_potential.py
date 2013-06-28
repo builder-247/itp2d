@@ -6,10 +6,29 @@ import h5py
 from optparse import OptionParser
 from numpy import *
 
-# Plot a stored potential from an itp2d datafile
+try:
+    from matplotlib import cm, pyplot, ticker
+    from mpl_toolkits.mplot3d import Axes3D
+except ImportError as e:
+    print "Couldn't import matplotlib:", str(e)
+    has_matplotlib = False
+else:
+    has_matplotlib = True
 
-if __name__=="__main__":
+try:
+    import mayavi
+    from mayavi import mlab
+except ImportError as e:
+    print "Couldn't import mayavi:", str(e)
+    has_mayavi = False
+else:
+    has_mayavi = True
+
+# Plot a stored potential from an itp2d datafile
+def main():
     parser = OptionParser(usage="%prog datafile.h5")
+    parser.add_option("-o", "--output", type="string", metavar="FILE",
+            help="Save image to file instead of showing")
     parser.add_option("-2", "--2d", action="store_true", dest="twodee",
             help="Plot 2D projection of potential")
     parser.add_option("", "--matplotlib3d", action="store_true", dest="matplotlib3d",
@@ -38,29 +57,44 @@ if __name__=="__main__":
     X, Y = meshgrid(X, Y)
     # Actual plotting
     if options.twodee or options.matplotlib3d:
-        # Plot using matplotlib
-        from matplotlib import cm, pyplot, ticker
-        from mpl_toolkits.mplot3d import Axes3D
+        matplotlib_plot(X, Y, potential, options, extent)
+    else:
+        mayavi_3dplot(X1d, Y1d, transpose(potential), options)
+
+def matplotlib_plot(X, Y, Z, options, extent):
         fig = pyplot.figure(figsize=(12,12))
-        ax = fig.add_subplot(1, 1, 1, projection=("rectilinear" if options.twodee else "3d"), aspect="equal")
+        ax = fig.add_subplot(1, 1, 1,
+                projection=("rectilinear" if options.twodee else "3d"), aspect="equal")
         if options.twodee:
-            ax.imshow(potential, extent=extent, rasterized=True, origin='lower')
+            ax.imshow(Z, extent=extent, rasterized=True, origin='lower')
         else:
             ax.set_xlabel('$x$')
             ax.set_ylabel('$y$')
-            ax.plot_surface(X, Y, potential, rstride=1, cstride=1, cmap=cm.jet, linewidth=0)
+            ax.plot_surface(X, Y, Z,
+                    rstride=1, cstride=1, cmap=cm.jet, linewidth=0)
             ax.apply_aspect()
-        pyplot.show()
+        if options.output:
+            pyplot.savefig(options.output)
+        else:
+            pyplot.show()
+
+def mayavi_3dplot(X, Y, Z, options):
+    if not has_mayavi:
+        raise RuntimeError("Can't plot with mayavi because it is not available")
+    fig = mlab.figure(bgcolor=(1,1,1), fgcolor=(0,0,0))
+    light_manager = fig.scene.light_manager
+    light_manager.number_of_lights = 4
+    lights = light_manager.lights
+    for light in lights:
+        light.activate = True
+        light.intensity = 0.5
+    s = mlab.surf(X, Y, Z, warp_scale='auto')
+    #mlab.axes(s, nb_labels=10)
+    if options.output:
+        mlab.savefig(options.output)
     else:
-        # Plot using mayavi
-        import mayavi
-        from mayavi import mlab
-        fig = mlab.figure(bgcolor=(1,1,1))
-        light_manager = fig.scene.light_manager
-        light_manager.number_of_lights = 4
-        lights = light_manager.lights
-        for light in lights:
-            light.activate = True
-            light.intensity = 0.5
-        s = mlab.surf(X1d, Y1d, transpose(potential), warp_scale='auto')
         mlab.show()
+    mlab.close(all=True)
+
+if __name__=="__main__":
+    main()
