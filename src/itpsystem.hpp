@@ -76,6 +76,7 @@ class ITPSystem {
 		inline std::vector<std::vector<double> > const& get_standard_deviations() const { return standard_deviations; }
 		inline double get_sorted_energy(size_t n) const { return std::tr1::get<0>(Esn_tuples[n]); }
 		inline size_t get_sorted_index(size_t n) const { return std::tr1::get<2>(Esn_tuples[n]); }
+		inline double get_total_time() const { return total_time; }
 		inline double get_prop_time() const { return prop_time; }
 		inline double get_ortho_time() const { return states.get_ortho_time(); }
 		inline double get_dot_time() const { return states.get_dot_time(); }
@@ -89,7 +90,6 @@ class ITPSystem {
 		inline OperatorSum const& get_hamiltonian() const { return H; }
 		inline double get_eps() const { return eps; }
 		// Main operation
-		void print_initial_message();
 		void step();	// A single iteration of ITP
 		void check_timestep_convergence();
 		void check_final_convergence();
@@ -104,6 +104,8 @@ class ITPSystem {
 		const Transformer transformer;
 		const BoundaryType boundary_type;
 	private:
+		void print_initial_message();
+		void print_final_message();
 		void propagate();
 		void orthonormalize();
 		void change_time_step();
@@ -124,7 +126,7 @@ class ITPSystem {
 		bool exhausting_eps_values;
 		// Timers, RNG etc helpers
 		RNG rng;
-		Timer prop_timer, io_timer, convtest_timer;
+		Timer total_timer, prop_timer, io_timer, convtest_timer;
 		time_t rawtime;
 		struct tm* timeinfo;
 		char timestring[24];
@@ -145,6 +147,7 @@ class ITPSystem {
 		// Running counters etc.
 		int total_step_counter;
 		int step_counter;
+		double total_time;
 		double prop_time;
 		double io_time;
 		double convtest_time;

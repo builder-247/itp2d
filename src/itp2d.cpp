@@ -34,7 +34,6 @@
 #include "parameters.hpp"
 #include "commandlineparser.hpp"
 #include "itpsystem.hpp"
-#include "timer.hpp"
 
 using namespace std;
 
@@ -61,14 +60,12 @@ void sigusr1_handler(__attribute__((unused)) int s) {
 }
 
 int main(int argc, char* argv[]) {
-	Timer timer;
 	// Trap SIGINT and SIGUSR1
 	signal(SIGINT, sigint_handler);
 	signal(SIGUSR1, sigusr1_handler);
 	// Parse parameters
 	vector<string> args(argv, argv+argc);
-	// TCLAP eats the first element of args
-	string program_name(args.front());
+	string program_name(args.front()); // TCLAP eats the first element of args
 	CommandLineParser parser;
 	try {
 		parser.parse(args);
@@ -94,56 +91,16 @@ int main(int argc, char* argv[]) {
 		fclose(wisdom_file);
 	}
 	// Initialize ITPSystem
-	if (params.get_verbosity() >= 1) {
-		cout << "Initializing ITP system..." << endl;
-	}
 	ITPSystem* sys = new ITPSystem(params, &abort_flag, &save_flag);
-	if (params.get_verbosity() >= 1) {
-		sys->print_initial_message();
-		cout << "Initializations ready. Starting propagation." << endl;
-		if (params.get_verbosity() >= 2)
-			cout << endl;
-	}
-	timer.start();
-	/*** Main loop starts ***/
+	// Main loop
 	while(not sys->is_finished()) {
 		sys->step();
-	}
-	/*** Main loop ends ***/
-	const double elapsed_time = timer.stop();
-	const bool error_flag = sys->get_error_flag();
-	if (params.get_verbosity() >= 1) {
-		if (params.get_verbosity() >= 2)
-			cout << endl;
-		cout << "Finished." << endl;
-		cout << "Total " << sys->get_total_step_counter() << " steps of ITP performed." << endl;
-		cout << fixed << "Total simulation time: " << elapsed_time << " s." << endl;
-	}
-	if (params.get_verbosity() >= 2) {
-		const double prop_ratio = sys->get_prop_time()/elapsed_time;
-		const double ortho_ratio = sys->get_ortho_time()/elapsed_time;
-		const double dot_ratio = sys->get_dot_time()/elapsed_time;
-		const double eigensolve_ratio = sys->get_eigensolve_time()/elapsed_time;
-		const double lincomb_ratio = sys->get_lincomb_time()/elapsed_time;
-		const double convtest_ratio = sys->get_convtest_time()/elapsed_time;
-		const double io_ratio = sys->get_io_time()/elapsed_time;
-		const double other_ratio = 1.0 - prop_ratio - ortho_ratio - convtest_ratio - io_ratio;
-		cout << "Ratios:" << std::fixed << std::setprecision(3) << endl
-			<< "\tPropagation:         " << prop_ratio << endl
-			<< "\tOrthonormalization:  " << ortho_ratio << endl
-			<< "\t      dot products:  " << dot_ratio << endl
-			<< "\t      eigenvalues:   " << eigensolve_ratio << endl
-			<< "\t      combination:   " << lincomb_ratio << endl
-			<< "\tConvergence testing: " << convtest_ratio << endl
-			<< "\tI/O:                 " << io_ratio << endl
-			<< "\tOther:               " << other_ratio << endl;
-		cout << endl;
-		if (not sys->get_error_flag())
-			sys->print_energies();
 	}
 	// Save FFTW Wisdom
 	wisdom_file = fopen(fftw_wisdom_filename.c_str(), "w");
 	fftw_export_wisdom_to_file(wisdom_file);
+	// Cleanup and exit
+	const bool error_flag = sys->get_error_flag();
 	delete sys;
 	fftw_cleanup();
 	if (error_flag)

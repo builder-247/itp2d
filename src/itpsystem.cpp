@@ -41,8 +41,12 @@ ITPSystem::ITPSystem(Parameters const& given_params,
 		states(params.get_N(), datalayout, params.get_ortho_algorithm()),
 		Esn_tuples(params.get_N()),
 		total_step_counter(0),
-		step_counter(0), prop_time(0), io_time(0), convtest_time(0),
+		step_counter(0),
+		total_time(0), prop_time(0), io_time(0), convtest_time(0),
 		eps(NaN), eps_values(params.get_eps_values()) {
+	if (verb(1)) {
+		out << "Initializing ITP system..." << std::endl;
+	}
 	update_timestring();
 	omp_set_num_threads(static_cast<int>(params.get_num_threads()));
 	if (params.get_save_what() != Parameters::Nothing) {
@@ -105,10 +109,11 @@ ITPSystem::ITPSystem(Parameters const& given_params,
 	}
 	if (params.get_save_what() == Parameters::Everything)
 		save_states(false);
-	io_timer.start();
 	if (datafile != NULL)
 		datafile->flush();
-	io_time += io_timer.stop();
+	if (verb(1)) {
+		print_initial_message();
+	}
 }
 
 ITPSystem::~ITPSystem() {
@@ -375,6 +380,12 @@ void ITPSystem::step() {
 		finish();
 		return;
 	}
+	if (total_step_counter == 0) { // This is the first step
+		if (verb(1)) {
+			out << "Starting first propagation step." << std::endl;
+		}
+		total_timer.start();
+	}
 	if (total_step_counter >= params.get_max_steps()) {
 		err << "Error: Maximum number of total steps reached (" << params.get_max_steps() << ")." << std::endl
 			<< "Bailing out." << std::endl;
@@ -483,12 +494,41 @@ void ITPSystem::finish() {
 		datafile->add_attribute("lincomb_time", get_lincomb_time());
 		datafile->add_attribute("io_time", get_io_time());
 		datafile->add_attribute("convtest_time", get_convtest_time());
-		datafile->add_attribute("total_time", get_prop_time()+get_ortho_time()+get_convtest_time()+get_io_time());
+		datafile->add_attribute("total_time", get_total_time());
 	}
 	finished = true;
+	total_time += total_timer.stop();
+	print_final_message();
+}
+
+void ITPSystem::print_final_message() {
+	if (not verb(1))
+		return;
+	update_timestring();
+	out << "Finished at " << timestring << "." << std::endl
+		<< "Total " << total_step_counter
+		<< " steps of ITP performed." << std::endl
+		<< std::fixed << "Total simulation time: " << total_time << " s." << std::endl;
 	if (verb(2)) {
-		update_timestring();
-		out << "finish() called at " << timestring << "." << std::endl;
+		const double prop_ratio = get_prop_time()/total_time;
+		const double ortho_ratio = get_ortho_time()/total_time;
+		const double dot_ratio = get_dot_time()/total_time;
+		const double eigensolve_ratio = get_eigensolve_time()/total_time;
+		const double lincomb_ratio = get_lincomb_time()/total_time;
+		const double convtest_ratio = get_convtest_time()/total_time;
+		const double io_ratio = get_io_time()/total_time;
+		const double other_ratio = 1.0 - prop_ratio - ortho_ratio - convtest_ratio - io_ratio;
+		out << "Ratios:" << std::fixed << std::setprecision(3) << std::endl
+			<< "\tPropagation:         " << prop_ratio << std::endl
+			<< "\tOrthonormalization:  " << ortho_ratio << std::endl
+			<< "\t      dot products:  " << dot_ratio << std::endl
+			<< "\t      eigenvalues:   " << eigensolve_ratio << std::endl
+			<< "\t      combination:   " << lincomb_ratio << std::endl
+			<< "\tConvergence testing: " << convtest_ratio << std::endl
+			<< "\tI/O:                 " << io_ratio << std::endl
+			<< "\tOther:               " << other_ratio << std::endl << std::endl;
+		if (not error_flag)
+			print_energies();
 	}
 }
 
