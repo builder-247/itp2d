@@ -42,7 +42,6 @@ ITPSystem::ITPSystem(Parameters const& given_params,
 		Esn_tuples(params.get_N()),
 		total_step_counter(0),
 		step_counter(0),
-		total_time(0), prop_time(0), io_time(0), convtest_time(0),
 		eps(NaN), eps_values(params.get_eps_values()) {
 	if (verb(1)) {
 		out << "Initializing ITP system..." << std::endl;
@@ -219,7 +218,7 @@ void ITPSystem::propagate() {
 		// states just for added precision and robustness.
 		(*T)(states[n], *(workslices[omp_get_thread_num()]));
 	}
-	prop_time += prop_timer.stop();
+	prop_timer.stop();
 }
 
 void ITPSystem::orthonormalize() {
@@ -295,7 +294,7 @@ void ITPSystem::check_timestep_convergence() {
 			out << missing.back() << std::endl;
 		}
 	}
-	convtest_time += convtest_timer.stop();
+	convtest_timer.stop();
 }
 
 void ITPSystem::check_final_convergence() {
@@ -335,7 +334,7 @@ void ITPSystem::check_final_convergence() {
 			out << missing.back() << std::endl;
 		}
 	}
-	convtest_time += convtest_timer.stop();
+	convtest_timer.stop();
 }
 
 void ITPSystem::save_states(bool sort) {
@@ -351,7 +350,7 @@ void ITPSystem::save_states(bool sort) {
 			sort_order.push_back(std::tr1::get<2>(Esn_tuples[n]));
 		datafile->write_stateset(states, total_step_counter, &sort_order);
 	}
-	io_time += io_timer.stop();
+	io_timer.stop();
 }
 
 void ITPSystem::save_energies() {
@@ -360,14 +359,14 @@ void ITPSystem::save_energies() {
 		datafile->write_energies(energies.back());
 	if (not standard_deviations.empty())
 		datafile->write_energy_standard_deviations(standard_deviations.back());
-	io_time += io_timer.stop();
+	io_timer.stop();
 }
 
 void ITPSystem::save_energy_history() {
 	io_timer.start();
 	datafile->write_energy_history(energies[total_step_counter-1], total_step_counter-1);
 	datafile->write_deviation_history(standard_deviations[total_step_counter-1], total_step_counter-1);
-	io_time += io_timer.stop();
+	io_timer.stop();
 }
 
 // A single iteration of imaginary time propagation
@@ -474,7 +473,7 @@ void ITPSystem::calculate_energies() {
 		new_energies.push_back(std::tr1::get<0>(*it));
 		new_deviations.push_back(std::tr1::get<1>(*it));
 	}
-	convtest_time += convtest_timer.stop();
+	convtest_timer.stop();
 }
 
 void ITPSystem::finish() {
@@ -484,6 +483,7 @@ void ITPSystem::finish() {
 		save_states();
 	if (params.get_save_what() != Parameters::Nothing) {
 		save_energies();
+		io_timer.start();
 		datafile->add_attribute("num_converged", static_cast<int>(how_many_finally_converged()));
 		datafile->add_attribute("error_flag", error_flag);
 		datafile->add_attribute("total_steps_done", total_step_counter);
@@ -492,12 +492,15 @@ void ITPSystem::finish() {
 		datafile->add_attribute("dotproduct_time", get_dot_time());
 		datafile->add_attribute("eigensolve_time", get_eigensolve_time());
 		datafile->add_attribute("lincomb_time", get_lincomb_time());
-		datafile->add_attribute("io_time", get_io_time());
 		datafile->add_attribute("convtest_time", get_convtest_time());
+		io_timer.stop();
+		datafile->add_attribute("io_time", get_io_time());
+	}
+	total_timer.stop();
+	if (params.get_save_what() != Parameters::Nothing) {
 		datafile->add_attribute("total_time", get_total_time());
 	}
 	finished = true;
-	total_time += total_timer.stop();
 	print_final_message();
 }
 
@@ -505,6 +508,7 @@ void ITPSystem::print_final_message() {
 	if (not verb(1))
 		return;
 	update_timestring();
+	const double total_time = get_total_time();
 	out << "Finished at " << timestring << "." << std::endl
 		<< "Total " << total_step_counter
 		<< " steps of ITP performed." << std::endl

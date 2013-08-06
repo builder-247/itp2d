@@ -41,10 +41,6 @@ StateSet::StateSet(size_t arg_N, DataLayout const& dl, OrthoAlgorithm algo) :
 	}
 	how_many_timestep_converged = 0;
 	how_many_finally_converged = 0;
-	ortho_time = 0;
-	dot_time = 0;
-	eigensolve_time = 0;
-	lincomb_time = 0;
 }
 
 StateSet::~StateSet() {
@@ -153,7 +149,7 @@ void StateSet::orthonormalize() throw(std::exception) {
 			overlapmatrix[N*j+i] = dot(i,j);
 		}
 	}
-	dot_time += dot_timer.stop();
+	dot_timer.stop();
 	// Solve eigenvalue problem for the overlap matrix
 	eigensolve_timer.start();
 	ESolver.solve(overlapmatrix);
@@ -164,19 +160,19 @@ void StateSet::orthonormalize() throw(std::exception) {
 		// causes the overlap matrix to have non-positive eigenvalues and as a
 		// result the orthonormalization will fail.
 		if (eval <= 0) {
-			ortho_time += ortho_timer.stop();
-			eigensolve_time += eigensolve_timer.stop();
+			ortho_timer.stop();
+			eigensolve_timer.stop();
 			throw(NonPositiveEigenvalue(n, eval, overlapmatrix, N));
 		}
 		else if (std::fpclassify(eval) != FP_NORMAL) {
-			ortho_time += ortho_timer.stop();
-			eigensolve_time += eigensolve_timer.stop();
+			ortho_timer.stop();
+			eigensolve_timer.stop();
 			throw(NonNormalEigenvalue(n, eval, overlapmatrix, N));
 		}
 		// Scale eigenvectors with the eigenvalues
 		ESolver.scale_eigenvector(overlapmatrix, n, 1/sqrt(eval));
 	}
-	eigensolve_time += eigensolve_timer.stop();
+	eigensolve_timer.stop();
 	// Form orthonormal states from linear combinations
 	lincomb_timer.start();
 	const comp one = 1;
@@ -221,8 +217,8 @@ void StateSet::orthonormalize() throw(std::exception) {
 			switch_state_arrays();
 			break;
 	}
-	lincomb_time += lincomb_timer.stop();
-	ortho_time += ortho_timer.stop();
+	lincomb_timer.stop();
+	ortho_timer.stop();
 }
 
 // Check whether the states are orthonormal to a given precision "epsilon".

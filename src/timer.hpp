@@ -33,32 +33,49 @@ class Timer {
 public:
 	Timer();
 	typedef struct timeval timeval;
-	inline void start();	// Starts the timer
-	inline double stop();	// Stops and returns elapsed time
+	inline void start();
+	inline void stop();
+	inline void reset();
+	inline double get_time();
 private:
 	timespec start_time;
 	timespec stop_time;
+	unsigned long int elapsed_nsec;
 	bool running;
 };
 
 inline void Timer::start() {
 	if (running)
-		throw GeneralError("Timer::start() called on a timer which was already started");
+		throw GeneralError("Timer::start() called on a timer which was already running");
 	clock_gettime(CLOCK_MONOTONIC, &start_time);
 	running = true;
 }
 
-inline double Timer::stop() {
-	if (!running)
-		throw GeneralError("Timer::stop() called on a timer which was never started");
+inline void Timer::stop() {
+	if (not running)
+		throw GeneralError("Timer::stop() called on a timer which was not running");
 	clock_gettime(CLOCK_MONOTONIC, &stop_time);
 	running = false;
 	// Compute difference in nanoseconds
 	const long int sec_diff = stop_time.tv_sec - start_time.tv_sec;
 	const long int nsec_diff = stop_time.tv_nsec - start_time.tv_nsec;
-	const long int elapsed_nsec = (nsec_diff < 0)?
+	elapsed_nsec += (nsec_diff < 0)?
 		1000000000*(sec_diff-1) + (1000000000 + nsec_diff) :
 		1000000000*(sec_diff) + nsec_diff;
+}
+
+inline void Timer::reset() {
+	elapsed_nsec = 0;
+	running = false;
+}
+
+inline double Timer::get_time() {
+	if (running) {
+		stop();
+		const double elapsed_time = 1e-9*static_cast<double>(elapsed_nsec);
+		start();
+		return elapsed_time;
+	}
 	return 1e-9*static_cast<double>(elapsed_nsec);
 }
 

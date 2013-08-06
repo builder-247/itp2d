@@ -18,7 +18,7 @@
 
 #include "timer.hpp"
 
-Timer::Timer() : running(false) {
+Timer::Timer() : elapsed_nsec(0), running(false) {
 	// Test that CLOCK_MONOTONIC works
 	timespec* t = new timespec;
 	const int retval = clock_gettime(CLOCK_MONOTONIC, t);

@@ -74,10 +74,10 @@ class StateSet {
 		bool is_orthonormal(double epsilon = 1e-5) const;
 		double how_orthonormal() const;
 		// Timing
-		double get_ortho_time() const { return ortho_time; };
-		double get_dot_time() const { return dot_time; };
-		double get_eigensolve_time() const { return eigensolve_time; };
-		double get_lincomb_time() const { return lincomb_time; };
+		double get_ortho_time() { return ortho_timer.get_time(); };
+		double get_dot_time() { return dot_timer.get_time(); };
+		double get_eigensolve_time() { return eigensolve_timer.get_time(); };
+		double get_lincomb_time() { return lincomb_timer.get_time(); };
 		// Public reference to the underlying data layout
 		DataLayout const& datalayout;
 	private:
@@ -105,7 +105,6 @@ class StateSet {
 		inline comp& data(size_t n, size_t x, size_t y) { return (*state_array)[n](x,y); }
 		inline void switch_state_arrays();
 		// For timing
-		double ortho_time, dot_time, eigensolve_time, lincomb_time;
 		Timer ortho_timer, dot_timer, eigensolve_timer, lincomb_timer;
 };
 

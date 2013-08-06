@@ -76,14 +76,14 @@ class ITPSystem {
 		inline std::vector<std::vector<double> > const& get_standard_deviations() const { return standard_deviations; }
 		inline double get_sorted_energy(size_t n) const { return std::tr1::get<0>(Esn_tuples[n]); }
 		inline size_t get_sorted_index(size_t n) const { return std::tr1::get<2>(Esn_tuples[n]); }
-		inline double get_total_time() const { return total_time; }
-		inline double get_prop_time() const { return prop_time; }
-		inline double get_ortho_time() const { return states.get_ortho_time(); }
-		inline double get_dot_time() const { return states.get_dot_time(); }
-		inline double get_eigensolve_time() const { return states.get_eigensolve_time(); }
-		inline double get_lincomb_time() const { return states.get_lincomb_time(); }
-		inline double get_io_time() const { return io_time; }
-		inline double get_convtest_time() const { return convtest_time; }
+		inline double get_total_time() { return total_timer.get_time(); }
+		inline double get_prop_time() { return prop_timer.get_time(); }
+		inline double get_ortho_time() { return states.get_ortho_time(); }
+		inline double get_dot_time() { return states.get_dot_time(); }
+		inline double get_eigensolve_time() { return states.get_eigensolve_time(); }
+		inline double get_lincomb_time() { return states.get_lincomb_time(); }
+		inline double get_io_time() { return io_timer.get_time(); }
+		inline double get_convtest_time() { return convtest_timer.get_time(); }
 		inline StateSet const& get_states() const { return states; }
 		inline State const& get_state(size_t n) const { return states[n]; }
 		inline Potential const& get_potential() const { return pot; }
@@ -147,10 +147,6 @@ class ITPSystem {
 		// Running counters etc.
 		int total_step_counter;
 		int step_counter;
-		double total_time;
-		double prop_time;
-		double io_time;
-		double convtest_time;
 		double eps;
 		std::list<double> eps_values;
 };
