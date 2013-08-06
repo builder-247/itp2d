@@ -31,6 +31,7 @@
 #include <utility>
 #include <algorithm>
 #include <ctime>
+#include <csignal>
 #include <tr1/tuple>
 
 #include <omp.h>
@@ -56,14 +57,17 @@ class ITPSystem {
 		typedef std::tr1::tuple<double,double,size_t> Esn_tuple;
 		// Constructors & destructors
 		// All parameters for ITPSystem are provided by the Parameters class
-		ITPSystem(Parameters const& params, std::ostream& out = std::cout, std::ostream& err = std::cerr);
+		ITPSystem(Parameters const& params,
+				volatile sig_atomic_t* abort_flagptr = NULL,
+				volatile sig_atomic_t* save_flagptr = NULL,
+				std::ostream& out = std::cout,
+				std::ostream& err = std::cerr);
 		~ITPSystem();
 		// Status checks
 		inline size_t how_many_timestep_converged() { return states.get_num_timestep_converged(); }
 		inline size_t how_many_finally_converged() { return states.get_num_finally_converged(); }
 		size_t lowest_not_finally_converged();
 		inline bool get_error_flag() const { return error_flag; }
-		inline bool get_quit_flag() const { return quit_flag; }
 		inline bool is_finished() const { return finished; }
 		inline int get_total_step_counter() const { return total_step_counter; }
 		inline int get_step_counter() const { return step_counter; }
@@ -95,8 +99,6 @@ class ITPSystem {
 		void save_energy_history();
 		void print_energies();
 		void finish();
-		inline void emergency_quit() { error_flag = true; quit_flag = true; };
-		inline void save_states_at_next_opportunity() { save_flag = true; }
 		const Parameters params;
 		const DataLayout datalayout;
 		const Transformer transformer;
@@ -108,14 +110,15 @@ class ITPSystem {
 		inline void check_save_flag();
 		inline bool verb(int level) const { return (params.get_verbosity() >= level)? true : false; }
 		inline void update_timestring();
+		// Pointers to flags set by external signals
+		volatile sig_atomic_t* abort_flagptr;
+		volatile sig_atomic_t* save_flagptr;
 		// Output streams
 		std::ostream& out;
 		std::ostream& err;
 		// Status flags
 		bool finished;
 		bool error_flag;
-		bool quit_flag;
-		bool save_flag;
 		bool all_needed_states_timestep_converged;
 		bool all_needed_states_finally_converged;
 		bool exhausting_eps_values;

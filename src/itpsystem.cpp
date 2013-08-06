@@ -20,13 +20,18 @@
 
 // Constructors & destructors
 
-ITPSystem::ITPSystem(Parameters const& given_params, std::ostream& arg_out, std::ostream& arg_err) :
+ITPSystem::ITPSystem(Parameters const& given_params,
+				volatile sig_atomic_t* arg_abort_flagptr,
+				volatile sig_atomic_t* arg_save_flagptr,
+				std::ostream& arg_out, std::ostream& arg_err) :
 		params(given_params),
 		datalayout(params.get_sizex(), params.get_sizey(), params.get_grid_delta()),
 		transformer(datalayout, params.get_fftw_flags()),
 		boundary_type(params.get_boundary_type()),
+		abort_flagptr(arg_abort_flagptr),
+		save_flagptr(arg_save_flagptr),
 		out(arg_out), err(arg_err),
-		finished(false), error_flag(false), quit_flag(false), save_flag(false),
+		finished(false), error_flag(false),
 		all_needed_states_timestep_converged(false), all_needed_states_finally_converged(false),
 		exhausting_eps_values(params.get_exhaust_eps()),
 		rng(params.get_random_seed()),
@@ -172,7 +177,6 @@ void ITPSystem::change_time_step() {
 		err << "Error: Minimum time step reached (" << params.get_min_time_step() << ")." << std::endl
 			<< "Bailing out." << std::endl;
 		error_flag = true;
-		quit_flag = true;
 		finish();
 		return;
 	}
@@ -192,9 +196,9 @@ void ITPSystem::change_time_step() {
 
 // Check if save_flag is raised by e.g. the signal handlers
 void ITPSystem::check_save_flag() {
-	if (save_flag) {
+	if (save_flagptr != NULL and *save_flagptr) {
 		save_states();
-		save_flag = false;
+		*save_flagptr = false;
 	}
 }
 
@@ -224,7 +228,6 @@ void ITPSystem::orthonormalize() {
 		// "almost linearly dependent", orthonormalization fails. If the
 		// recovery-mode is on, we can start again by resetting the states and
 		// trying a smaller time step value.
-		error_flag = true;
 		err << "ERROR: " << e.what() << std::endl;
 		if (params.get_recover()) {
 			err	<< "Trying to recover: Changing time step and resetting states." << std::endl;
@@ -233,7 +236,7 @@ void ITPSystem::orthonormalize() {
 			out << "States reset. Resuming propagation." << std::endl;
 		}
 		else {
-			quit_flag = true;
+			error_flag = true;
 			finish();
 		}
 		return;
@@ -242,7 +245,6 @@ void ITPSystem::orthonormalize() {
 		err << "ERROR: " << std::endl << e.what() << std::endl;
 		err << "Quitting..." << std::endl;
 		error_flag = true;
-		quit_flag = true;
 		finish();
 		return;
 	}
@@ -366,12 +368,13 @@ void ITPSystem::save_energy_history() {
 // A single iteration of imaginary time propagation
 void ITPSystem::step() {
 	// First check for error conditions and increment some counters
-	if (quit_flag) {
+	if (abort_flagptr != NULL and *abort_flagptr) {
+		// The abort flag has been raised by a signal handler so we certainly
+		// have an error
+		error_flag = true;
 		finish();
 		return;
 	}
-	if (error_flag)
-		error_flag = false;
 	if (total_step_counter >= params.get_max_steps()) {
 		err << "Error: Maximum number of total steps reached (" << params.get_max_steps() << ")." << std::endl
 			<< "Bailing out." << std::endl;
@@ -401,7 +404,6 @@ void ITPSystem::step() {
 	if (verb(3)) {
 		print_energies();
 	}
-	if (error_flag) return;
 	if (params.get_save_what() == Parameters::Everything) {
 		save_states();
 	}
@@ -488,7 +490,6 @@ void ITPSystem::finish() {
 		update_timestring();
 		out << "finish() called at " << timestring << "." << std::endl;
 	}
-	quit_flag = true;
 }
 
 void ITPSystem::print_energies() {

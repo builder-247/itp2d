@@ -27,7 +27,9 @@
 #include <vector>
 #include <utility>
 #include <algorithm>
-#include <signal.h>
+#include <csignal>
+
+#include <unistd.h>
 
 #include "parameters.hpp"
 #include "commandlineparser.hpp"
@@ -36,31 +38,33 @@
 
 using namespace std;
 
-// We need to have a global pointer to call methods from the signal handlers.
-// This is ugly and dangerous, but I see no way around it.
-ITPSystem* sys = NULL;
+// Global flags for signal handling
+volatile sig_atomic_t abort_flag = false;
+volatile sig_atomic_t save_flag = false;
 
-// Signal handler for SIGINT and SIGUSR1
-void sighandler(int s) {
-	if (s == SIGINT) {
-		if (sys == NULL or sys->get_quit_flag()) {
-			exit(1);
-		}
-		cerr << "Caught SIGINT. Saving data and quitting at next convenient spot." << endl
-			<< "Press Ctrl-C again to signal immediate stop." << endl;
-		sys->emergency_quit();
-	}
-	if (s == SIGUSR1) {
-		cerr << "Caught SIGUSR1. Saving states at next convenient stop and continuing." << endl;
-		sys->save_states_at_next_opportunity();
-	}
+const char abort_flag_note[] = "\nCaught SIGINT. Saving data and quitting at next convenient spot.\nPress Ctrl-C again to signal immediate stop.\n";
+const size_t abort_flag_note_size = sizeof(abort_flag_note)+1;
+const char save_flag_note[] = "\nCaught SIGUSR1. Saving states at next convenient stop and continuing.\n";
+const size_t save_flag_note_size = sizeof(save_flag_note)+1;
+
+// Signal handlers for SIGINT and SIGUSR1
+void sigint_handler(__attribute__((unused)) int s) {
+	if (abort_flag)
+		exit(1);
+	write(STDERR_FILENO, abort_flag_note, abort_flag_note_size);
+	abort_flag = true;
+}
+
+void sigusr1_handler(__attribute__((unused)) int s) {
+	write(STDERR_FILENO, save_flag_note, save_flag_note_size);
+	save_flag = true;
 }
 
 int main(int argc, char* argv[]) {
 	Timer timer;
 	// Trap SIGINT and SIGUSR1
-	signal(SIGINT, sighandler);
-	signal(SIGUSR1, sighandler);
+	signal(SIGINT, sigint_handler);
+	signal(SIGUSR1, sigusr1_handler);
 	// Parse parameters
 	vector<string> args(argv, argv+argc);
 	// TCLAP eats the first element of args
@@ -93,12 +97,7 @@ int main(int argc, char* argv[]) {
 	if (params.get_verbosity() >= 1) {
 		cout << "Initializing ITP system..." << endl;
 	}
-	try {
-		sys = new ITPSystem(params);
-	}
-	catch (H5::Exception) { // These report when originally caught in lower-level code
-		return 1;
-	}
+	ITPSystem* sys = new ITPSystem(params, &abort_flag, &save_flag);
 	if (params.get_verbosity() >= 1) {
 		sys->print_initial_message();
 		cout << "Initializations ready. Starting propagation." << endl;
