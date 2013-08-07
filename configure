@@ -399,14 +399,55 @@ class LinearAlgebraLibs(Library):
         self.lalib = "OpenBLAS"
 
     def check_mkl(self):
-        self.check_for_include("mkl_cblas.h", self.mkl_path)
-        self.check_for_include("mkl_lapack.h", self.mkl_path)
-        self.check_for_library("mkl", self.mkl_path, add_link_flag=True)
-        # This is ugly: MKL uses a different library name for 32bit and 64bit
-        if platform.architecture()[0] == "64bit":
-            self.check_for_library("mkl_lapack64", self.mkl_path, add_link_flag=True)
+        # MKL has its own extremely convoluted linking pattern so we either
+        # find and use its own linking tool or don't use MKL at all
+        # TODO: Check for mkl_link_tool in PATH with find_file
+        print "Checking for mkl_link_tool... ",
+        if self.mkl_path:
+            mkl_link_tool = os.path.join(self.mkl_path, "tools", "mkl_link_tool")
+            if os.path.isfile(mkl_link_tool):
+                print mkl_link_tool
+            else:
+                raise RequirementFail("Couldn't find mkl_link_tool under %s" % self.mkl_path)
         else:
-            self.check_for_library("mkl_lapack32", self.mkl_path, add_link_flag=True)
+            # Try to find mkl_link_tool on our own
+            mkl_link_tool_dirs = []
+            try:
+                mkl_link_tool_dirs += [os.path.join(os.environ["MKLROOT"])]
+            except KeyError:
+                pass
+            try:
+                mkl_link_tools_dirs += os.environ["PATH"].split(":")
+            except KeyError:
+                pass
+            mkl_link_tool = self.find_file("mkl_link_tool", paths=mkl_link_tool_dirs,
+                possible_subpaths = ["tools"])
+            if not mkl_link_tool:
+                raise RequirementFail("Couldn't find mkl_link_tool under any of the following directories: %s" % str(mkl_link_tools_dirs))
+        # Query mkl_link_tool for correct compilation flags
+        def query_mkl_link_tool(path, option):
+            try:
+                p = subprocess.Popen([path, "-c", "gnu_c", "-o", "gomp", option], stdout=PIPE, stderr=PIPE)
+                returncode = p.wait()
+                if returncode != 0:
+                    raise RequirementFail("Call to mkl_link_tool %s failed with return code %d", (option, returncode))
+            except OSError, e:
+                raise RequirementFail(e.strerror)
+            return p.stdout.readlines()[-1].strip()
+        mkl_cflags = query_mkl_link_tool(mkl_link_tool, "-opts")
+        mkl_libflags = query_mkl_link_tool(mkl_link_tool, "-libs")
+        # Expand MKLROOT in the flags
+        def expand_mklroot(s):
+            return s.replace("$(MKLROOT)", os.environ["MKLROOT"])
+        if "MKLROOT" in os.environ:
+            mkl_cflags, mkl_libflags = [ expand_mklroot(s) for s in [mkl_cflags, mkl_libflags] ]
+        # Also add rpath entries for library directories
+        libdir_re = re.compile(r"(?:\A|\s)-L\s*(?P<dir>\S+)")
+        for dir in re.findall(libdir_re, mkl_cflags+" "+mkl_libflags):
+            mkl_libflags += " -Wl,-rpath %s" % dir
+        # Finally append flags to cflags and libflags
+        self.cflags.append(mkl_cflags)
+        self.libflags.append(mkl_libflags)
         # MKL also requires changes to some internal logic, which is triggered
         # by macro USE_MKL
         self.cflags.append("-DUSE_MKL")
