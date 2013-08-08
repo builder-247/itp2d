@@ -33,6 +33,7 @@ test_flags := -I$(gtest_dir)/include -I$(gtest_dir)
 test_lib_flags := -pthread
 
 progs := itp2d run_tests
+libs := libitp2d.a
 src := $(wildcard src/*.cpp)
 hdr := $(wildcard src/*.hpp)
 obj := $(patsubst src/%.cpp,obj/%.o,$(src)) obj/gtest-all.o
@@ -55,7 +56,7 @@ lib: libitp2d.a
 all: itp2d run_tests lib
 
 clean:
-	rm -f $(progs) $(obj) $(dep)
+	rm -f $(progs) $(libs) $(obj) $(dep)
 
 depend: $(dep)
 
