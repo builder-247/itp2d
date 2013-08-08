@@ -50,9 +50,9 @@ check: run_tests
 
 doc: README.html
 
-all: itp2d run_tests
-
 lib: libitp2d.a
+
+all: itp2d run_tests lib
 
 clean:
 	rm -f $(progs) $(obj) $(dep)
