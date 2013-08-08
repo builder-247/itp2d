@@ -29,6 +29,7 @@ if sys.version_info < (2,4):
     sys.exit(1)
 
 import os, re, optparse, subprocess, platform
+import socket # needed for ugly CSC mkl_link_tool hack
 from subprocess import PIPE
 
 # These two will be queried later
@@ -436,6 +437,17 @@ class LinearAlgebraLibs(Library):
             return p.stdout.readlines()[-1].strip()
         mkl_cflags = query_mkl_link_tool(mkl_link_tool, "-opts")
         mkl_libflags = query_mkl_link_tool(mkl_link_tool, "-libs")
+        # mkl_link_tool is known to create invalid link flags at least on CSC's computers when using gcc
+        # (AFAIK it might never work for gcc). More testing is needed, but for
+        # now apply a fix if we can detect that we are compiling for CSC.
+        # Thanks for Sami Ilvonen for the fix!
+        if "-lmkl_gf_lp64" in mkl_libflags:
+            self.warn("The linking tool distributed with MKL is known to link to broken libraries. You can tell this has happended if the unit tests show that the dot product of two complex vectors is always zero.")
+            if socket.gethostname().endswith(".csc.fi"):
+                mkl_libflags = mkl_libflags.replace("-lmkl_gf_lp64", "-lmkl_intel_lp64")
+                self.warn("Applying a fix that probably works for CSC.")
+            else:
+                self.warn("In this case you could try replacing -lmkl_gf_* with -lmkl_intel_* in the link flags manually. That works sometimes.")
         # Expand MKLROOT in the flags
         def expand_mklroot(s):
             return s.replace("$(MKLROOT)", os.environ["MKLROOT"])
