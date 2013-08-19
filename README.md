@@ -118,7 +118,7 @@ standard search path), you can inform the `configure`-script where the libraries
 are found. Please see `configure --help` for various options you can pass to the
 script. The `configure`-script writes the configuration options to a file called
 `Makefile.local` which is then read by the main Makefile. After the
-`configure`-script is succesfully finished, you can compile itp2d simply by
+`configure`-script is successfully finished, you can compile itp2d simply by
 running the command `make` in the directory where the Makefile resides. Please
 note that these build tools are only designed for GCC's C++ compiler `g++` – if
 you wish to compile itp2d with some other compiler, you need to modify the
@@ -181,7 +181,7 @@ they will be added to the main itp2d distribution.
 
 The scripts are not required to access the data created by itp2d, since the datafiles created by
 itp2d are standard [HDF5][] files with a simple layout. You should be able to access them
-easily with any program cabable of reading [HDF5][] files, such as Python or MATLAB.
+easily with any program capable of reading [HDF5][] files, such as Python or MATLAB.
 
 Common issues
 -------------
@@ -307,7 +307,7 @@ box of this size in *zero* magnetic field is simple. Then we put on a magnetic f
 The value specified is the strength of the magnetic field in SI-bases atomic units. The magnetic field will
 be homogeneous and in the direction of the `z`-axis.
 
-When using a magnetic field with Dirichlet boundary conditions there wil be
+When using a magnetic field with Dirichlet boundary conditions there will be
 ringing artifacts near the edges, which arise from the fact that the Dirichlet
 boundary conditions are enforced simply by expanding the states in a sine
 series instead of a Fourier series. However, the sine functions are
@@ -316,7 +316,7 @@ artifacts around the edges of the calculation box. For one, this makes convergen
 the standard deviation of the energy inaccurate, so we need to switch to another test. Let's consider the
 states converged in respect to the used time step value when the relative energy change between
 successive iterations is less than 0.0001, and completely converged when they converge w.r.t the
-timestep with a single iteration. This can be set from the itp2d command line interface with `-T
+time step with a single iteration. This can be set from the itp2d command line interface with `-T
 "relchange(0.0001)" -F onestep` (the quotation marks are used only to tell the command shell to not
 interpret the parentheses). We'll also need to start with a shorter imaginary time step since the
 system is more complicated. To set the time step to 0.1 units we provide `-e 0.1`.
