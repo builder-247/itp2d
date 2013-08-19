@@ -83,7 +83,7 @@ In order to build itp2d you must have:
   disk. The library must be compiled with C++ support (i.e., you must pass
   `--enable-cxx` to the `configure`-script when installing HDF5 from source).
 - A linear algebra library with a [CBLAS][] and [LAPACK][] interfaces. Possible alternatives are,
-  e.g., [ATLAS][], Intel's [MKL][] or AMD's [ACML][].
+  e.g., [ATLAS][], [OpenBLAS][], Intel's [MKL][] or AMD's [ACML][].
 - [Python][], which is used for the build scripts.
 - To build the unit test functions distributed with itp2d you'll also need the
   source code of [the Google C++ Testing Framework (gtest)][gtest]. If you
@@ -100,6 +100,7 @@ itp2d.
 [gcc]: http://gcc.gnu.org
 [hdf5]: http://www.hdfgroup.org/HDF5
 [ATLAS]: http://math-atlas.sourceforge.net
+[OpenBLAS]: http://xianyi.github.io/OpenBLAS
 [MKL]: http://software.intel.com/en-us/articles/intel-mkl
 [ACML]: http://developer.amd.com/libraries/acml/pages/default.aspx
 [Python]: http://python.org
@@ -153,7 +154,7 @@ install.
 ##### Using MKL or ACML for linear algebra
 
 The `configure`-script attempts to detect which linear algebra libraries you
-have installed, defaulting to plain [CBLAS][] and [LAPACK][] if several options
+have installed, defaulting to [OpenBLAS][] if several options
 are found. If you wish to force the script to use Intel's [MKL][] or AMD's
 [ACML][] library, you can use the options `--with-mkl=PATH` or
 `--with-acml=PATH` to tell the script where these libraries can be found.
