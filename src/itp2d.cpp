@@ -42,9 +42,9 @@ volatile sig_atomic_t abort_flag = false;
 volatile sig_atomic_t save_flag = false;
 
 const char abort_flag_note[] = "\nCaught SIGINT. Saving data and quitting at next convenient spot.\nPress Ctrl-C again to signal immediate stop.\n";
-const size_t abort_flag_note_size = sizeof(abort_flag_note)+1;
+const size_t abort_flag_note_size = sizeof(abort_flag_note);
 const char save_flag_note[] = "\nCaught SIGUSR1. Saving states at next convenient stop and continuing.\n";
-const size_t save_flag_note_size = sizeof(save_flag_note)+1;
+const size_t save_flag_note_size = sizeof(save_flag_note);
 
 // Signal handlers for SIGINT and SIGUSR1
 void sigint_handler(__attribute__((unused)) int s) {
