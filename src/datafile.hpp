@@ -42,6 +42,9 @@ class Datafile {
 	static const hsize_t ones[2];
 	static const hsize_t zeroes[2];
 	public:
+		// std::pair would be nicer, but unfortunately we need to do this the C way for HDF5.
+		struct state_history_pair { int step; int index; };
+		struct time_step_history_pair { int step; double time_step; };
 		Datafile(std::string filename, DataLayout const& dl, bool clobber = false);
 		~Datafile();
 		// functions for writing States, StateSets and such into the file
@@ -118,18 +121,6 @@ inline void Datafile::validate_selection(H5::DataSpace const& dataspace) {
 		throw InvalidDataspaceSelection(bbox);
 	}
 }
-
-// std::pair would be nicer, but unfortunately we need to do this the C way for HDF5.
-struct state_history_pair {
-	int step;
-	int index;
-};
-
-struct time_step_history_pair {
-	int step;
-	double time_step;
-};
-
 template <typename Type>
 void Datafile::add_description(Type& obj, std::string const& value) {
 	const size_t len = value.length();
