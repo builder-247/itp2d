@@ -50,7 +50,7 @@ class State {
 		State(DataLayout const& lay, comp (*initfunc)(double, double), comp* ptr);
 		~State();
 		// Basic operations
-		void operator=(State const& other);
+		State& operator=(State const& other);
 		inline void zero();
 		inline void normalize(double target_norm = 1.0);
 		// Getters & Setters
@@ -100,10 +100,11 @@ std::ostream& operator<<(std::ostream& stream, const State& state);
 
 // Basic operations
 
-inline void State::operator=(State const& other) {
+inline State& State::operator=(State const& other) {
 	assert(datalayout == other.datalayout);
 	assert(memptr != other.memptr);
 	memcpy(memptr, other.memptr, datalayout.N*sizeof(comp));
+	return *this;
 }
 
 inline void State::zero() {
