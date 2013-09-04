@@ -98,7 +98,7 @@ class HarmonicPotential : public PotentialType {
 		static const double default_frequency;
 		static const double default_x0;
 		static const double default_y0;
-		HarmonicPotential(double omega=default_frequency) : w(omega) { init(); }
+		HarmonicPotential(double omega=default_frequency, double orig_x=default_x0, double orig_y=default_y0);
 		HarmonicPotential(std::vector<double> params);
 		inline double operator()(double x, double y) const {
 			const double px = x-x0;

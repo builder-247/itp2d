@@ -79,6 +79,12 @@ ZeroPotential::ZeroPotential(std::vector<double> params) {
 }
 
 // The harmonic potential
+HarmonicPotential::HarmonicPotential(double omega, double orig_x, double orig_y) :
+		w(omega),
+		x0(orig_x),
+		y0(orig_y) {
+	init();
+}
 
 HarmonicPotential::HarmonicPotential(std::vector<double> params) {
 	if (params.empty()) {
