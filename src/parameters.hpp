@@ -62,9 +62,9 @@ class Parameters {
 		void set_bailout_limits(int max_steps, double min_time_step);
 		inline void set_ortho_algorithm(OrthoAlgorithm alg) { ortho_alg = alg; }
 		inline void set_timestep_convergence_test(ConvergenceTest* test) { timestep_convergence_test = test; }
-		inline void set_timestep_convergence_test(std::string const& str) { timestep_convergence_test = parse_convergence_description(str); }
+		inline void set_timestep_convergence_test(std::string const& str);
 		inline void set_final_convergence_test(ConvergenceTest* test) { final_convergence_test = test; }
-		inline void set_final_convergence_test(std::string const& str) { final_convergence_test = parse_convergence_description(str); }
+		inline void set_final_convergence_test(std::string const& str);
 		inline void set_noise(Noise const* n) { noise = n; }
 		inline void set_noise(std::string const& str) { noise = parse_noise_description(str); }
 		inline void set_fftw_flags(unsigned int fl) { fftw_flags = fl; }
@@ -183,6 +183,16 @@ class Parameters {
 		int max_steps;
 		double min_time_step;
 };
+
+inline void Parameters::set_timestep_convergence_test(std::string const& str) {
+	delete timestep_convergence_test;
+	timestep_convergence_test = parse_convergence_description(str);
+}
+
+inline void Parameters::set_final_convergence_test(std::string const& str) {
+	delete final_convergence_test;
+	final_convergence_test = parse_convergence_description(str);
+}
 
 std::ostream& operator<<(std::ostream& stream, const Parameters& params);
 
