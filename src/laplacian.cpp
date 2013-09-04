@@ -25,12 +25,11 @@ Laplacian::Laplacian(Transformer const& _tr) : dl(_tr.datalayout), tr(_tr) {
 	size_t const& sx = dl.sizex;
 	size_t const& sy = dl.sizey;
 	double const& normfac = tr.normalization_factor(FFT);
-	double kx, ky;
 	multipliers = new double[sx*sy];
 	for (size_t y=0; y<sy; y++) {
-		ky = tr.fft_ky(y);
+		double ky = tr.fft_ky(y);
 		for (size_t x=0; x<sx; x++) {
-			kx = tr.fft_kx(x);
+			double kx = tr.fft_kx(x);
 			dl.value(multipliers, x, y) = (-kx*kx - ky*ky)*normfac;
 		}
 	}

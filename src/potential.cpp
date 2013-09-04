@@ -53,11 +53,10 @@ std::ostream& Potential::print(std::ostream& stream) const {
 
 void Potential::init_values() {
 	values = new double[datalayout.sizex*datalayout.sizey];
-	double dx, dy;
 	for (size_t y=0; y<datalayout.sizey; y++) {
-		dy = datalayout.get_posy(y);
+		double dy = datalayout.get_posy(y);
 		for (size_t x=0; x<datalayout.sizex; x++) {
-			dx = datalayout.get_posx(x);
+			double dx = datalayout.get_posx(x);
 			datalayout.value(values, x, y) = type(dx,dy);
 		}
 	}

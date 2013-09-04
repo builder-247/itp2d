@@ -111,11 +111,10 @@ inline void State::zero() {
 }
 
 inline void State::set_by_func(comp (*initfunc)(double, double)) {
-	double dx, dy;
 	for (size_t y=0; y<datalayout.sizey; y++) {
-		dy = datalayout.get_posy(y);
+		double dy = datalayout.get_posy(y);
 		for (size_t x=0; x<datalayout.sizex; x++) {
-			dx = datalayout.get_posy(x);
+			double dx = datalayout.get_posy(x);
 			(*this)(x,y) = initfunc(dx,dy);
 		}
 	}

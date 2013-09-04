@@ -48,9 +48,8 @@ void MultiProductSplit::set_time_step(double time_step) {
 
 void MultiProductSplit::calculate_coefficients() {
 	// This is formula (2.12) in the article
-	int denom;
 	for (int t=1; t<=halforder; t++) {
-		denom = 1;
+		int denom = 1;
 		for (int n=1; n<=halforder; n++) {
 			if (n != t)
 				denom *= (t*t-n*n);
