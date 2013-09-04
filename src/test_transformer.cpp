@@ -71,7 +71,7 @@ TEST_F(transformer, kvalues) {
 
 class transform_type : public testing::TestWithParam<Transform> {
 	public:
-		transform_type() : dl(test_transformer_reference::sx, test_transformer_reference::sy,
+		transform_type() : type(FFT), dl(test_transformer_reference::sx, test_transformer_reference::sy,
 				test_transformer_reference::dx), tr(dl), A(dl, test_transformer_reference::initfunc) {}
 		virtual void SetUp() { type = GetParam(); }
 		Transform type;
