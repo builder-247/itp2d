@@ -469,7 +469,7 @@ void ITPSystem::calculate_energies() {
 	std::vector<double>& new_deviations = standard_deviations[total_step_counter-1];
 	new_energies.clear();
 	new_deviations.clear();
-	for (std::vector<Esn_tuple>::const_iterator it = Esn_tuples.begin(); it != Esn_tuples.end(); it++) {
+	for (std::vector<Esn_tuple>::const_iterator it = Esn_tuples.begin(); it != Esn_tuples.end(); ++it) {
 		new_energies.push_back(std::tr1::get<0>(*it));
 		new_deviations.push_back(std::tr1::get<1>(*it));
 	}

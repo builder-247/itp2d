@@ -20,10 +20,11 @@
 
 std::ostream& OperatorSum::print(std::ostream& stream) const {
 	const_opiter next_op = components.begin();
-	next_op++;
-	for (const_opiter op = components.begin(); op != components.end(); op++) {
+	++next_op;
+	for (const_opiter op = components.begin(); op != components.end(); ++op) {
 		stream << (**op);
-		if (next_op++ != components.end())
+		++next_op;
+		if (next_op != components.end())
 			stream << " + ";
 	}
 	return stream;
@@ -44,7 +45,7 @@ size_t OperatorSum::required_workspace() const {
 		return components.front()->required_workspace();
 	// then the general case
 	size_t size = 0;
-	for (const_opiter op = components.begin(); op != components.end(); op++) {
+	for (const_opiter op = components.begin(); op != components.end(); ++op) {
 		const size_t req = (*op)->required_workspace();
 		if (req > size)
 			size = req;
@@ -75,11 +76,11 @@ void OperatorSum::operate(State& state, StateArray& workspace) const {
 	StateArray workslice = StateArray(workspace, 2);
 	const_opiter op = components.begin();
 	(**op)(state, workslice);	// Operate with first operator
-	op++;
+	++op;
 	while (op != components.end()) {
 		intermediate = orig; // Load original state
 		(**op)(intermediate, workslice); // Operate on it
 		state += intermediate;  // Sum to state
-		op++;
+		++op;
 	}
 }

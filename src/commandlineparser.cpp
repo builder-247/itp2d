@@ -241,7 +241,7 @@ void CommandLineParser::parse(std::vector<std::string>& args) {
 	throw_if_nonpositive(arg_sizey);
 	throw_if_nonpositive(arg_lenx);
 	std::vector<double> const& eps_values = arg_eps_values.getValue();
-	for (std::vector<double>::const_iterator it = eps_values.begin(); it != eps_values.end(); it++) {
+	for (std::vector<double>::const_iterator it = eps_values.begin(); it != eps_values.end(); ++it) {
 		throw_if_nonpositive(*it, arg_eps_values.getName());
 	}
 	throw_if_nonpositive(arg_eps_divisor);
@@ -287,7 +287,7 @@ void CommandLineParser::parse(std::vector<std::string>& args) {
 	params.lenx = ((arg_pi.isSet())? pi : 1.0) *arg_lenx.getValue();
 	params.boundary = arg_dirichlet.getValue()? Dirichlet : Periodic;
 	params.ortho_alg = arg_highmem.getValue()? HighMem : Default;
-	for (std::vector<double>::const_iterator it = eps_values.begin(); it != eps_values.end(); it++) {
+	for (std::vector<double>::const_iterator it = eps_values.begin(); it != eps_values.end(); ++it) {
 		params.add_eps_value(*it);
 	}
 	params.eps_divisor = arg_eps_divisor.getValue();

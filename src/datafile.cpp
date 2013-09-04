@@ -226,7 +226,7 @@ void Datafile::write_stateset(StateSet const& stateset, int step, std::list<size
 			std::list<size_t>::const_iterator it = sort_order->begin();
 			for (size_t m=0; m<N; m++) {
 				write_state(new_slot, m, stateset[*it]);
-				it++;
+				++it;
 			}
 		}
 	}

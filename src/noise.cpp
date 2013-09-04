@@ -98,7 +98,7 @@ void GaussianNoise::add_noise(DataLayout const& dl, double* pot_values, RNG& rng
 	// Then, loop through all spikes and add its effect into pot_values. This
 	// is not a very efficient way to do this, but this only needs to be done
 	// once so it doesn't matter.
-	for (spike_vector::const_iterator it = spikes.begin(); it != spikes.end(); it++) {
+	for (spike_vector::const_iterator it = spikes.begin(); it != spikes.end(); ++it) {
 		const double sx = std::tr1::get<0>(*it);
 		const double sy = std::tr1::get<1>(*it);
 		const double A = std::tr1::get<2>(*it);

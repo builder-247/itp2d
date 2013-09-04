@@ -52,7 +52,7 @@ class OperatorProduct : public virtual Operator {
 };
 
 inline OperatorProduct& OperatorProduct::operator*=(OperatorProduct const& operprod) {
-	for (const_ropiter op = operprod.components.rend(); op != operprod.components.rbegin(); op++) {
+	for (const_ropiter op = operprod.components.rend(); op != operprod.components.rbegin(); ++op) {
 		components.push_back(*op);
 	}
 	return *this;

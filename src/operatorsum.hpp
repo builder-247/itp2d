@@ -48,7 +48,7 @@ class OperatorSum : public virtual Operator {
 };
 
 inline OperatorSum& OperatorSum::operator+=(OperatorSum const& opersum) {
-	for (const_opiter op = opersum.components.end(); op != opersum.components.begin(); op++) {
+	for (const_opiter op = opersum.components.end(); op != opersum.components.begin(); ++op) {
 		components.push_back(*op);
 	}
 	return *this;

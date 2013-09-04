@@ -19,7 +19,7 @@
 #include "operatorproduct.hpp"
 
 std::ostream& OperatorProduct::print(std::ostream& stream) const {
-	for (const_opiter op = components.begin(); op != components.end(); op++) {
+	for (const_opiter op = components.begin(); op != components.end(); ++op) {
 		stream << (**op);
 	}
 	return stream;
@@ -36,7 +36,7 @@ OperatorProduct::OperatorProduct(OperatorProduct const& operprod)
 // required by its components
 size_t OperatorProduct::required_workspace() const {
 	size_t size = 0;
-	for (const_opiter op = components.begin(); op != components.end(); op++) {
+	for (const_opiter op = components.begin(); op != components.end(); ++op) {
 		const size_t req = (**op).required_workspace();
 		if (req > size)
 			size = req;
@@ -46,7 +46,7 @@ size_t OperatorProduct::required_workspace() const {
 
 // OperatorProduct will simply act on the state with all of its components in order
 void OperatorProduct::operate(State& state, StateArray& workspace) const {
-	for (const_ropiter op = components.rbegin(); op != components.rend(); op++) {
+	for (const_ropiter op = components.rbegin(); op != components.rend(); ++op) {
 		(**op)(state, workspace);
 	}
 }

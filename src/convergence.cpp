@@ -94,9 +94,9 @@ bool RelativeEnergyChangeTest::test(ITPSystem const& sys, size_t n) const {
 	if (sys.get_energies().size() < 2)
 		return false;
 	std::vector<std::vector<double> >::const_iterator it = sys.get_energies().end();
-	it--;
+	--it;
 	const double thisstep = (*it)[n];
-	it--;
+	--it;
 	const double prevstep = (*it)[n];
 	const double scaled_difference = fabs((thisstep-prevstep)/prevstep);
 	return scaled_difference < limit;
@@ -122,9 +122,9 @@ bool AbsoluteEnergyChangeTest::test(ITPSystem const& sys, size_t n) const {
 	if (sys.get_energies().size() < 2)
 		return false;
 	std::vector<std::vector<double> >::const_iterator it = sys.get_energies().end();
-	it--;
+	--it;
 	const double thisstep = (*it)[n];
-	it--;
+	--it;
 	const double prevstep = (*it)[n];
 	const double absolute_difference = fabs(thisstep-prevstep);
 	return absolute_difference < limit;
