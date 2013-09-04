@@ -194,7 +194,6 @@ void StateSet::orthonormalize() throw(std::exception) {
 					tempstate.resize(required_size);
 				}
 				comp* const temp = tempstate.data() + thread_offset;
-				comp c;
 				#pragma omp for
 				for (size_t t=0; t<datalayout.N; t++) {
 					// Save old state values
