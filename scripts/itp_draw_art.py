@@ -15,6 +15,15 @@ colorschemes = {
     "bow" :     ("L",   lambda x: int(256*(1-x)))
 }
 
+# Try to import more colorschemes from Matplotlib
+try:
+    from matplotlib import pylab
+    for mapname in pylab.cm.datad:
+        colorfunc = lambda x, mapname=mapname: tuple((int(256*t) for t in getattr(pylab.cm, mapname)(x)[:3]))
+        colorschemes[mapname] = ("RGB", colorfunc)
+except ImportError:
+    pass
+
 if __name__ == "__main__":
     # parse command line arguments
     parser = OptionParser(usage="%prog [options] [datafile.h5] [indices]")
