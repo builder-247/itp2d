@@ -10,6 +10,25 @@ from PIL import Image
 
 # Print pretty pictures from the wave functions computed with itp2d.
 
+try:
+    from progressbar import ProgressBar, ETA, Percentage, Bar
+    has_progressbar = True
+except ImportError:
+    # Provide mock objects in case import fails
+    has_progressbar = False
+    print "Import of module 'progressbar' failed. Will not print a progress bar."
+    class ProgressBar(object):
+        def __init__(self, *args, **kwargs):
+            pass
+        def __call__(self, x):
+            return x
+    class ETA(object):
+        pass
+    class Percentage(object):
+        pass
+    class Bar(object):
+        pass
+
 # Each color scheme is a tuple with two attributes: a mode (either "RGB" or
 # "L") and a function. The function maps a NxN numpy array with float values to
 # a NxNx3 numpy array of uint8 RGB values (if mode is "RGB") or to a NxN numpy
@@ -122,7 +141,8 @@ if __name__ == "__main__":
         full_im = Image.new(mode, (full_x, full_y), background_color)
     counter = 0
     # Loop through all states to be plotted
-    for index in indices:
+    progressbar = ProgressBar(widgets=["Drawing images: ", Percentage(), Bar(), ETA()])
+    for index in progressbar(indices):
         # The data to plot is the square of the absolute value of the
         # wave function, i.e., the probability density
         if options.trim == 0:
@@ -149,9 +169,9 @@ if __name__ == "__main__":
         if options.separate:
             out = out_multifilename % index
             state_im.save(out)
-            if options.verbose:
+            if options.verbose and not has_progressbar:
                 print "State %d drawn. Saved in %s" % (index, out)
-        elif options.verbose:
+        elif options.verbose and not has_progressbar:
             print "State %d drawn." % index
         counter += 1
     if options.combined:
