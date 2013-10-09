@@ -1,27 +1,41 @@
 #!/usr/bin/env python2
 from __future__ import division
 import os
-import h5py
 from math import floor, ceil, sqrt
-from numpy import flipud
+from collections import namedtuple
+import numpy as np
+import h5py
 from optparse import OptionParser
 from PIL import Image
 
 # Print pretty pictures from the wave functions computed with itp2d.
 
+# Each color scheme is a tuple with two attributes: a mode (either "RGB" or
+# "L") and a function. The function maps a NxN numpy array with float values to
+# a NxNx3 numpy array of uint8 RGB values (if mode is "RGB") or to a NxN numpy
+# array of uint8 values (if mode is "L"). The values of the original array are
+# assumed to be in the range [0, 1]. Everything beyond this range is clipped.
+Colorscheme = namedtuple("Colorscheme", ["mode", "func"])
+
+CC = conv_const = np.nextafter(256,0) # Conversion constant from float to uint8
+
 colorschemes = {
-    "default" : ("RGB", lambda x: (int(256*x), 0, int(256*x*(1-x)))),
-    "cold" : ("RGB", lambda x: (int(256*x**2), int(256*x**2), int(256*x**0.75))),
-    "finland" : ("RGB", lambda x: (int(256*(1-x)), int(256*(1-x)), 256)),
-    "bow" :     ("L",   lambda x: int(256*(1-x)))
+    "default" : Colorscheme("RGB",
+        lambda x: np.uint8(CC*np.dstack((x, np.zeros_like(x), x*(1-x))))),
+    "cold" : Colorscheme("RGB",
+        lambda x: np.uint8(CC*np.dstack((x**2, x**2, x**0.75)))),
+    "finland" : Colorscheme("RGB",
+        lambda x: np.uint8(CC*np.dstack((1-x, 1-x, np.ones_like(x))))),
+    "bow" : Colorscheme("L",
+        lambda x: np.uint8(CC*(1-x)))
 }
 
 # Try to import more colorschemes from Matplotlib
 try:
     from matplotlib import pylab
     for mapname in pylab.cm.datad:
-        colorfunc = lambda x, mapname=mapname: tuple((int(256*t) for t in getattr(pylab.cm, mapname)(x)[:3]))
-        colorschemes[mapname] = ("RGB", colorfunc)
+        colorfunc = lambda x, cmap=getattr(pylab.cm, mapname): cmap(x, bytes=True)[...,:3]
+        colorschemes[mapname] = Colorscheme("RGB", colorfunc)
 except ImportError:
     pass
 
@@ -95,24 +109,32 @@ if __name__ == "__main__":
     rows = int(ceil(num_to_draw/columns))
     mode, colorfunc = colorschemes[options.colorscheme]
     if options.combined:
-        full_im = Image.new(mode, (columns*Mx+(columns-1)*margin, rows*My+(rows-1)*margin), colorfunc(0))
-    state_im = Image.new(mode, (Mx, My), colorfunc(0))
+        # Get color of zero from colormap
+        if mode == "RGB":
+            background_color = tuple(colorfunc(np.zeros((1,1)))[0,0])
+        else:
+            background_color = colorfunc(np.zeros((1,1)))[0,0]
+        full_shape = (columns*Mx+(columns-1)*margin, rows*My+(rows-1)*margin)
+        full_im = Image.new(mode, full_shape, background_color)
     counter = 0
     # Loop through all states to be plotted
     for index in indices:
         # The data to plot is the square of the absolute value of the
         # wave function, i.e., the probability density
-        Z = abs(states[options.slot, index][trim:-trim,trim:-trim])**2
+        if options.trim == 0:
+            Z = abs(states[options.slot, index])**2
+        else:
+            Z = abs(states[options.slot, index][trim:-trim,trim:-trim])**2
+        # Flip, since in the original data array y-axis points "downwards"
+        Z = np.flipud(Z)
         # Normalize
         if options.average_point == 0:
             Z /= Z.max()
         else:
             avg = Z.mean()
             Z *= options.average_point/avg
-        # Flatten the data array, map each value to a color, and write to the image
-        # It seems that PIL writes data in reverse order (bottom up), so we need to
-        # flip the data array with flipud
-        state_im.putdata([ colorfunc(x) for x in flipud(Z).flat ])
+        # Create image by mapping data through colorfunc
+        state_im = Image.fromarray(colorfunc(Z), mode=mode)
         if options.combined:
             paste_corner = ((counter % columns)*(Mx+margin), (counter // columns)*(My+margin))
             full_im.paste(state_im, paste_corner)
