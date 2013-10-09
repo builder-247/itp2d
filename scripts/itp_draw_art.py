@@ -43,14 +43,15 @@ if __name__ == "__main__":
     # parse command line arguments
     parser = OptionParser(usage="%prog [options] [datafile.h5] [indices]")
     parser.set_defaults(verbose=True, combined=True, colorscheme="default",
-            slot=-1, margin=0, trim=0, average_point=0)
+            slot=-1, margin=0, trim=0, average_point=0, rescale=1)
     parser.add_option("-v", "--verbose", action="store_true")
     parser.add_option("-q", "--quiet", action="store_false", dest="verbose")
     parser.add_option("-o", "--output", type="string", metavar="FILENAME", help="Filename for the output image")
     parser.add_option("-a", "--all", action="store_true", help="Draw also the extra states not intended to converge")
     parser.add_option("-s", "--square", action="store_true", help="Discard states so that the resulting image is square")
-    parser.add_option("-m", "--margin", type="int", metavar="PIXELS", help="Add some empty space between states in the combined image")
-    parser.add_option("-t", "--trim", type="int", metavar="PIXELS", help="Remove some space from the edges of each state image")
+    parser.add_option("-r", "--rescale", type="float", metavar="FACTOR", help="Rescale resulting images with this factor")
+    parser.add_option("-m", "--margin", type="int", metavar="PIXELS", help="Add some empty space between states in the combined image (after rescaling)")
+    parser.add_option("-t", "--trim", type="int", metavar="PIXELS", help="Remove some space from the edges of each state image (before rescaling)")
     parser.add_option(      "--separate", action="store_true", help="Save separate images of each state")
     parser.add_option(      "--no-combined", action="store_false", dest="combined", help="Do not save a combined image of all the states")
     parser.add_option("-c", "--colorscheme", type="choice", choices=colorschemes.keys(), help="The colors. Valid choices: %s" % colorschemes.keys())
@@ -88,6 +89,8 @@ if __name__ == "__main__":
     trim = options.trim
     Mx = file.attrs["grid_sizex"] - 2*trim
     My = file.attrs["grid_sizey"] - 2*trim
+    scaled_Mx = int(options.rescale * Mx)
+    scaled_My = int(options.rescale * My)
     # The states that are drawn are either
     # * The ones specified by the indices argument
     # * All states found in the file (if --all)
@@ -114,8 +117,9 @@ if __name__ == "__main__":
             background_color = tuple(colorfunc(np.zeros((1,1)))[0,0])
         else:
             background_color = colorfunc(np.zeros((1,1)))[0,0]
-        full_shape = (columns*Mx+(columns-1)*margin, rows*My+(rows-1)*margin)
-        full_im = Image.new(mode, full_shape, background_color)
+        full_x = columns*scaled_Mx+(columns-1)*margin
+        full_y = rows*scaled_My+(rows-1)*margin
+        full_im = Image.new(mode, (full_x, full_y), background_color)
     counter = 0
     # Loop through all states to be plotted
     for index in indices:
@@ -135,8 +139,12 @@ if __name__ == "__main__":
             Z *= options.average_point/avg
         # Create image by mapping data through colorfunc
         state_im = Image.fromarray(colorfunc(Z), mode=mode)
+        if options.rescale != 1:
+            state_im.thumbnail((scaled_Mx, scaled_My), Image.ANTIALIAS)
         if options.combined:
-            paste_corner = ((counter % columns)*(Mx+margin), (counter // columns)*(My+margin))
+            paste_x = (counter % columns)*(scaled_Mx+margin)
+            paste_y = (counter // columns)*(scaled_My+margin)
+            paste_corner = (paste_x, paste_y)
             full_im.paste(state_im, paste_corner)
         if options.separate:
             out = out_multifilename % index
