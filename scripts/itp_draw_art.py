@@ -38,15 +38,20 @@ Colorscheme = namedtuple("Colorscheme", ["mode", "func"])
 
 CC = conv_const = np.nextafter(256,0) # Conversion constant from float to uint8
 
+def C(x):
+    return np.clip(x, 0, 1)
+
+# Sorry for the ugly function definitions... This asks for some Haskell-style
+# function composition
 colorschemes = {
     "default" : Colorscheme("RGB",
-        lambda x: np.uint8(CC*np.dstack((x, np.zeros_like(x), x*(1-x))))),
+        lambda x: np.uint8(CC*np.dstack((C(x), np.zeros_like(C(x)), C(x)*(1-C(x)))))),
     "cold" : Colorscheme("RGB",
-        lambda x: np.uint8(CC*np.dstack((x**2, x**2, x**0.75)))),
+        lambda x: np.uint8(CC*np.dstack((C(x)**2, C(x)**2, C(x)**0.75)))),
     "finland" : Colorscheme("RGB",
-        lambda x: np.uint8(CC*np.dstack((1-x, 1-x, np.ones_like(x))))),
+        lambda x: np.uint8(CC*np.dstack((1-C(x), 1-C(x), np.ones_like(C(x)))))),
     "bow" : Colorscheme("L",
-        lambda x: np.uint8(CC*(1-x)))
+        lambda x: np.uint8(CC*(1-C(x))))
 }
 
 # Try to import more colorschemes from Matplotlib
