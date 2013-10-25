@@ -36,6 +36,8 @@ Constraint const* parse_constraint_description(std::string const& str) {
 	// Simply delegate to the individual constructors based on name
 	if (name == "no" or name == "none" or name == "zero")
 		return new NoConstraint(params);
+	else if (name == "maxr" or name == "maxradius")
+		return new MaximumRadialDistanceConstraint(params);
 	else
 		throw UnknownConstraintType(str);
 }
@@ -46,4 +48,23 @@ NoConstraint::NoConstraint(std::vector<double> params) {
 	if (not params.empty())
 		throw InvalidConstraintType("Constraint type NoConstraint does not take parameters");
 	init();
+}
+
+// MaximumRadialDistanceConstraint
+
+MaximumRadialDistanceConstraint::MaximumRadialDistanceConstraint(std::vector<double> params) {
+	if (params.size() == 1) {
+		r = params[0];
+	}
+	else
+		throw InvalidConstraintType("Constraint type MaximumRadialDistanceConstraint takes exactly 1 parameter");
+	init();
+}
+
+void MaximumRadialDistanceConstraint::init() {
+	if (r < 0)
+		throw InvalidConstraintType("radial constraint with negative radius");
+	std::stringstream ss;
+	ss << "maximum radial distance = " << r;
+	description = ss.str();
 }

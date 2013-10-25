@@ -25,6 +25,7 @@
 #ifndef _CONSTRAINT_HPP_
 #define _CONSTRAINT_HPP_
 
+#include <cmath>
 #include <vector>
 #include <tr1/tuple>
 
@@ -57,6 +58,20 @@ class NoConstraint : public Constraint {
 		bool check(__attribute__((unused)) double x, __attribute__((unused)) double y) const { return true; }
 	private:
 		void init() { description = "none"; }
+};
+
+// Maximum radial distance
+
+class MaximumRadialDistanceConstraint : public Constraint {
+	public:
+		MaximumRadialDistanceConstraint(double _r) : r(_r) { init(); }
+		MaximumRadialDistanceConstraint(std::vector<double> params);
+		bool check(__attribute__((unused)) double x, __attribute__((unused)) double y) const {
+			return (hypot(x,y) <= r);
+		}
+	private:
+		double r;
+		void init();
 };
 
 #endif // _CONSTRAINT_HPP_
