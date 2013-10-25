@@ -34,7 +34,7 @@ Noise const* parse_noise_description(std::string const& str) {
 	}
 	catch (ParseError& e) {
 		std::cerr << e.what() << std::endl;
-		throw InvalidPotentialType(str);
+		throw InvalidNoiseType(str);
 	}
 	std::string const& name = p.first;
 	std::vector<double> const& params = p.second;
