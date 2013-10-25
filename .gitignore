@@ -29,6 +29,7 @@ src/gtest*
 
 # Object files
 obj/commandlineparser.o
+obj/constraint.o
 obj/convergence.o
 obj/convergenceparser.o
 obj/datafile.o
@@ -79,6 +80,7 @@ obj/transformer.o
 
 # Dependency files
 .deps/commandlineparser.o.d
+.deps/constraint.o.d
 .deps/convergence.o.d
 .deps/convergenceparser.o.d
 .deps/datafile.o.d

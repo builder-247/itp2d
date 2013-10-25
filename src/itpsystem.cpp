@@ -36,7 +36,7 @@ ITPSystem::ITPSystem(Parameters const& given_params,
 		exhausting_eps_values(params.get_exhaust_eps()),
 		rng(params.get_random_seed()),
 		pot_type(parse_potential_description(params.get_potential_type())),
-		pot(datalayout, *pot_type, rng, params.get_noise()),
+		pot(datalayout, *pot_type, rng, params.get_noise(), params.get_noise_constraint()),
 		kin(params.get_B(), transformer, boundary_type),
 		states(params.get_N(), datalayout, params.get_ortho_algorithm()),
 		Esn_tuples(params.get_N()),
@@ -70,6 +70,7 @@ ITPSystem::ITPSystem(Parameters const& given_params,
 		datafile->add_attribute("operator_splitting_order", 2*params.get_halforder());
 		datafile->add_attribute("potential", pot_type->get_description());
 		datafile->add_attribute("noise", params.get_noise().get_description());
+		datafile->add_attribute("noise_constraint", params.get_noise_constraint().get_description());
 		datafile->add_attribute("timestep_convergence_test", params.get_timestep_convergence_test().get_description());
 		datafile->add_attribute("final_convergence_test", params.get_final_convergence_test().get_description());
 		datafile->add_attribute("magnetic_field_strength", params.get_B());
@@ -135,6 +136,7 @@ void ITPSystem::print_initial_message() {
 		<< "\t\tfinal convergence: " << params.get_final_convergence_test().get_description() << std::endl
 		<< "\tpotential: " << pot_type->get_description() << std::endl
 		<< "\t\tnoise: " << params.get_noise().get_description() << std::endl
+		<< "\t\tnoise_constraint: " << params.get_noise_constraint().get_description() << std::endl
 		<< "\tmagnetic field strength: " << params.get_B() << std::endl
 		<< "\tgrid: " << params.get_sizex() << "x" << params.get_sizey() << " of length " << params.get_lenx() << ", ";
 	switch (boundary_type) {

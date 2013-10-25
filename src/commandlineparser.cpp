@@ -34,6 +34,10 @@ Gaussian spikes with the prescribed density and normally distributed amplitude a
 \tgaussian(density,amp_mean,amp_stdev,width_mean,width_stdev)\n\
 See header noise.hpp for details.";
 
+const char CommandLineParser::help_noise_constraint[] = "\
+Description of possible geometric constraint imposed on the noise. Valid descriptions:\n\
+See header constraint.hpp for details.";
+
 const char CommandLineParser::help_recover[] = "\
 Restart simulation instead of quitting on some fatal errors.";
 
@@ -182,6 +186,7 @@ CommandLineParser::CommandLineParser() :
 	arg_highmem("", "highmem-orthonormalization", help_highmem, cmd),
 	arg_wisdom_file_name("", "wisdomfile", help_wisdom_file_name, false, Parameters::default_wisdom_file_name, "FILENAME", cmd),
 	arg_noise("", "noise", help_noise, false, Parameters::default_noise_type, "STRING", cmd),
+	arg_noise_constraint("", "noise-constraint", help_noise_constraint, false, Parameters::default_noise_constraint_type, "STRING", cmd),
 	arg_recover("", "recover", help_recover, cmd),
 	arg_rngseed("", "rngseed", help_rngseed, false, Parameters::default_rngseed, "NUM", cmd),
 	arg_min_time_step("", "mineps", help_min_time_step, false, Parameters::default_min_time_step, "FLOAT", cmd),
@@ -269,6 +274,7 @@ void CommandLineParser::parse(std::vector<std::string>& args) {
 	params.set_timestep_convergence_test(arg_timestep_convtest.getValue());
 	params.set_final_convergence_test(arg_final_convtest.getValue());
 	params.set_noise(arg_noise.getValue());
+	params.set_noise_constraint(arg_noise_constraint.getValue());
 	if (arg_save_everything.getValue())
 		params.save_what = Parameters::Everything;
 	if (arg_save_onlyenergies.getValue())

@@ -77,7 +77,7 @@ GaussianNoise::GaussianNoise(std::vector<double> params) {
 	init();
 }
 
-void GaussianNoise::add_noise(DataLayout const& dl, double* pot_values, RNG& rng) const {
+void GaussianNoise::add_noise(DataLayout const& dl, double* pot_values, RNG& rng, Constraint const& constraint) const {
 	// Probability that a grid point has a spike. This should be quite small,
 	// so that the probability of two spikes landing on the same grid point is
 	// negligible, as we will neglect this scenario.
@@ -86,15 +86,19 @@ void GaussianNoise::add_noise(DataLayout const& dl, double* pot_values, RNG& rng
 	typedef std::tr1::tuple<double, double, double, double> spike; // x-coord, y-coord, amplitude and width of a spike
 	typedef std::vector<spike> spike_vector;
 	spike_vector spikes;
-	for (size_t x=0; x<dl.sizex; x++)
-		for (size_t y=0; y<dl.sizey; y++)
-			if (rng.bernoulli_trial(p)) {	// Place a spike here at probability p
+	for (size_t x=0; x<dl.sizex; x++) {
+		const double px = dl.get_posx(x);
+		for (size_t y=0; y<dl.sizey; y++) {
+			const double py = dl.get_posy(y);
+			if (constraint.check(px,py) and rng.bernoulli_trial(p)) { // Place a spike here at probability p
 				// Determine width
 				const double w = width_mean + width_stdev*rng.gaussian_rand();
 				// Determine amplitude
 				const double A = amplitude_mean + amplitude_stdev*rng.gaussian_rand();
 				spikes.push_back(spike(dl.get_posx(x),dl.get_posy(y),A,w));
 			}
+		}
+	}
 	// Then, loop through all spikes and add its effect into pot_values. This
 	// is not a very efficient way to do this, but this only needs to be done
 	// once so it doesn't matter.

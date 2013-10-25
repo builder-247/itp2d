@@ -29,7 +29,7 @@
 class Potential : public virtual Operator {
 	public:
 		Potential(DataLayout const& dl, PotentialType const& ptype, std::string name = "V");
-		Potential(DataLayout const& dl, PotentialType const& ptype, RNG& rng, Noise const& noise = NoNoise(), std::string name = "V");
+		Potential(DataLayout const& dl, PotentialType const& ptype, RNG& rng, Noise const& noise = NoNoise(), Constraint const& noise_constraint = NoConstraint(), std::string name = "V");
 		~Potential();
 		inline double get_value(size_t x, size_t y) const { return (isnull)? 0 : datalayout.value(values, x, y); }
 		inline double const* get_valueptr() const { return (isnull)? NULL : values; }

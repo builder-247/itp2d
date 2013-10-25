@@ -151,6 +151,15 @@ class UnknownNoiseType : public std::runtime_error {
 		}
 };
 
+class UnknownConstraintType : public std::runtime_error {
+	public:
+		UnknownConstraintType(std::string str) : std::runtime_error("") {
+			std::stringstream ss;
+			ss << "Constraint description \"" << str << "\" not understood by parser.";
+			static_cast<std::runtime_error&>(*this) = std::runtime_error(ss.str());
+		}
+};
+
 class InvalidPotentialType : public std::runtime_error {
 	public:
 		InvalidPotentialType(std::string str) : std::runtime_error("") {
@@ -166,6 +175,15 @@ class InvalidNoiseType : public std::runtime_error {
 		InvalidNoiseType(std::string str) : std::runtime_error("") {
 			std::stringstream ss;
 			ss	<< "Invalid noise type: " << str << std::endl;
+			static_cast<std::runtime_error&>(*this) = std::runtime_error(ss.str());
+		}
+};
+
+class InvalidConstraintType : public std::runtime_error {
+	public:
+		InvalidConstraintType(std::string str) : std::runtime_error("") {
+			std::stringstream ss;
+			ss	<< "Invalid constraint type: " << str << std::endl;
 			static_cast<std::runtime_error&>(*this) = std::runtime_error(ss.str());
 		}
 };

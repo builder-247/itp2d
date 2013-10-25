@@ -26,13 +26,14 @@
 #include "datalayout.hpp"
 #include "rng.hpp"
 #include "parser.hpp"
+#include "constraint.hpp"
 
 /* Interface class representing "noise" which can be added to some array of
  * values, such as a potential. */
 class Noise {
 	public:
 		virtual ~Noise() {};
-		virtual void add_noise(DataLayout const& dl, double* pot_values, RNG& rng) const = 0;
+		virtual void add_noise(DataLayout const& dl, double* pot_values, RNG& rng, Constraint const& constraint) const = 0;
 		virtual std::string const& get_description() const { return description; }
 	protected:
 		std::string description;
@@ -54,7 +55,7 @@ class NoNoise : public Noise {
 	public:
 		NoNoise() { init(); }
 		NoNoise(std::vector<double> params);
-		void add_noise(__attribute__((unused)) DataLayout const& dl, __attribute__((unused))double* pot_values, __attribute__((unused))RNG& rng) const {}
+		void add_noise(__attribute__((unused)) DataLayout const& dl, __attribute__((unused))double* pot_values, __attribute__((unused))RNG& rng, __attribute__((unused)) Constraint const& constraint) const {}
 	private:
 		void init() { description = "none"; }
 };
@@ -78,7 +79,7 @@ class GaussianNoise : public Noise {
 			init();
 		}
 		GaussianNoise(std::vector<double> params);
-		void add_noise(DataLayout const& dl, double* pot_values, RNG& rng) const;
+		void add_noise(DataLayout const& dl, double* pot_values, RNG& rng, Constraint const& constraint) const;
 	private:
 		double density;
 		double amplitude_mean;

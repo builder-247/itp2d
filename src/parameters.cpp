@@ -41,6 +41,7 @@ const char Parameters::default_potential_type[] = "harmonic";
 const char Parameters::default_timestep_convergence_test_string[] = "relstdev(1e-3,1e-4)";
 const char Parameters::default_final_convergence_test_string[] = "relstdev(1e-3,0)";
 const char Parameters::default_noise_type[] = "none";
+const char Parameters::default_noise_constraint_type[] = "none";
 const double Parameters::default_B = 0;
 const int Parameters::default_halforder = 5;
 const double Parameters::default_initial_eps = 0.50;
@@ -73,6 +74,7 @@ std::ostream& operator<<(std::ostream& stream, const Parameters& params) {
 	stream << "initialstate_description: " << params.get_initialstate_description() << std::endl;
 	stream << "potential_type: " << params.get_potential_type() << std::endl;
 	stream << "noise: " << params.get_noise().get_description() << std::endl;
+	stream << "noise_constraint: " << params.get_noise_constraint().get_description() << std::endl;
 	stream << "timestep_convergence_test: " << params.get_timestep_convergence_test().get_description() << std::endl;
 	stream << "final_convergence_test: " << params.get_final_convergence_test().get_description() << std::endl;
 	stream << "B: " << params.get_B() << std::endl;
@@ -113,6 +115,7 @@ void Parameters::set_to_defaults() {
 	timestep_convergence_test = parse_convergence_description(default_timestep_convergence_test_string);
 	final_convergence_test = parse_convergence_description(default_final_convergence_test_string);
 	noise = parse_noise_description(default_noise_type);
+	noise_constraint = parse_constraint_description(default_noise_constraint_type);
 	define_external_field(default_potential_type, default_B);
 	set_num_states(default_N, default_needed_to_converge, default_ignore_lowest);
 	define_initial_states(default_initialstate_preset);

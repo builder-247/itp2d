@@ -41,6 +41,7 @@ class CommandLineParser {
 		static const char help_highmem[];
 		static const char help_wisdom_file_name[];
 		static const char help_noise[];
+		static const char help_noise_constraint[];
 		static const char help_recover[];
 		static const char help_rngseed[];
 		static const char help_min_time_step[];
@@ -82,6 +83,7 @@ class CommandLineParser {
 		TCLAP::SwitchArg arg_highmem;
 		TCLAP::ValueArg<std::string> arg_wisdom_file_name;
 		TCLAP::ValueArg<std::string> arg_noise;
+		TCLAP::ValueArg<std::string> arg_noise_constraint;
 		TCLAP::SwitchArg arg_recover;
 		TCLAP::ValueArg<unsigned long int> arg_rngseed;
 		TCLAP::ValueArg<double> arg_min_time_step;
