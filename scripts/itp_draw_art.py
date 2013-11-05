@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import division
+import sys
 import os
 from math import floor, ceil, sqrt
 from collections import namedtuple
@@ -110,7 +111,11 @@ if __name__ == "__main__":
     # Option parsing done. Read data.
     file = h5py.File(filename, 'r')
     N = file.attrs["num_states"]
-    states = file["/states"]
+    try:
+        states = file["/states"]
+    except KeyError:
+        print >> sys.stderr, "Error: Datafile '%s' doesn't seem to contain state data. Did you use --save-only-energies or strip_states.py?" % filename
+        sys.exit(1)
     energies = file["/final_energies"]
     assert (N == states.shape[1]), "Datafile corrupted, recorded num_states does not match state array dimensions."
     if ((options.slot >= 0) and options.slot >= states.shape[0]) \
