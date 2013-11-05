@@ -48,6 +48,7 @@ class Constraint {
 // desciption string
 
 Constraint const* parse_constraint_description(std::string const& str);
+Constraint const* parse_constraint_description(name_parameters_pair const& pair);
 
 // The trivial case of no constraint at all
 
@@ -58,6 +59,23 @@ class NoConstraint : public Constraint {
 		bool check(__attribute__((unused)) double x, __attribute__((unused)) double y) const { return true; }
 	private:
 		void init() { description = "none"; }
+};
+
+
+// A special constraint representing a negation of another constraint
+
+class InverseConstraint : public Constraint {
+	public:
+		InverseConstraint(Constraint const& base);
+		InverseConstraint(Constraint const* base); // If constructed with a pointer, this pointer will be
+												   // free'd in the destructor
+		~InverseConstraint();
+		inline bool check(double x, double y) const { return !base_constraint.check(x, y); }
+	private:
+		Constraint const& base_constraint;
+		Constraint const* base_constraint_ptr;
+		const bool owns_base_constraint;
+		void init();
 };
 
 // Maximum radial distance

@@ -38,6 +38,7 @@ const char CommandLineParser::help_noise_constraint[] = "\
 Description of possible geometric constraint imposed on the noise. Valid descriptions:\n\
 Maximum distance from the center:\n\
 \tmaxradius(r)\n\
+You can also negate any other constraint with a '!', for example '!maxradius(4.0)'.\n\
 See header constraint.hpp for details.";
 
 const char CommandLineParser::help_recover[] = "\

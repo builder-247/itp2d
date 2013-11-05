@@ -31,15 +31,23 @@ Constraint const* parse_constraint_description(std::string const& str) {
 		std::cerr << e.what() << std::endl;
 		throw UnknownConstraintType(str);
 	}
+	return parse_constraint_description(p);
+}
+
+Constraint const* parse_constraint_description(name_parameters_pair const& p) {
 	std::string const& name = p.first;
 	std::vector<double> const& params = p.second;
 	// Simply delegate to the individual constructors based on name
-	if (name == "no" or name == "none" or name == "zero")
+	if (name[0] == '!') {
+		std::string base = name.substr(1,name.size()-1);
+		return new InverseConstraint(parse_constraint_description(make_pair(base, params)));
+	}
+	else if (name == "no" or name == "none" or name == "zero")
 		return new NoConstraint(params);
 	else if (name == "maxr" or name == "maxradius")
 		return new MaximumRadialDistanceConstraint(params);
 	else
-		throw UnknownConstraintType(str);
+		throw UnknownConstraintType(name);
 }
 
 // NoConstraint
@@ -48,6 +56,33 @@ NoConstraint::NoConstraint(std::vector<double> params) {
 	if (not params.empty())
 		throw InvalidConstraintType("Constraint type NoConstraint does not take parameters");
 	init();
+}
+
+// InverseConstraint
+
+InverseConstraint::InverseConstraint(Constraint const& base) :
+		base_constraint(base),
+		base_constraint_ptr(&base),
+		owns_base_constraint(false) {
+	init();
+}
+
+InverseConstraint::InverseConstraint(Constraint const* base) :
+		base_constraint(*base),
+		base_constraint_ptr(base),
+		owns_base_constraint(true) {
+	init();
+}
+
+InverseConstraint::~InverseConstraint() {
+	if (owns_base_constraint)
+		delete base_constraint_ptr;
+}
+
+void InverseConstraint::init() {
+	std::stringstream ss;
+	ss << "inverse of " << base_constraint.get_description();
+	description = ss.str();
 }
 
 // MaximumRadialDistanceConstraint
