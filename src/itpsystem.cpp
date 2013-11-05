@@ -147,7 +147,7 @@ void ITPSystem::print_initial_message() {
 			out << "Dirichlet boundary conditions" << std::endl;
 			break;
 	}
-	if (typeid(*pot_type) == typeid(ZeroPotential)) {
+	if (pot.is_null()) {
 		out << "\tzero potential -> no operator splitting needed" << std::endl;
 		assert(T->halforder == 1);
 	}
