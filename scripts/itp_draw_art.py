@@ -6,7 +6,7 @@ from collections import namedtuple
 import numpy as np
 import h5py
 from optparse import OptionParser
-from PIL import Image
+from PIL import Image, ImageFont, ImageDraw
 
 # Print pretty pictures from the wave functions computed with itp2d.
 
@@ -68,12 +68,15 @@ except ImportError:
 if __name__ == "__main__":
     # parse command line arguments
     parser = OptionParser(usage="%prog [options] [datafile.h5] [indices]")
-    parser.set_defaults(verbose=True, combined=True, colorscheme="default",
-            slot=-1, margin=0, trim=0, average_point=0, rescale=1)
+    parser.set_defaults(verbose=True, labels=False, label_font_size=10,
+            combined=True, colorscheme="default", slot=-1, margin=0, trim=0,
+            average_point=0, rescale=1)
     parser.add_option("-v", "--verbose", action="store_true")
     parser.add_option("-q", "--quiet", action="store_false", dest="verbose")
     parser.add_option("-o", "--output", type="string", metavar="FILENAME", help="Filename for the output image")
     parser.add_option("-a", "--all", action="store_true", help="Draw also the extra states not intended to converge")
+    parser.add_option("-l", "--labels", action="store_true", help="Draw labels with each state's index and energy to the combined image")
+    parser.add_option("", "--label-font-size", type="int", help="Font size for the labels")
     parser.add_option("-s", "--square", action="store_true", help="Discard states so that the resulting image is square")
     parser.add_option("-r", "--rescale", type="float", metavar="FACTOR", help="Rescale resulting images with this factor")
     parser.add_option("-m", "--margin", type="int", metavar="PIXELS", help="Add some empty space between states in the combined image (after rescaling)")
@@ -108,6 +111,7 @@ if __name__ == "__main__":
     file = h5py.File(filename, 'r')
     N = file.attrs["num_states"]
     states = file["/states"]
+    energies = file["/final_energies"]
     assert (N == states.shape[1]), "Datafile corrupted, recorded num_states does not match state array dimensions."
     if ((options.slot >= 0) and options.slot >= states.shape[0]) \
             or ((options.slot < 0) and abs(options.slot) > states.shape[0]):
@@ -137,6 +141,15 @@ if __name__ == "__main__":
     columns = int(floor(sqrt(num_to_draw)))
     rows = int(ceil(num_to_draw/columns))
     mode, colorfunc = colorschemes[options.colorscheme]
+    # Load PIL's default font for creating labels
+    font = ImageFont.truetype("/usr/share/fonts/dejavu/DejaVuSansMono.ttf",
+            options.label_font_size)
+    # Get color of text from the colormap
+    if mode == "RGB":
+        foreground_color = tuple(colorfunc(np.ones((1,1)))[0,0])
+    else:
+        foreground_color = colorfunc(np.ones((1,1)))[0,0]
+    # Initialize combined image
     if options.combined:
         # Get color of zero from colormap
         if mode == "RGB":
@@ -146,6 +159,7 @@ if __name__ == "__main__":
         full_x = columns*scaled_Mx+(columns-1)*margin
         full_y = rows*scaled_My+(rows-1)*margin
         full_im = Image.new(mode, (full_x, full_y), background_color)
+        full_draw = ImageDraw.Draw(full_im)
     counter = 0
     # Loop through all states to be plotted
     progressbar = ProgressBar(widgets=["Drawing images: ", Percentage(), Bar(), ETA()])
@@ -173,6 +187,10 @@ if __name__ == "__main__":
             paste_y = (counter // columns)*(scaled_My+margin)
             paste_corner = (paste_x, paste_y)
             full_im.paste(state_im, paste_corner)
+            if options.labels:
+                E = energies[index]
+                label = "n = %d, E = %.3f" % (index, E)
+                full_draw.text(paste_corner, label, fill=foreground_color, font=font)
         if options.separate:
             out = out_multifilename % index
             state_im.save(out)
