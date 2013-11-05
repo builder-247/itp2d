@@ -56,6 +56,8 @@ colorschemes = {
 
 # Try to import more colorschemes from Matplotlib
 try:
+    import matplotlib
+    matplotlib.use('Agg')
     from matplotlib import pylab
     for mapname in pylab.cm.datad:
         colorfunc = lambda x, cmap=getattr(pylab.cm, mapname): cmap(x, bytes=True)[...,:3]
