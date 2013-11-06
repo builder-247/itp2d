@@ -46,6 +46,8 @@ Constraint const* parse_constraint_description(name_parameters_pair const& p) {
 		return new NoConstraint(params);
 	else if (name == "maxr" or name == "maxradius")
 		return new MaximumRadialDistanceConstraint(params);
+	else if (name == "ring" or name == "annulus")
+		return new RingConstraint(params);
 	else
 		throw UnknownConstraintType(name);
 }
@@ -101,5 +103,27 @@ void MaximumRadialDistanceConstraint::init() {
 		throw InvalidConstraintType("radial constraint with negative radius");
 	std::stringstream ss;
 	ss << "maximum radial distance = " << r;
+	description = ss.str();
+}
+
+// RingConstraint
+
+RingConstraint::RingConstraint(std::vector<double> params) {
+	if (params.size() == 2) {
+		minr = params[0];
+		width = params[1];
+	}
+	else
+		throw InvalidConstraintType("Constraint type RingConstraint takes exactly 2 parameters");
+	init();
+}
+
+void RingConstraint::init() {
+	if (minr < 0)
+		throw InvalidConstraintType("ring constraint with negative inner radius");
+	if (width < 0)
+		throw InvalidConstraintType("ring constraint with negative width");
+	std::stringstream ss;
+	ss << "ring with inner radius = " << minr << " and width = " << width;
 	description = ss.str();
 }

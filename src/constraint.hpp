@@ -92,4 +92,20 @@ class MaximumRadialDistanceConstraint : public Constraint {
 		void init();
 };
 
+// A ring-like (or annulus-like) constraint with a minimum radius and a width
+
+class RingConstraint : public Constraint {
+	public:
+		RingConstraint(double _minr, double _width) : minr(_minr), width(_width) { init(); }
+		RingConstraint(std::vector<double> params);
+		bool check(__attribute__((unused)) double x, __attribute__((unused)) double y) const {
+			const double r = hypot(x,y);
+			return (r >= minr and r <= minr+width);
+		}
+	private:
+		double minr;
+		double width;
+		void init();
+};
+
 #endif // _CONSTRAINT_HPP_
