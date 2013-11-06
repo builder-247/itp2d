@@ -69,7 +69,7 @@ except ImportError:
 if __name__ == "__main__":
     # parse command line arguments
     parser = OptionParser(usage="%prog [options] [datafile.h5] [indices]")
-    parser.set_defaults(verbose=True, labels=False, label_font_size=10,
+    parser.set_defaults(verbose=True, labels=False, label_font_size=10, label_font_file="",
             combined=True, colorscheme="default", slot=-1, margin=0, trim=0,
             average_point=0, rescale=1)
     parser.add_option("-v", "--verbose", action="store_true")
@@ -78,6 +78,7 @@ if __name__ == "__main__":
     parser.add_option("-a", "--all", action="store_true", help="Draw also the extra states not intended to converge")
     parser.add_option("-l", "--labels", action="store_true", help="Draw labels with each state's index and energy to the combined image")
     parser.add_option("", "--label-font-size", type="int", help="Font size for the labels")
+    parser.add_option("", "--label-font-file", type="string", metavar="FILENAME", help="TTF or OTF font file for the labels")
     parser.add_option("-s", "--square", action="store_true", help="Discard states so that the resulting image is square")
     parser.add_option("-r", "--rescale", type="float", metavar="FACTOR", help="Rescale resulting images with this factor")
     parser.add_option("-m", "--margin", type="int", metavar="PIXELS", help="Add some empty space between states in the combined image (after rescaling)")
@@ -146,9 +147,11 @@ if __name__ == "__main__":
     columns = int(floor(sqrt(num_to_draw)))
     rows = int(ceil(num_to_draw/columns))
     mode, colorfunc = colorschemes[options.colorscheme]
-    # Load PIL's default font for creating labels
-    font = ImageFont.truetype("/usr/share/fonts/dejavu/DejaVuSansMono.ttf",
-            options.label_font_size)
+    # Load font for creating labels
+    if options.label_font_file == "":
+        # TODO: Replace this with some sensible search function
+        options.label_font_file = "/usr/share/fonts/dejavu/DejaVuSansMono.ttf"
+    font = ImageFont.truetype(options.label_font_file, options.label_font_size)
     # Get color of text from the colormap
     if mode == "RGB":
         foreground_color = tuple(colorfunc(np.ones((1,1)))[0,0])
