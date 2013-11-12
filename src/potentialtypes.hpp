@@ -235,4 +235,21 @@ class SquareOscillator : public PotentialType {
 		void init();
 };
 
+// A generalization of the harmonic oscillator
+class PowerOscillator : public PotentialType {
+	public:
+		static const double default_exponent;
+		static const double default_w;
+		PowerOscillator(double exponent=default_exponent, double omega=default_w);
+		PowerOscillator(std::vector<double> params);
+		inline double operator()(double x, double y) const {
+			const double r = hypot(x, y);
+			return 0.5*w*pow(r,a);
+		}
+	private:
+		double a;
+		double w;
+		void init();
+};
+
 #endif // _POTENTIALTYPES_HPP_

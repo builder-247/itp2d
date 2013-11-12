@@ -32,6 +32,8 @@ const double GaussianPotential::default_x0 = 0;
 const double GaussianPotential::default_y0 = 0;
 const double QuarticPotential::default_b = 0.01;
 const double SquareOscillator::default_alpha = 8;
+const double PowerOscillator::default_exponent = 4;
+const double PowerOscillator::default_w = 1;
 
 // The parser delegator
 
@@ -65,6 +67,8 @@ PotentialType const* parse_potential_description(std::string const& str) {
 		return new QuarticPotential(params);
 	if (name == "squareoscillator")
 		return new SquareOscillator(params);
+	if (name == "power" or name == "poweroscillator")
+		return new PowerOscillator(params);
 	else
 		throw UnknownPotentialType(str);
 	return NULL;
@@ -236,5 +240,39 @@ SquareOscillator::SquareOscillator(std::vector<double> params) {
 void SquareOscillator::init() {
 	std::stringstream ss;
 	ss << "squareoscillator(" << alpha << ")";
+	description = ss.str();
+}
+
+// PowerOscillator
+
+PowerOscillator::PowerOscillator(double exponent, double omega) :
+		a(exponent),
+		w(omega) {
+	init();
+}
+
+PowerOscillator::PowerOscillator(std::vector<double> params) {
+	if (params.empty()) {
+		a = default_exponent;
+		w = default_w;
+	}
+	else if (params.size() == 1) {
+		a = params[0];
+		w = default_w;
+	}
+	else if (params.size() == 2) {
+		a = params[0];
+		w = params[1];
+	}
+	else
+		throw InvalidPotentialType("power oscillator potential takes either zero, one or two parameters");
+	init();
+}
+
+void PowerOscillator::init() {
+	if (w < 0)
+		throw InvalidPotentialType("power oscillator with negative \"frequency\"");
+	std::stringstream ss;
+	ss << "poweroscillator(" << a << "," << w << ")";
 	description = ss.str();
 }

@@ -172,6 +172,8 @@ Quartic oscillator potential (x^2 * y^2)/2 + b(x^4 + y^4)/4, rotated by pi/4:\n\
 \tquartic(b)\n\
 Square oscillator potential 0.5*(|x|^a + |x|^a)\n\
 \tsquareoscillator(a)\n\
+Power oscillator potential 0.5*w*r^a\n\
+\tpoweroscillator(a,w)\n\
 See header potential.hpp for details.";
 
 const char CommandLineParser::help_epilogue[] = "\
