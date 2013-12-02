@@ -23,6 +23,8 @@
 const double HarmonicPotential::default_frequency = 1;
 const double HarmonicPotential::default_x0 = 0;
 const double HarmonicPotential::default_y0 = 0;
+const double EllipticOscillator::default_frequency_x = 1;
+const double EllipticOscillator::default_frequency_y = 1.6180339887498948482;
 const double PrettyHardSquare::default_exponent = 8;
 const double HenonHeiles::default_a = 205.0/42.0;
 const double HenonHeiles::default_b = -13.0/3.0;
@@ -55,6 +57,8 @@ PotentialType const* parse_potential_description(std::string const& str) {
 		return new ZeroPotential(params);
 	if (name == "harmonic")
 		return new HarmonicPotential(params);
+	if (name == "elliptic")
+		return new EllipticOscillator(params);
 	if (name == "prettyhardsquare")
 		return new PrettyHardSquare(params);
 	if (name == "softpentagon")
@@ -119,6 +123,35 @@ void HarmonicPotential::init() {
 	description = ss.str();
 }
 
+// EllipticOscillator
+
+EllipticOscillator::EllipticOscillator(double omega_x, double omega_y) :
+		wx(omega_x),
+		wy(omega_y) {
+	init();
+}
+
+EllipticOscillator::EllipticOscillator(std::vector<double> params) {
+	if (params.empty()) {
+		wx = default_frequency_x;
+		wy = default_frequency_y;
+	}
+	else if (params.size() == 2) {
+		wx = params[0];
+		wy = params[1];
+	}
+	else
+		throw InvalidPotentialType("elliptic oscillator potential takes either zero or three parameters");
+	init();
+}
+
+void EllipticOscillator::init() {
+	if (wx < 0 or wy < 0)
+		throw InvalidPotentialType("elliptic oscillator with negative frequency");
+	std::stringstream ss;
+	ss << "elliptic(" << wx <<", " << wy << ")";
+	description = ss.str();
+}
 // PrettyHardSquare
 
 PrettyHardSquare::PrettyHardSquare(std::vector<double> params) {

@@ -112,6 +112,24 @@ class HarmonicPotential : public PotentialType {
 		void init();
 };
 
+// The non-degenerate (elliptic) harmonic oscillator
+class EllipticOscillator : public PotentialType {
+	public:
+		static const double default_frequency_x;
+		static const double default_frequency_y;
+		static const double default_x0;
+		static const double default_y0;
+		EllipticOscillator(double omega_x=default_frequency_x, double omega_y=default_frequency_y);
+		EllipticOscillator(std::vector<double> params);
+		inline double operator()(double x, double y) const {
+			return 0.5*(wx*x*x + wy*y*y);
+		}
+	private:
+		double wx;
+		double wy;
+		void init();
+};
+
 // A pretty hard square of length pi
 class PrettyHardSquare : public PotentialType {
 	public:

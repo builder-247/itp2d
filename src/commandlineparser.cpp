@@ -159,6 +159,8 @@ Zero potential:\n\
 Harmonic oscillator with frequency w, centered at (x0,y0):\n\
 \tharmonic(w)\n\
 \tharmonic(w,x0,y0)\n\
+Elliptic oscillator with frequencies wx and wy:\n\
+\telliptic(wx,wy)\n\
 Square box with power function walls:\n\
 \tprettyhardsquare(exponent)\n\
 Soft-walled pentagon:\n\
