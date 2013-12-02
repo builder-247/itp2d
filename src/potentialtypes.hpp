@@ -93,13 +93,13 @@ class UserSetPotential : public PotentialType {
 };
 
 // The harmonic oscillator
-class HarmonicPotential : public PotentialType {
+class HarmonicOscillator : public PotentialType {
 	public:
 		static const double default_frequency;
 		static const double default_x0;
 		static const double default_y0;
-		HarmonicPotential(double omega=default_frequency, double orig_x=default_x0, double orig_y=default_y0);
-		HarmonicPotential(std::vector<double> params);
+		HarmonicOscillator(double omega=default_frequency, double orig_x=default_x0, double orig_y=default_y0);
+		HarmonicOscillator(std::vector<double> params);
 		inline double operator()(double x, double y) const {
 			const double px = x-x0;
 			const double py = y-y0;

@@ -20,9 +20,9 @@
 
 // Default values for parameters
 
-const double HarmonicPotential::default_frequency = 1;
-const double HarmonicPotential::default_x0 = 0;
-const double HarmonicPotential::default_y0 = 0;
+const double HarmonicOscillator::default_frequency = 1;
+const double HarmonicOscillator::default_x0 = 0;
+const double HarmonicOscillator::default_y0 = 0;
 const double EllipticOscillator::default_frequency_x = 1;
 const double EllipticOscillator::default_frequency_y = 1.6180339887498948482;
 const double PrettyHardSquare::default_exponent = 8;
@@ -56,7 +56,7 @@ PotentialType const* parse_potential_description(std::string const& str) {
 	if (name == "zero")
 		return new ZeroPotential(params);
 	if (name == "harmonic")
-		return new HarmonicPotential(params);
+		return new HarmonicOscillator(params);
 	if (name == "elliptic")
 		return new EllipticOscillator(params);
 	if (name == "prettyhardsquare")
@@ -87,14 +87,14 @@ ZeroPotential::ZeroPotential(std::vector<double> params) {
 }
 
 // The harmonic potential
-HarmonicPotential::HarmonicPotential(double omega, double orig_x, double orig_y) :
+HarmonicOscillator::HarmonicOscillator(double omega, double orig_x, double orig_y) :
 		w(omega),
 		x0(orig_x),
 		y0(orig_y) {
 	init();
 }
 
-HarmonicPotential::HarmonicPotential(std::vector<double> params) {
+HarmonicOscillator::HarmonicOscillator(std::vector<double> params) {
 	if (params.empty()) {
 		w = default_frequency;
 		x0 = default_x0;
@@ -115,7 +115,7 @@ HarmonicPotential::HarmonicPotential(std::vector<double> params) {
 	init();
 }
 
-void HarmonicPotential::init() {
+void HarmonicOscillator::init() {
 	if (w < 0)
 		throw InvalidPotentialType("harmonic oscillator with negative frequency");
 	std::stringstream ss;
