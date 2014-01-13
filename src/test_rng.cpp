@@ -93,6 +93,42 @@ TEST(rng, uniformity_of_uniform_rand) {
 	delete[] membuf;
 }
 
+// The same thing for the Poisson distribution.
+TEST(rng, poissonity_of_poisson_rand) {
+	const double lambda = 1.0;
+	const int N = 100000;
+	const double tolerance = 0.01;
+	RNG rng(RNG::produce_random_seed());
+	double* membuf = new double[N];
+	for (int i=0; i<N; i++) {
+		membuf[i] = rng.poisson_rand(lambda);
+	}
+	double sum;
+	sum = 0;
+	for (int i=0; i<N; i++) {
+		sum += membuf[i];
+	}
+	const double mean = sum/N;
+	sum = 0;
+	for (int i=0; i<N; i++) {
+		sum += (mean-membuf[i])*(mean-membuf[i]);
+	}
+	const double variance = sum/N;
+	EXPECT_NEAR(mean, lambda, tolerance);
+	EXPECT_NEAR(variance, lambda, 5*tolerance);
+	if (dump_data) {
+		// Save the random numbers for more careful analysis.
+		const char filename[] = "data/test_rng_poisson.h5";
+		const hsize_t hN = N;
+		H5::H5File datafile(filename, H5F_ACC_TRUNC);
+		H5::DataSpace rand_space(1, &hN);
+		H5::DataSet rand_data = datafile.createDataSet("rand", H5::PredType::NATIVE_DOUBLE, rand_space);
+		rand_data.write(membuf, H5::PredType::NATIVE_DOUBLE);
+		datafile.close();
+	}
+	delete[] membuf;
+}
+
 class BernoulliTest : public ::testing::TestWithParam<double> {
 	public:
 		BernoulliTest() : p(GetParam()) {}

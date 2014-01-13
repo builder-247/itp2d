@@ -36,11 +36,13 @@ public:
 	inline double gaussian_rand() { return normal_distribution(uniform_rng); }
 	inline double uniform_rand() { return uniform_rng(); }
 	inline bool bernoulli_trial(double p) { return bernoulli_distribution_type(p)(uniform_rng); }
+	inline unsigned int poisson_rand(double lambda) { return poisson_distribution_type(lambda)(uniform_rng); }
 	inline unsigned long int get_seed() const { return seed; }
 	typedef std::tr1::mt19937 base_rng_type;
 	typedef std::tr1::normal_distribution<double> normal_distribution_type;
 	typedef std::tr1::uniform_real<double> uniform_distribution_type;
 	typedef std::tr1::bernoulli_distribution bernoulli_distribution_type;
+	typedef std::tr1::poisson_distribution<unsigned int> poisson_distribution_type;
 	typedef std::tr1::variate_generator<base_rng_type, uniform_distribution_type> uniform_rng_type;
 	static unsigned long int produce_random_seed();
 private:
