@@ -19,8 +19,13 @@
 #ifndef _TEST_RNG_HPP_
 #define _TEST_RNG_HPP_
 
+#include <utility>
 #include <H5Cpp.h>
 #include "tests_common.hpp"
 #include "rng.hpp"
+
+std::pair<double,double> mean_and_variance(std::vector<double> const& vec);
+
+void write_sample(std::vector<double> const& vec, std::string filename);
 
 #endif // _TEST_RNG_HPP_

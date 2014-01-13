@@ -22,111 +22,91 @@
 
 #include "test_rng.hpp"
 
+// Helper function for computing the mean and variance of a sequence of numbers
+std::pair<double,double> mean_and_variance(std::vector<double> const& vec) {
+	const size_t N = vec.size();
+	double sum;
+	sum = 0;
+	for (size_t i=0; i<N; i++) {
+		sum += vec[i];
+	}
+	const double mean = sum/static_cast<double>(N);
+	sum = 0;
+	for (size_t i=0; i<N; i++) {
+		sum += (mean-vec[i])*(mean-vec[i]);
+	}
+	const double variance = sum/static_cast<double>(N);
+	return std::make_pair(mean, variance);
+}
+
+void write_sample(std::vector<double> const& vec, std::string filename) {
+	const hsize_t hN = vec.size();
+	H5::H5File datafile(filename.c_str(), H5F_ACC_TRUNC);
+	H5::DataSpace rand_space(1, &hN);
+	H5::DataSet rand_data = datafile.createDataSet("rand", H5::PredType::NATIVE_DOUBLE, rand_space);
+	rand_data.write(&vec.front(), H5::PredType::NATIVE_DOUBLE);
+	datafile.close();
+}
+
 // Test that the normally distributed random numbers are really normally distributed.
 // This could be done more thoroughly, but here we just check the mean and
 // variance of the distribution.
 TEST(rng, gaussianity_of_gaussian_rand) {
-	const int N = 100000;
-	const double tolerance = 0.015;
+	const size_t N = 100000;
+	const double tolerance = 0.01;
 	RNG rng(RNG::produce_random_seed());
-	double* membuf = new double[N];
-	for (int i=0; i<N; i++) {
-		membuf[i] = rng.gaussian_rand();
+	std::vector<double> sample(N);
+	for (size_t i=0; i<N; i++) {
+		sample[i] = rng.gaussian_rand();
 	}
-	double sum;
-	sum = 0;
-	for (int i=0; i<N; i++) {
-		sum += membuf[i];
-	}
-	const double mean = sum/N;
-	sum = 0;
-	for (int i=0; i<N; i++) {
-		sum += (mean-membuf[i])*(mean-membuf[i]);
-	}
-	const double variance = sum/N;
-	EXPECT_LT(fabs(mean), tolerance);
-	EXPECT_NEAR(variance, 1.0, 100*tolerance);
+	std::pair<double,double> p = mean_and_variance(sample);
+	const double mean = p.first;
+	const double variance = p.second;
+	EXPECT_NEAR(mean, 0.0, tolerance);
+	EXPECT_NEAR(variance, 1.0, 2*tolerance);
 	if (dump_data) {
 		// Save the random numbers for more careful analysis.
-		const char filename[] = "data/test_rng_gaussian.h5";
-		const hsize_t hN = N;
-		H5::H5File datafile(filename, H5F_ACC_TRUNC);
-		H5::DataSpace rand_space(1, &hN);
-		H5::DataSet rand_data = datafile.createDataSet("rand", H5::PredType::NATIVE_DOUBLE, rand_space);
-		rand_data.write(membuf, H5::PredType::NATIVE_DOUBLE);
-		datafile.close();
+		write_sample(sample, "data/test_rng_gaussian.h5");
 	}
-	delete[] membuf;
 }
 
 // The same thing for the uniform distribution.
 TEST(rng, uniformity_of_uniform_rand) {
-	const int N = 100000;
-	const double tolerance = 0.015;
+	const size_t N = 100000;
+	const double tolerance = 0.01;
 	RNG rng(RNG::produce_random_seed());
-	double* membuf = new double[N];
-	for (int i=0; i<N; i++) {
-		membuf[i] = rng.uniform_rand();
+	std::vector<double> sample(N);
+	for (size_t i=0; i<N; i++) {
+		sample[i] = rng.uniform_rand();
 	}
-	double sum;
-	sum = 0;
-	for (int i=0; i<N; i++) {
-		sum += membuf[i];
-	}
-	const double mean = sum/N;
-	sum = 0;
-	for (int i=0; i<N; i++) {
-		sum += (mean-membuf[i])*(mean-membuf[i]);
-	}
-	const double variance = sum/N;
-	EXPECT_NEAR(variance, 0.0, 100*tolerance);
+	std::pair<double,double> p = mean_and_variance(sample);
+	const double mean = p.first;
+	const double variance = p.second;
+	EXPECT_NEAR(mean, 0.5, tolerance);
+	EXPECT_NEAR(variance, 1.0/12, 2*tolerance);
 	if (dump_data) {
-		// Save the random numbers for more careful analysis.
-		const char filename[] = "data/test_rng_uniform.h5";
-		const hsize_t hN = N;
-		H5::H5File datafile(filename, H5F_ACC_TRUNC);
-		H5::DataSpace rand_space(1, &hN);
-		H5::DataSet rand_data = datafile.createDataSet("rand", H5::PredType::NATIVE_DOUBLE, rand_space);
-		rand_data.write(membuf, H5::PredType::NATIVE_DOUBLE);
-		datafile.close();
+		write_sample(sample, "data/test_rng_uniform.h5");
 	}
-	delete[] membuf;
 }
 
 // The same thing for the Poisson distribution.
 TEST(rng, poissonity_of_poisson_rand) {
 	const double lambda = 1.0;
-	const int N = 100000;
+	const size_t N = 100000;
 	const double tolerance = 0.01;
 	RNG rng(RNG::produce_random_seed());
-	double* membuf = new double[N];
-	for (int i=0; i<N; i++) {
-		membuf[i] = rng.poisson_rand(lambda);
+	std::vector<double> sample(N);
+	for (size_t i=0; i<N; i++) {
+		sample[i] = rng.poisson_rand(lambda);
 	}
-	double sum;
-	sum = 0;
-	for (int i=0; i<N; i++) {
-		sum += membuf[i];
-	}
-	const double mean = sum/N;
-	sum = 0;
-	for (int i=0; i<N; i++) {
-		sum += (mean-membuf[i])*(mean-membuf[i]);
-	}
-	const double variance = sum/N;
+	std::pair<double,double> p = mean_and_variance(sample);
+	const double mean = p.first;
+	const double variance = p.second;
 	EXPECT_NEAR(mean, lambda, tolerance);
-	EXPECT_NEAR(variance, lambda, 5*tolerance);
+	EXPECT_NEAR(variance, lambda, 2*tolerance);
 	if (dump_data) {
-		// Save the random numbers for more careful analysis.
-		const char filename[] = "data/test_rng_poisson.h5";
-		const hsize_t hN = N;
-		H5::H5File datafile(filename, H5F_ACC_TRUNC);
-		H5::DataSpace rand_space(1, &hN);
-		H5::DataSet rand_data = datafile.createDataSet("rand", H5::PredType::NATIVE_DOUBLE, rand_space);
-		rand_data.write(membuf, H5::PredType::NATIVE_DOUBLE);
-		datafile.close();
+		write_sample(sample, "data/test_rng_uniform.h5");
 	}
-	delete[] membuf;
 }
 
 class BernoulliTest : public ::testing::TestWithParam<double> {
