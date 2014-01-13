@@ -89,4 +89,25 @@ class GaussianNoise : public Noise {
 		void init();
 };
 
+/* Coulomb-like impurities in 3D space with a tunable exponent. */
+class CoulombImpurities : public Noise {
+	public:
+		static const double default_alpha;
+		static const double default_exponent;
+		static const double default_maxd;
+		CoulombImpurities(double _density, double _exponent = default_exponent,
+				double _alpha = default_alpha, double _maxd = default_maxd) :
+				density(_density), exponent(_exponent), alpha(_alpha), maxd(_maxd) {
+			init();
+		}
+		CoulombImpurities(std::vector<double> params);
+		void add_noise(DataLayout const& dl, double* pot_values, RNG& rng, Constraint const& constraint) const;
+	private:
+		double density; // density of impurities in three dimensions
+		double exponent;
+		double alpha;	// the potential of a single impurity is alpha/r^exp
+		double maxd;	// the impurities are located furthest at maxd distance units from the calculation plane
+		void init();
+};
+
 #endif // _NOISE_HPP_
