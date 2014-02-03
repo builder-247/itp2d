@@ -58,7 +58,7 @@ class NoConvergenceTest : public ConvergenceTest {
 };
 
 // Consider a state completely converged when it reaches convergence w.r.t
-// current ltimestep size with one iteration.
+// current timestep size with one iteration.
 class OneStepConvergenceTest : public ConvergenceTest {
 	public:
 		OneStepConvergenceTest() { init(); }

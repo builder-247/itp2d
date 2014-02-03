@@ -266,7 +266,7 @@ void ITPSystem::check_timestep_convergence() {
 		if (params.get_timestep_convergence_test().test(*this, n))
 			states.set_timestep_converged(index, true);
 	}
-	// Count how many where converged
+	// Count how many were converged
 	bool flag = true;
 	size_t count = 0;
 	std::vector<size_t> missing;
