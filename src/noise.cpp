@@ -84,26 +84,24 @@ GaussianNoise::GaussianNoise(std::vector<double> params) {
 }
 
 void GaussianNoise::add_noise(DataLayout const& dl, double* pot_values, RNG& rng, Constraint const& constraint) const {
-	// Probability that a grid point has a spike. This should be quite small,
-	// so that the probability of two spikes landing on the same grid point is
-	// negligible, as we will neglect this scenario.
-	const double p = density*dl.dx*dl.dx;
-	// First, randomly distribute the centers of the spikes
+	// The number of impurities on the calculation plane is Poisson distributed around the mean value
+	const double lambda = density*dl.lenx*dl.leny;
+	const unsigned int N = rng.poisson_rand(lambda);
+	// First, randomly distribute the centers, amplitudes and widths of the spikes
 	typedef std::tr1::tuple<double, double, double, double> spike; // x-coord, y-coord, amplitude and width of a spike
 	typedef std::vector<spike> spike_vector;
 	spike_vector spikes;
-	for (size_t x=0; x<dl.sizex; x++) {
-		const double px = dl.get_posx(x);
-		for (size_t y=0; y<dl.sizey; y++) {
-			const double py = dl.get_posy(y);
-			if (constraint.check(px,py) and rng.bernoulli_trial(p)) { // Place a spike here at probability p
-				// Determine width
-				const double w = width_mean + width_stdev*rng.gaussian_rand();
-				// Determine amplitude
-				const double A = amplitude_mean + amplitude_stdev*rng.gaussian_rand();
-				spikes.push_back(spike(dl.get_posx(x),dl.get_posy(y),A,w));
-			}
+	for (unsigned int n=0; n<N; n++) {
+		// First randomize the position
+		const double x = (rng.uniform_rand()-0.5)*dl.lenx;
+		const double y = (rng.uniform_rand()-0.5)*dl.leny;
+		if (not constraint.check(x, y)) {
+			continue;
 		}
+		// Determine amplitude and width
+		const double A = amplitude_mean + amplitude_stdev*rng.gaussian_rand();
+		const double w = width_mean + width_stdev*rng.gaussian_rand();
+		spikes.push_back(spike(x, y, A, w));
 	}
 	// Then, loop through all spikes and add its effect into pot_values. This
 	// is not a very efficient way to do this, but this only needs to be done
