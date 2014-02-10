@@ -132,6 +132,8 @@ class ITPSystem {
 		char timestring[24];
 		// Main members
 		PotentialType const* pot_type;
+		Constraint const* noise_constraint;
+		Noise const* noise;
 		const Potential pot;
 		const Kinetic kin;
 		OperatorSum H;

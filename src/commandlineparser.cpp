@@ -285,8 +285,8 @@ void CommandLineParser::parse(std::vector<std::string>& args) {
 	params.potential_type = arg_potential.getValue();
 	params.set_timestep_convergence_test(arg_timestep_convtest.getValue());
 	params.set_final_convergence_test(arg_final_convtest.getValue());
-	params.set_noise(arg_noise.getValue());
-	params.set_noise_constraint(arg_noise_constraint.getValue());
+	params.set_noise_type(arg_noise.getValue());
+	params.set_noise_constraint_type(arg_noise_constraint.getValue());
 	if (arg_save_everything.getValue())
 		params.save_what = Parameters::Everything;
 	if (arg_save_onlyenergies.getValue())

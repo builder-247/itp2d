@@ -66,10 +66,8 @@ class Parameters {
 		inline void set_timestep_convergence_test(std::string const& str);
 		inline void set_final_convergence_test(ConvergenceTest* test) { final_convergence_test = test; }
 		inline void set_final_convergence_test(std::string const& str);
-		inline void set_noise(Noise const* n) { noise = n; }
-		inline void set_noise(std::string const& str) { noise = parse_noise_description(str); }
-		inline void set_noise_constraint(Constraint const* c) { noise_constraint = c; }
-		inline void set_noise_constraint(std::string const& str) { noise_constraint = parse_constraint_description(str); }
+		inline void set_noise_type(std::string const& str) { noise_type = str; }
+		inline void set_noise_constraint_type(std::string const& str) { noise_constraint_type = str; }
 		inline void set_fftw_flags(unsigned int fl) { fftw_flags = fl; }
 		inline void set_verbosity(int val) { verbosity = val; }
 		inline void set_num_threads(int num) { num_threads = num; }
@@ -97,8 +95,8 @@ class Parameters {
 		inline std::string const& get_potential_type() const { return potential_type; }
 		inline ConvergenceTest const& get_timestep_convergence_test() const { return *timestep_convergence_test; }
 		inline ConvergenceTest const& get_final_convergence_test() const { return *final_convergence_test; }
-		inline Noise const& get_noise() const { return *noise; }
-		inline Constraint const& get_noise_constraint() const { return *noise_constraint; }
+		inline std::string const& get_noise_type() const { return noise_type; }
+		inline std::string const& get_noise_constraint_type() const { return noise_constraint_type; }
 		inline double get_B() const { return B; }
 		inline int get_halforder() const { return halforder; }
 		inline std::list<double> const& get_eps_values() const { return eps_values; }
@@ -173,8 +171,8 @@ class Parameters {
 		// Potential & field parameters
 		std::string potential_type;
 		double B;
-		Noise const* noise;
-		Constraint const* noise_constraint;
+		std::string noise_type;
+		std::string noise_constraint_type;
 		// Time evolution parameters
 		int halforder;					// Half the order of operator factorization
 		std::list<double> eps_values;	// Time step values to use

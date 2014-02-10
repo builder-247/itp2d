@@ -73,8 +73,8 @@ std::ostream& operator<<(std::ostream& stream, const Parameters& params) {
 	stream << "N: " << params.get_N() << std::endl;
 	stream << "initialstate_description: " << params.get_initialstate_description() << std::endl;
 	stream << "potential_type: " << params.get_potential_type() << std::endl;
-	stream << "noise: " << params.get_noise().get_description() << std::endl;
-	stream << "noise_constraint: " << params.get_noise_constraint().get_description() << std::endl;
+	stream << "noise_type: " << params.get_noise_type() << std::endl;
+	stream << "noise_constraint_type: " << params.get_noise_constraint_type() << std::endl;
 	stream << "timestep_convergence_test: " << params.get_timestep_convergence_test().get_description() << std::endl;
 	stream << "final_convergence_test: " << params.get_final_convergence_test().get_description() << std::endl;
 	stream << "B: " << params.get_B() << std::endl;
@@ -111,11 +111,11 @@ void Parameters::set_to_defaults() {
 	min_time_step = default_min_time_step;
 	ortho_alg = default_ortho_alg;
 	fftw_flags = default_fftw_flags;
+	noise_type = default_noise_type;
+	noise_constraint_type = default_noise_constraint_type;
 	//
 	timestep_convergence_test = parse_convergence_description(default_timestep_convergence_test_string);
 	final_convergence_test = parse_convergence_description(default_final_convergence_test_string);
-	noise = parse_noise_description(default_noise_type);
-	noise_constraint = parse_constraint_description(default_noise_constraint_type);
 	define_external_field(default_potential_type, default_B);
 	set_num_states(default_N, default_needed_to_converge, default_ignore_lowest);
 	define_initial_states(default_initialstate_preset);
