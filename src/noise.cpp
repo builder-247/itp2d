@@ -18,15 +18,6 @@
 
 #include "noise.hpp"
 
-// default parameters
-
-const double GaussianNoise::default_relative_amplitude_stdev = 0.20;
-const double GaussianNoise::default_relative_width_stdev = 0.20;
-
-const double CoulombImpurities::default_exponent = 1.0;
-const double CoulombImpurities::default_alpha = 1.0;
-const double CoulombImpurities::default_maxd = 1.0;
-
 // noise parser function
 
 Noise const* parse_noise_description(std::string const& str,
@@ -46,34 +37,31 @@ Noise const* parse_noise_description(std::string const& str,
 	// Simply delegate to the individual constructors based on name
 	if (name == "no" or name == "none" or name == "zero")
 		return new NoNoise();
-	else if (name == "gaussian" or name == "gaussians" or name == "gaussiannoise")
-		return new GaussianNoise(params, dl, constraint, rng);
-	else if (name == "coulomb" or name == "coulombimpurities")
-		return new CoulombImpurities(params, dl, constraint, rng);
+	else if (name == "gaussian" or name == "gaussians" or name == "gaussiannoise") {
+		if (params.size() == 3)
+			return new GaussianNoise(params[0], params[1], 0.0, params[2], 0.0, dl, constraint, rng);
+		else if (params.size() == 5)
+			return new GaussianNoise(params[0], params[1], params[2], params[3], params[4], dl, constraint, rng);
+		else
+			throw InvalidNoiseType("Noise type GaussianNoise takes either 3 or 5 parameters");
+	}
+	else if (name == "coulomb" or name == "coulombimpurities") {
+	// It looks like this "design pattern" has reached its end
+		if (params.size() == 4)
+			return new CoulombImpurities(params[0], params[1], params[2], params[3], dl, constraint, rng);
+		else
+			throw InvalidNoiseType("Noise type CoulombImpurities takes 4 parameters");
+	}
 	else
 		throw UnknownNoiseType(str);
 }
 
 // GaussianNoise
 
-GaussianNoise::GaussianNoise(std::vector<double> params, DataLayout const& dl, Constraint const& constr, RNG& rng) :
-		datalayout(dl), constraint(constr) {
-	if (params.size() == 3) {
-		density = params[0];
-		amplitude_mean = params[1];
-		width_mean = params[2];
-		amplitude_stdev = default_relative_amplitude_stdev * amplitude_mean;
-		width_stdev = default_relative_width_stdev * width_mean;
-	}
-	else if (params.size() == 5) {
-		density = params[0];
-		amplitude_mean = params[1];
-		amplitude_stdev = params[2];
-		width_mean = params[3];
-		width_stdev = params[4];
-	}
-	else
-		throw InvalidNoiseType("Noise type GaussianNoise takes either 3 or 5 parameters");
+GaussianNoise::GaussianNoise(double d, double amp, double amp_stdev, double w, double w_stdev,
+		DataLayout const& dl, Constraint const& constr, RNG& rng) :
+		datalayout(dl), constraint(constr),
+		density(d), amplitude_mean(amp), amplitude_stdev(amp_stdev), width_mean(w), width_stdev(w_stdev) {
 	init(rng);
 }
 
@@ -129,35 +117,9 @@ void GaussianNoise::add_noise(DataLayout const& dl, double* pot_values) const {
 
 // CoulombImpurities
 
-CoulombImpurities::CoulombImpurities(std::vector<double> params, DataLayout const& dl, Constraint const& constr, RNG& rng) :
-		datalayout(dl), constraint(constr) {
-	// It looks like this "design pattern" has reached its end
-	if (params.size() == 4) {
-		density = params[0];
-		exponent = params[1];
-		alpha = params[2];
-		maxd = params[3];
-	}
-	else if (params.size() == 3) {
-		density = params[0];
-		exponent = params[1];
-		alpha = params[2];
-		maxd = default_maxd;
-	}
-	else if (params.size() == 2) {
-		density = params[0];
-		exponent = params[1];
-		alpha = default_alpha;
-		maxd = default_maxd;
-	}
-	else if (params.size() == 1) {
-		density = params[0];
-		exponent = default_exponent;
-		alpha = default_alpha;
-		maxd = default_maxd;
-	}
-	else
-		throw InvalidNoiseType("Noise type CoulombImpurities takes 1-4 parameters");
+CoulombImpurities::CoulombImpurities(double d, double e, double a, double _maxd, DataLayout const& dl, Constraint const& constr, RNG& rng) :
+		datalayout(dl), constraint(constr),
+		density(d), exponent(e), alpha(a), maxd(_maxd) {
 	init(rng);
 }
 

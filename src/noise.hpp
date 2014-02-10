@@ -60,9 +60,8 @@ class NoNoise : public Noise {
 class GaussianNoise : public Noise {
 	public:
 		typedef std::tr1::tuple<double, double, double, double> spike; // x-coord, y-coord, amplitude and width of a spike
-		static const double default_relative_amplitude_stdev;
-		static const double default_relative_width_stdev;
-		GaussianNoise(std::vector<double> params, DataLayout const& dl, Constraint const& constr, RNG& rng);
+		GaussianNoise(double d, double amp, double amp_stdev, double width, double width_stdev,
+				DataLayout const& dl, Constraint const& constr, RNG& rng);
 		void add_noise(DataLayout const& dl, double* pot_values) const;
 		DataLayout const& datalayout;
 		Constraint const& constraint;
@@ -80,10 +79,7 @@ class GaussianNoise : public Noise {
 class CoulombImpurities : public Noise {
 	public:
 		typedef std::tr1::tuple<double, double, double, double> impurity; // x-coord, y-coord, z-coord, alpha
-		static const double default_alpha;
-		static const double default_exponent;
-		static const double default_maxd;
-		CoulombImpurities(std::vector<double> params, DataLayout const& dl, Constraint const& constr, RNG& rng);
+		CoulombImpurities(double d, double e, double a, double maxd, DataLayout const& dl, Constraint const& constr, RNG& rng);
 		void add_noise(DataLayout const& dl, double* pot_values) const;
 		DataLayout const& datalayout;
 		Constraint const& constraint;
