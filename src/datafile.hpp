@@ -58,6 +58,7 @@ class Datafile {
 		void write_energies(std::vector<double> energies);
 		void write_energy_standard_deviations(std::vector<double> standard_deviations);
 		void write_potential(Potential const& pot);
+		void write_noise_realization(Noise const& noise);
 		// functions for adding attributes describing the simulation
 		void add_attribute(const char* name, int value);
 		void add_attribute(const char* name, unsigned long int value);
@@ -78,6 +79,7 @@ class Datafile {
 		void ensure_energy_standard_deviations_data();
 		void ensure_deviation_history_data();
 		void ensure_potential_data();
+		void ensure_noise_data();
 		DataLayout const& datalayout;
 		H5::H5File hfile;
 		H5::Group root_group;
@@ -104,6 +106,7 @@ class Datafile {
 		H5::DataSet energy_standard_deviations_data;
 		H5::DataSet deviation_history_data;
 		H5::DataSet potential_data;
+		H5::DataSet noise_data;
 		// Dataset property lists
 		H5::DSetCreatPropList states_dset_props;
 		H5::DSetCreatPropList state_history_props;
@@ -111,6 +114,7 @@ class Datafile {
 		H5::DSetCreatPropList time_step_history_props;
 		H5::DSetCreatPropList energy_history_props;
 		H5::DSetCreatPropList potential_dset_props;
+		H5::DSetCreatPropList noise_dset_props;
 };
 
 inline void Datafile::validate_selection(H5::DataSpace const& dataspace) {

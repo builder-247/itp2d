@@ -77,6 +77,7 @@ ITPSystem::ITPSystem(Parameters const& given_params,
 		datafile->add_attribute("final_convergence_test", params.get_final_convergence_test().get_description());
 		datafile->add_attribute("magnetic_field_strength", params.get_B());
 		datafile->write_potential(pot);
+		datafile->write_noise_realization(*noise);
 	}
 	else
 		datafile = NULL;

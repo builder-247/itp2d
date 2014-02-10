@@ -35,6 +35,9 @@ class Noise {
 		virtual ~Noise() {};
 		virtual void add_noise(DataLayout const& dl, double* pot_values) const = 0;
 		std::string const& get_description() const { return description; }
+		// Write internal data which can be used to re-create the noise realization. For example for
+		// Gaussian impurities, store the positions, amplitudes and widths of the Gaussians.
+		virtual void write_realization_data(std::vector<double>& vec) const = 0;
 	protected:
 		std::string description;
 };
@@ -51,6 +54,7 @@ class NoNoise : public Noise {
 	public:
 		NoNoise() { init(); }
 		void add_noise(__attribute__((unused)) DataLayout const& dl, __attribute__((unused)) double* pot_values) const {}
+		void write_realization_data(std::vector<double>& vec) const { vec.clear(); }
 	private:
 		void init() { description = "none"; }
 };
@@ -63,6 +67,7 @@ class GaussianNoise : public Noise {
 		GaussianNoise(double d, double amp, double amp_stdev, double width, double width_stdev,
 				DataLayout const& dl, Constraint const& constr, RNG& rng);
 		void add_noise(DataLayout const& dl, double* pot_values) const;
+		void write_realization_data(std::vector<double>& vec) const;
 		DataLayout const& datalayout;
 		Constraint const& constraint;
 	private:
@@ -81,6 +86,7 @@ class CoulombImpurities : public Noise {
 		typedef std::tr1::tuple<double, double, double, double> impurity; // x-coord, y-coord, z-coord, alpha
 		CoulombImpurities(double d, double e, double a, double maxd, DataLayout const& dl, Constraint const& constr, RNG& rng);
 		void add_noise(DataLayout const& dl, double* pot_values) const;
+		void write_realization_data(std::vector<double>& vec) const;
 		DataLayout const& datalayout;
 		Constraint const& constraint;
 	private:

@@ -84,6 +84,8 @@ Datafile::Datafile(std::string filename, DataLayout const& dl, bool clobber) :
 	time_step_history_props.setDeflate(9);
 	energy_history_props.setChunk(2, ones);
 	energy_history_props.setDeflate(9);
+	noise_dset_props.setChunk(1, ones);
+	noise_dset_props.setDeflate(9);
 	// Standard attributes
 	add_attribute("grid_sizex", static_cast<int>(datalayout.sizex));
 	add_attribute("grid_sizey", static_cast<int>(datalayout.sizey));
@@ -163,6 +165,13 @@ void Datafile::ensure_potential_data() {
 	if (potential_data.getId() == 0) {
 		potential_data = hfile.createDataSet("/potential_values", *potential_type, scalar_space, potential_dset_props);
 		add_description(potential_data, "Value of the external potential at each grid point.");
+	}
+}
+
+void Datafile::ensure_noise_data() {
+	if (noise_data.getId() == 0) {
+		noise_data = hfile.createDataSet("/noise_data", double_type, null_space_1d, noise_dset_props);
+		add_description(noise_data, "Raw data from the Noise class which can be used to reproduce the noise realization.");
 	}
 }
 
@@ -354,6 +363,24 @@ void Datafile::write_potential(Potential const& pot) {
 		potential_data.write(pot.get_valueptr(), *potential_type, scalar_space, scalar_space);
 	}
 	catch(H5::Exception& e) {
+		e.printError();
+		throw;
+	}
+}
+
+void Datafile::write_noise_realization(Noise const& noise) {
+	ensure_noise_data();
+	// Write noise data to a buffer;
+	std::vector<double> vec;
+	noise.write_realization_data(vec);
+	const hsize_t N = vec.size();
+	try {
+		space_1d.setExtentSimple(1, &N);
+		space_1d.selectAll();
+		noise_data.extend(&N);
+		noise_data.write(&vec.front(), double_type, space_1d, space_1d);
+	}
+	catch (H5::Exception& e) {
 		e.printError();
 		throw;
 	}

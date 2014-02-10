@@ -115,6 +115,17 @@ void GaussianNoise::add_noise(DataLayout const& dl, double* pot_values) const {
 	}
 }
 
+void GaussianNoise::write_realization_data(std::vector<double>& vec) const {
+	vec.clear();
+	vec.reserve(4*spikes.size());
+	for (std::vector<spike>::const_iterator it = spikes.begin(); it != spikes.end(); ++it) {
+		vec.push_back(std::tr1::get<0>(*it));
+		vec.push_back(std::tr1::get<1>(*it));
+		vec.push_back(std::tr1::get<2>(*it));
+		vec.push_back(std::tr1::get<3>(*it));
+	}
+}
+
 // CoulombImpurities
 
 CoulombImpurities::CoulombImpurities(double d, double e, double a, double _maxd, DataLayout const& dl, Constraint const& constr, RNG& rng) :
@@ -164,5 +175,16 @@ void CoulombImpurities::add_noise(DataLayout const& dl, double* pot_values) cons
 				dl.value(pot_values, sx, sy) += a*pow(r2, -exponent/2);
 			}
 		}
+	}
+}
+
+void CoulombImpurities::write_realization_data(std::vector<double>& vec) const {
+	vec.clear();
+	vec.reserve(4*impurities.size());
+	for (std::vector<impurity>::const_iterator it = impurities.begin(); it != impurities.end(); ++it) {
+		vec.push_back(std::tr1::get<0>(*it));
+		vec.push_back(std::tr1::get<1>(*it));
+		vec.push_back(std::tr1::get<2>(*it));
+		vec.push_back(std::tr1::get<3>(*it));
 	}
 }
