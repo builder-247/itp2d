@@ -70,12 +70,16 @@ if __name__ == "__main__":
     # parse command line arguments
     parser = OptionParser(usage="%prog [options] [datafile.h5] [indices]")
     parser.set_defaults(verbose=True, labels=False, label_font_size=10, label_font_file="",
-            combined=True, colorscheme="default", slot=-1, margin=0, trim=0,
-            average_point=0, rescale=1)
+            combined=True, colorscheme="default", potential_colorscheme="bow", potential_scale=0,
+            potential_alpha=0.4, slot=-1, margin=0, trim=0, average_point=0,
+            rescale=1)
     parser.add_option("-v", "--verbose", action="store_true")
     parser.add_option("-q", "--quiet", action="store_false", dest="verbose")
     parser.add_option("-o", "--output", type="string", metavar="FILENAME", help="Filename for the output image")
     parser.add_option("-a", "--all", action="store_true", help="Draw also the extra states not intended to converge")
+    parser.add_option("-p", "--potential", action="store_true", help="Also draw a histogram of the potential under the states")
+    parser.add_option(      "--potential-alpha", type="float", help="Alpha value to use for the potential")
+    parser.add_option(      "--potential-scale", type="float", metavar="VAL", help="Scale potential so that 1.0 in the colormap corresponds to VAL. Set to 0 to use the maximum value of the potential.")
     parser.add_option("-l", "--labels", action="store_true", help="Draw labels with each state's index and energy to the combined image")
     parser.add_option("", "--label-font-size", type="int", help="Font size for the labels")
     parser.add_option("", "--label-font-file", type="string", metavar="FILENAME", help="TTF or OTF font file for the labels")
@@ -86,9 +90,10 @@ if __name__ == "__main__":
     parser.add_option(      "--separate", action="store_true", help="Save separate images of each state")
     parser.add_option(      "--no-combined", action="store_false", dest="combined", help="Do not save a combined image of all the states")
     parser.add_option("-c", "--colorscheme", type="choice", choices=colorschemes.keys(), help="The colors. Valid choices: %s" % colorschemes.keys())
+    parser.add_option(      "--potential-colorscheme", type="choice", choices=colorschemes.keys(), help="Colorscheme for the potential.")
     parser.add_option("-S", "--slot", type="int", help="If the datafile contains several sets of states this lets you select the one you want. The default is to load the last one.")
     parser.add_option(      "--scale-to-average-point", type="float", metavar="VAL", dest="average_point", default=0,
-            help="Instead of scaling density data so that 1.0 corresponds to maximum density, scale so that VAL corresponds to average density.")
+            help="Instead of scaling density data so that 1.0 corresponds to maximum value, scale so that VAL corresponds to the average value.")
     (options, args) = parser.parse_args()
     if (len(args) > 0):
         filename = args[0]
@@ -157,6 +162,21 @@ if __name__ == "__main__":
         foreground_color = tuple(colorfunc(np.ones((1,1)))[0,0])
     else:
         foreground_color = colorfunc(np.ones((1,1)))[0,0]
+    # Initialize potential image
+    if options.potential:
+        try:
+            potential = np.flipud(file["/potential_values"].value)
+        except KeyError:
+            print >> sys.stderr, "Error: Could not read potential data from '%s'." % filename
+            sys.exit(1)
+        # Normalize
+        if options.potential_scale == 0:
+            potential /= potential.max()
+        else:
+            potential /= options.potential_scale
+        potential_mode, potential_colorfunc = colorschemes[options.potential_colorscheme]
+        potential_im = Image.fromarray(potential_colorfunc(potential), mode=potential_mode)
+        potential_im = potential_im.convert(mode)
     # Initialize combined image
     if options.combined:
         # Get color of zero from colormap
@@ -188,6 +208,8 @@ if __name__ == "__main__":
             Z *= options.average_point/avg
         # Create image by mapping data through colorfunc
         state_im = Image.fromarray(colorfunc(Z), mode=mode)
+        if options.potential:
+            state_im = Image.blend(state_im, potential_im, options.potential_alpha)
         if options.rescale != 1:
             state_im.thumbnail((scaled_Mx, scaled_My), Image.ANTIALIAS)
         if options.combined:
