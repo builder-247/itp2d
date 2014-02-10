@@ -30,7 +30,7 @@ Potential::Potential(DataLayout const& dl, PotentialType const& ptype, std::stri
 	}
 }
 
-Potential::Potential(DataLayout const& dl, PotentialType const& ptype, RNG& rng, Noise const& noise, Constraint const& noise_constraint, std::string arg_name) :
+Potential::Potential(DataLayout const& dl, PotentialType const& ptype, Noise const& noise, std::string arg_name) :
 		datalayout(dl), type(ptype), name(arg_name) {
 	if (typeid(ptype) == typeid(ZeroPotential) and typeid(noise) == typeid(NoNoise)) {
 		isnull = true;
@@ -39,7 +39,7 @@ Potential::Potential(DataLayout const& dl, PotentialType const& ptype, RNG& rng,
 	else {
 		isnull = false;
 		init_values();
-		noise.add_noise(datalayout, values, rng, noise_constraint);
+		noise.add_noise(datalayout, values);
 	}
 }
 

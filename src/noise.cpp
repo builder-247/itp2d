@@ -29,7 +29,8 @@ const double CoulombImpurities::default_maxd = 1.0;
 
 // noise parser function
 
-Noise const* parse_noise_description(std::string const& str) {
+Noise const* parse_noise_description(std::string const& str,
+		DataLayout const& dl, Constraint const& constraint, RNG& rng) {
 	// Parse with the generic parse_parameter_string function and extract the
 	// name and parameters.
 	name_parameters_pair p;
@@ -44,26 +45,19 @@ Noise const* parse_noise_description(std::string const& str) {
 	std::vector<double> const& params = p.second;
 	// Simply delegate to the individual constructors based on name
 	if (name == "no" or name == "none" or name == "zero")
-		return new NoNoise(params);
+		return new NoNoise();
 	else if (name == "gaussian" or name == "gaussians" or name == "gaussiannoise")
-		return new GaussianNoise(params);
+		return new GaussianNoise(params, dl, constraint, rng);
 	else if (name == "coulomb" or name == "coulombimpurities")
-		return new CoulombImpurities(params);
+		return new CoulombImpurities(params, dl, constraint, rng);
 	else
 		throw UnknownNoiseType(str);
 }
 
-// NoNoise
-
-NoNoise::NoNoise(std::vector<double> params) {
-	if (not params.empty())
-		throw InvalidNoiseType("Noise type NoNoise does not take parameters");
-	init();
-}
-
 // GaussianNoise
 
-GaussianNoise::GaussianNoise(std::vector<double> params) {
+GaussianNoise::GaussianNoise(std::vector<double> params, DataLayout const& dl, Constraint const& constr, RNG& rng) :
+		datalayout(dl), constraint(constr) {
 	if (params.size() == 3) {
 		density = params[0];
 		amplitude_mean = params[1];
@@ -80,21 +74,26 @@ GaussianNoise::GaussianNoise(std::vector<double> params) {
 	}
 	else
 		throw InvalidNoiseType("Noise type GaussianNoise takes either 3 or 5 parameters");
-	init();
+	init(rng);
 }
 
-void GaussianNoise::add_noise(DataLayout const& dl, double* pot_values, RNG& rng, Constraint const& constraint) const {
+void GaussianNoise::init(RNG& rng) {
+	// Write description
+	std::stringstream ss;
+	ss << "gaussian spikes, density = " << density << ", amplitude ~ N(" << amplitude_mean
+		<< "," << amplitude_stdev << "^2), width ~ N(" << width_mean << "," << width_stdev << "^2)";
+	description = ss.str();
+	// Generate noise
+	spikes.clear();
 	// The number of impurities on the calculation plane is Poisson distributed around the mean value
-	const double lambda = density*dl.lenx*dl.leny;
+	const double lambda = density*datalayout.lenx*datalayout.leny;
 	const unsigned int N = rng.poisson_rand(lambda);
+	spikes.reserve(N);
 	// First, randomly distribute the centers, amplitudes and widths of the spikes
-	typedef std::tr1::tuple<double, double, double, double> spike; // x-coord, y-coord, amplitude and width of a spike
-	typedef std::vector<spike> spike_vector;
-	spike_vector spikes;
 	for (unsigned int n=0; n<N; n++) {
 		// First randomize the position
-		const double x = (rng.uniform_rand()-0.5)*dl.lenx;
-		const double y = (rng.uniform_rand()-0.5)*dl.leny;
+		const double x = (rng.uniform_rand()-0.5)*datalayout.lenx;
+		const double y = (rng.uniform_rand()-0.5)*datalayout.leny;
 		if (not constraint.check(x, y)) {
 			continue;
 		}
@@ -103,10 +102,13 @@ void GaussianNoise::add_noise(DataLayout const& dl, double* pot_values, RNG& rng
 		const double w = width_mean + width_stdev*rng.gaussian_rand();
 		spikes.push_back(spike(x, y, A, w));
 	}
-	// Then, loop through all spikes and add its effect into pot_values. This
-	// is not a very efficient way to do this, but this only needs to be done
-	// once so it doesn't matter.
-	for (spike_vector::const_iterator it = spikes.begin(); it != spikes.end(); ++it) {
+}
+
+void GaussianNoise::add_noise(DataLayout const& dl, double* pot_values) const {
+	// Loop through all spikes and add their effect into pot_values. This is
+	// not a very efficient way to do this, but this only needs to be done once
+	// so it doesn't really matter.
+	for (std::vector<spike>::const_iterator it = spikes.begin(); it != spikes.end(); ++it) {
 		const double sx = std::tr1::get<0>(*it);
 		const double sy = std::tr1::get<1>(*it);
 		const double A = std::tr1::get<2>(*it);
@@ -125,16 +127,10 @@ void GaussianNoise::add_noise(DataLayout const& dl, double* pot_values, RNG& rng
 	}
 }
 
-void GaussianNoise::init() {
-	std::stringstream ss;
-	ss << "gaussian spikes, density = " << density << ", amplitude ~ N(" << amplitude_mean
-		<< "," << amplitude_stdev << "^2), width ~ N(" << width_mean << "," << width_stdev << "^2)";
-	description = ss.str();
-}
-
 // CoulombImpurities
 
-CoulombImpurities::CoulombImpurities(std::vector<double> params) {
+CoulombImpurities::CoulombImpurities(std::vector<double> params, DataLayout const& dl, Constraint const& constr, RNG& rng) :
+		datalayout(dl), constraint(constr) {
 	// It looks like this "design pattern" has reached its end
 	if (params.size() == 4) {
 		density = params[0];
@@ -162,33 +158,40 @@ CoulombImpurities::CoulombImpurities(std::vector<double> params) {
 	}
 	else
 		throw InvalidNoiseType("Noise type CoulombImpurities takes 1-4 parameters");
-	init();
+	init(rng);
 }
 
-void CoulombImpurities::add_noise(DataLayout const& dl, double* pot_values, RNG& rng, Constraint const& constraint) const {
+void CoulombImpurities::init(RNG& rng) {
+	// Write description
+	std::stringstream ss;
+	ss << "Coulomb-like impurities, density = " << density << ", exponent = "
+		<< exponent << ", strength = " << alpha << ", max displacement = " <<
+		maxd;
+	description = ss.str();
+	// Generate noise
+	impurities.clear();
 	// The number of impurities inside the box is Poisson distributed around the mean value
-	const double lambda = density*dl.lenx*dl.leny*2*maxd;
+	const double lambda = density*datalayout.lenx*datalayout.leny*2*maxd;
 	const unsigned int N = rng.poisson_rand(lambda);
+	impurities.reserve(N);
 	// First, randomly distribute the positions of the impurities
-	typedef std::tr1::tuple<double, double, double> coords; // x-coord, y-coord, z-coord
-	typedef std::vector<coords> coords_vector;
-	coords_vector impurity_coords;
 	for (unsigned int n=0; n<N; n++) {
-		const double x = (rng.uniform_rand()-0.5)*dl.lenx;
-		const double y = (rng.uniform_rand()-0.5)*dl.leny;
+		const double x = (rng.uniform_rand()-0.5)*datalayout.lenx;
+		const double y = (rng.uniform_rand()-0.5)*datalayout.leny;
 		if (not constraint.check(x, y)) {
 			continue;
 		}
 		const double z = (rng.uniform_rand()-0.5)*2*maxd;
-		impurity_coords.push_back(coords(x, y, z));
+		impurities.push_back(impurity(x, y, z, alpha));
 	}
-	// Then, loop through all impurities and add its effect into pot_values. This
-	// is not a very efficient way to do this, but this only needs to be done
-	// once so it doesn't matter.
-	for (coords_vector::const_iterator it = impurity_coords.begin(); it != impurity_coords.end(); ++it) {
+}
+
+void CoulombImpurities::add_noise(DataLayout const& dl, double* pot_values) const {
+	for (std::vector<impurity>::const_iterator it = impurities.begin(); it != impurities.end(); ++it) {
 		const double x = std::tr1::get<0>(*it);
 		const double y = std::tr1::get<1>(*it);
 		const double z = std::tr1::get<2>(*it);
+		const double a = std::tr1::get<3>(*it);
 		for (size_t sx=0; sx<dl.sizex; sx++) {
 			const double px = dl.get_posx(sx);
 			for (size_t sy=0; sy<dl.sizey; sy++) {
@@ -196,16 +199,8 @@ void CoulombImpurities::add_noise(DataLayout const& dl, double* pot_values, RNG&
 				const double rx = x-px;
 				const double ry = y-py;
 				const double r2 = rx*rx + ry*ry + z*z;
-				dl.value(pot_values, sx, sy) += alpha*pow(r2, -exponent/2);
+				dl.value(pot_values, sx, sy) += a*pow(r2, -exponent/2);
 			}
 		}
 	}
-}
-
-void CoulombImpurities::init() {
-	std::stringstream ss;
-	ss << "Coulomb-like impurities, density = " << density << ", exponent = "
-		<< exponent << ", strength = " << alpha << ", max displacement = " <<
-		maxd;
-	description = ss.str();
 }

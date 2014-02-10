@@ -33,7 +33,7 @@
 class Noise {
 	public:
 		virtual ~Noise() {};
-		virtual void add_noise(DataLayout const& dl, double* pot_values, RNG& rng, Constraint const& constraint) const = 0;
+		virtual void add_noise(DataLayout const& dl, double* pot_values) const = 0;
 		virtual std::string const& get_description() const { return description; }
 	protected:
 		std::string description;
@@ -42,20 +42,15 @@ class Noise {
 // A parser function for returning a Noise instance from a user provided
 // desciption string
 
-Noise const* parse_noise_description(std::string const& str);
+Noise const* parse_noise_description(std::string const& str, DataLayout const& dl, Constraint const& constraint, RNG& rng);
 
 // Individual noise types
-// A noise type must implement
-// 	* The function add_noise for adding noise to an array of potential values
-// 	* A constructor constructing the instance from a vector of doubles. This is
-// 	  used for constructing noise types from user-provided strings
 
 /* The simple case of no noise at all */
 class NoNoise : public Noise {
 	public:
 		NoNoise() { init(); }
-		NoNoise(std::vector<double> params);
-		void add_noise(__attribute__((unused)) DataLayout const& dl, __attribute__((unused))double* pot_values, __attribute__((unused))RNG& rng, __attribute__((unused)) Constraint const& constraint) const {}
+		void add_noise(__attribute__((unused)) DataLayout const& dl, __attribute__((unused)) double* pot_values) const {}
 	private:
 		void init() { description = "none"; }
 };
@@ -64,50 +59,41 @@ class NoNoise : public Noise {
  * and normally distributed amplitude. */
 class GaussianNoise : public Noise {
 	public:
+		typedef std::tr1::tuple<double, double, double, double> spike; // x-coord, y-coord, amplitude and width of a spike
 		static const double default_relative_amplitude_stdev;
 		static const double default_relative_width_stdev;
-		GaussianNoise(double _density, double _amplitude_mean, double _width_mean) :
-				density(_density), amplitude_mean(_amplitude_mean), width_mean(_width_mean) {
-				amplitude_stdev = default_relative_amplitude_stdev * amplitude_mean;
-				width_stdev = default_relative_width_stdev * width_mean;
-			init();
-		}
-		GaussianNoise(double _density, double _amplitude_mean, double _amplitude_stdev, double _width_mean, double _width_stdev) :
-				density(_density), amplitude_mean(_amplitude_mean),
-				amplitude_stdev(_amplitude_stdev), width_mean(_width_mean),
-				width_stdev(_width_stdev) {
-			init();
-		}
-		GaussianNoise(std::vector<double> params);
-		void add_noise(DataLayout const& dl, double* pot_values, RNG& rng, Constraint const& constraint) const;
+		GaussianNoise(std::vector<double> params, DataLayout const& dl, Constraint const& constr, RNG& rng);
+		void add_noise(DataLayout const& dl, double* pot_values) const;
+		DataLayout const& datalayout;
+		Constraint const& constraint;
 	private:
 		double density;
 		double amplitude_mean;
 		double amplitude_stdev;
 		double width_mean;
 		double width_stdev;
-		void init();
+		void init(RNG& rng);
+		std::vector<spike> spikes;
 };
 
 /* Coulomb-like impurities in 3D space with a tunable exponent. */
 class CoulombImpurities : public Noise {
 	public:
+		typedef std::tr1::tuple<double, double, double, double> impurity; // x-coord, y-coord, z-coord, alpha
 		static const double default_alpha;
 		static const double default_exponent;
 		static const double default_maxd;
-		CoulombImpurities(double _density, double _exponent = default_exponent,
-				double _alpha = default_alpha, double _maxd = default_maxd) :
-				density(_density), exponent(_exponent), alpha(_alpha), maxd(_maxd) {
-			init();
-		}
-		CoulombImpurities(std::vector<double> params);
-		void add_noise(DataLayout const& dl, double* pot_values, RNG& rng, Constraint const& constraint) const;
+		CoulombImpurities(std::vector<double> params, DataLayout const& dl, Constraint const& constr, RNG& rng);
+		void add_noise(DataLayout const& dl, double* pot_values) const;
+		DataLayout const& datalayout;
+		Constraint const& constraint;
 	private:
 		double density; // density of impurities in three dimensions
 		double exponent;
 		double alpha;	// the potential of a single impurity is alpha/r^exp
 		double maxd;	// the impurities are located furthest at maxd distance units from the calculation plane
-		void init();
+		void init(RNG& rng);
+		std::vector<impurity> impurities;
 };
 
 #endif // _NOISE_HPP_
