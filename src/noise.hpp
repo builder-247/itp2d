@@ -34,7 +34,7 @@ class Noise {
 	public:
 		virtual ~Noise() {};
 		virtual void add_noise(DataLayout const& dl, double* pot_values) const = 0;
-		virtual std::string const& get_description() const { return description; }
+		std::string const& get_description() const { return description; }
 	protected:
 		std::string description;
 };
