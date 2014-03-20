@@ -21,7 +21,21 @@ the fastest discrete Fourier transform library in the West.
 [LAPACK]: http://www.netlib.org/lapack
 [FFTW]: http://www.fftw.org
 [CPC]: http://www.journals.elsevier.com/computer-physics-communications
-[article]: http://TODO_FILL_IN_THIS_LINK_ONCE_THE_ARTICLE_IS_PUBLISHED
+[article]: http://dx.doi.org/10.1016/j.cpc.2012.09.029
+[article_arxiv]: http://arxiv.org/abs/1311.1355
+
+If you intend to use itp2d for science you should first read the [associated
+article][article] ([arXiV preprint][article_arxiv]) published in [Computer
+Physics Communications][CPC]. The article describes the underlying algorithms
+behind the program in more detail and from a scientific point of view, whereas
+the purpose of this document is to give a quick overview about the structure
+and use of the program.
+
+Citing itp2d
+--------------
+
+If you wish to cite itp2d in a scientific publication, please cite the
+[article][] mentioned before.
 
 Acquiring itp2d
 -----------------
