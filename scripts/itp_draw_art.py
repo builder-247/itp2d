@@ -83,6 +83,7 @@ if __name__ == "__main__":
     parser.add_option("-l", "--labels", action="store_true", help="Draw labels with each state's index and energy to the combined image")
     parser.add_option("", "--label-font-size", type="int", help="Font size for the labels")
     parser.add_option("", "--label-font-file", type="string", metavar="FILENAME", help="TTF or OTF font file for the labels")
+    parser.add_option("", "--label-energy-precision", type="int", default=3, help="Number of decimals for energy values in labels")
     parser.add_option("",   "--columns", type="int", help="Number of columns to use for states")
     parser.add_option("-s", "--square", action="store_true", help="Discard states so that the resulting image is square")
     parser.add_option("-r", "--rescale", type="float", metavar="FACTOR", help="Rescale resulting images with this factor")
@@ -223,7 +224,7 @@ if __name__ == "__main__":
             full_im.paste(state_im, paste_corner)
             if options.labels:
                 E = energies[index]
-                label = "n = %d, E = %.3f" % (index, E)
+                label = ("n = %d, E = %."+str(options.label_energy_precision)+"f") % (index, E)
                 full_draw.text(paste_corner, label, fill=foreground_color, font=font)
         if options.separate:
             out = out_multifilename % index
