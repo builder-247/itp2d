@@ -83,6 +83,7 @@ if __name__ == "__main__":
     parser.add_option("-l", "--labels", action="store_true", help="Draw labels with each state's index and energy to the combined image")
     parser.add_option("", "--label-font-size", type="int", help="Font size for the labels")
     parser.add_option("", "--label-font-file", type="string", metavar="FILENAME", help="TTF or OTF font file for the labels")
+    parser.add_option("",   "--columns", type="int", help="Number of columns to use for states")
     parser.add_option("-s", "--square", action="store_true", help="Discard states so that the resulting image is square")
     parser.add_option("-r", "--rescale", type="float", metavar="FACTOR", help="Rescale resulting images with this factor")
     parser.add_option("-m", "--margin", type="int", metavar="PIXELS", help="Add some empty space between states in the combined image (after rescaling)")
@@ -149,7 +150,10 @@ if __name__ == "__main__":
     if options.square:
         num_to_draw = int(sqrt(num_to_draw))**2
         indices = indices[:num_to_draw]
-    columns = int(floor(sqrt(num_to_draw)))
+    if not options.columns:
+        columns = int(floor(sqrt(num_to_draw)))
+    else:
+        columns = options.columns
     rows = int(ceil(num_to_draw/columns))
     mode, colorfunc = colorschemes[options.colorscheme]
     # Load font for creating labels
