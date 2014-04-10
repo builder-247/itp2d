@@ -169,7 +169,7 @@ if __name__ == "__main__":
     # Initialize potential image
     if options.potential:
         try:
-            potential = np.flipud(file["/potential_values"].value)
+            potential = np.flipud(file["/potential_values"].value)[trim:-trim,trim:-trim]
         except KeyError:
             print >> sys.stderr, "Error: Could not read potential data from '%s'." % filename
             sys.exit(1)
