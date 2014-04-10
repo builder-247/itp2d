@@ -98,4 +98,26 @@ class CoulombImpurities : public Noise {
 		std::vector<impurity> impurities;
 };
 
+// TODO: There is a lot of code duplication going on in GaussianNoise,
+// CoulombImpurities and HemisphereImpurities. Replace them with a common
+// UniformImpurities with clever template code to set the type of a single
+// impurity
+
+/* Hemisphere-shaped finite-range impurities. */
+class HemisphereImpurities : public Noise {
+	public:
+		typedef std::tr1::tuple<double, double, double, double> impurity; // x-coord, y-coord, amplitude, radius
+		HemisphereImpurities(double d, double A, double r, DataLayout const& dl, Constraint const& constr, RNG& rng);
+		void add_noise(DataLayout const& dl, double* pot_values) const;
+		void write_realization_data(std::vector<double>& vec) const;
+		DataLayout const& datalayout;
+		Constraint const& constraint;
+	private:
+		double density; // density of impurities in two dimensions
+		double amplitude;
+		double radius;
+		void init(RNG& rng);
+		std::vector<impurity> impurities;
+};
+
 #endif // _NOISE_HPP_

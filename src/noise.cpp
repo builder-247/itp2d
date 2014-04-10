@@ -52,6 +52,12 @@ Noise const* parse_noise_description(std::string const& str,
 		else
 			throw InvalidNoiseType("Noise type CoulombImpurities takes 4 parameters");
 	}
+	else if (name == "hemisphere" or name == "hemispheres" or name == "hemisphereimpurities") {
+		if (params.size() == 3)
+			return new HemisphereImpurities(params[0], params[1], params[2], dl, constraint, rng);
+		else
+			throw InvalidNoiseType("Noise type HemisphereImpurities takes 3 parameters");
+	}
 	else
 		throw UnknownNoiseType(str);
 }
@@ -179,6 +185,69 @@ void CoulombImpurities::add_noise(DataLayout const& dl, double* pot_values) cons
 }
 
 void CoulombImpurities::write_realization_data(std::vector<double>& vec) const {
+	vec.clear();
+	vec.reserve(4*impurities.size());
+	for (std::vector<impurity>::const_iterator it = impurities.begin(); it != impurities.end(); ++it) {
+		vec.push_back(std::tr1::get<0>(*it));
+		vec.push_back(std::tr1::get<1>(*it));
+		vec.push_back(std::tr1::get<2>(*it));
+		vec.push_back(std::tr1::get<3>(*it));
+	}
+}
+
+// HemisphereImpurities
+
+HemisphereImpurities::HemisphereImpurities(double d, double A, double r, DataLayout const& dl, Constraint const& constr, RNG& rng) :
+		datalayout(dl), constraint(constr),
+		density(d), amplitude(A), radius(r) {
+	init(rng);
+}
+
+void HemisphereImpurities::init(RNG& rng) {
+	// Write description
+	std::stringstream ss;
+	ss << "Hemisphere impurities, density = " << density << ", amplitude = "
+		<< amplitude << ", radius = " << radius;
+	description = ss.str();
+	// Generate noise
+	impurities.clear();
+	// The number of impurities inside the box is Poisson distributed around the mean value
+	const double lambda = density*datalayout.lenx*datalayout.leny;
+	const unsigned int N = rng.poisson_rand(lambda);
+	impurities.reserve(N);
+	// First, randomly distribute the positions of the impurities
+	for (unsigned int n=0; n<N; n++) {
+		const double x = (rng.uniform_rand()-0.5)*datalayout.lenx;
+		const double y = (rng.uniform_rand()-0.5)*datalayout.leny;
+		if (not constraint.check(x, y)) {
+			continue;
+		}
+		impurities.push_back(impurity(x, y, amplitude, radius));
+	}
+}
+
+void HemisphereImpurities::add_noise(DataLayout const& dl, double* pot_values) const {
+	for (std::vector<impurity>::const_iterator it = impurities.begin(); it != impurities.end(); ++it) {
+		const double x = std::tr1::get<0>(*it);
+		const double y = std::tr1::get<1>(*it);
+		const double A = std::tr1::get<2>(*it);
+		const double r = std::tr1::get<3>(*it);
+		const double r2 = r*r;
+		for (size_t sx=0; sx<dl.sizex; sx++) {
+			const double px = dl.get_posx(sx);
+			for (size_t sy=0; sy<dl.sizey; sy++) {
+				const double py = dl.get_posy(sy);
+				const double dx = x-px;
+				const double dy = y-py;
+				const double d2 = dx*dx + dy*dy;
+				if (d2 < r2)
+					dl.value(pot_values, sx, sy) += A*sqrt(1-d2/r2);
+			}
+		}
+	}
+}
+
+void HemisphereImpurities::write_realization_data(std::vector<double>& vec) const {
 	vec.clear();
 	vec.reserve(4*impurities.size());
 	for (std::vector<impurity>::const_iterator it = impurities.begin(); it != impurities.end(); ++it) {
