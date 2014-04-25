@@ -73,6 +73,7 @@ if __name__ == "__main__":
             combined=True, colorscheme="default", potential_colorscheme="bow", potential_scale=0,
             potential_alpha=0.4, slot=-1, margin=0, trim=0, average_point=0,
             rescale=1)
+    parser.add_option("-f", "--force", action="store_true", help="Overwrite existing images")
     parser.add_option("-v", "--verbose", action="store_true")
     parser.add_option("-q", "--quiet", action="store_false", dest="verbose")
     parser.add_option("-o", "--output", type="string", metavar="FILENAME", help="Filename for the output image")
@@ -114,6 +115,9 @@ if __name__ == "__main__":
         out_filename = options.output
     else:
         out_filename = os.path.splitext(filename)[0]+".png"
+    # Check if file exists
+    if options.combined and not options.force and os.path.exists(out_filename):
+        parser.error("File '%s' exists. Not overwriting without --force." % out_filename)
     out_multifilename = os.path.splitext(out_filename)[0]+"%d.png"
     margin = options.margin
     # Option parsing done. Read data.
@@ -197,6 +201,11 @@ if __name__ == "__main__":
     # Loop through all states to be plotted
     progressbar = ProgressBar(widgets=["Drawing images: ", Percentage(), Bar(), ETA()])
     for index in progressbar(indices):
+        separate_out_filename = out_multifilename % index
+        # Check if output file exists
+        if options.separate and not options.force and os.path.exists(separate_out_filename):
+            print >> sys.stderr, "File '%s' exists. Not overwriting without --force." % separate_out_filename
+            continue
         # The data to plot is the square of the absolute value of the
         # wave function, i.e., the probability density
         if options.trim == 0:
@@ -227,10 +236,9 @@ if __name__ == "__main__":
                 label = ("n = %d, E = %."+str(options.label_energy_precision)+"f") % (index, E)
                 full_draw.text(paste_corner, label, fill=foreground_color, font=font)
         if options.separate:
-            out = out_multifilename % index
-            state_im.save(out)
+            state_im.save(separate_out_filename)
             if options.verbose and not has_progressbar:
-                print "State %d drawn. Saved in %s" % (index, out)
+                print "State %d drawn. Saved in %s" % (index, separate_out_filename)
         elif options.verbose and not has_progressbar:
             print "State %d drawn." % index
         counter += 1
