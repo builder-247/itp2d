@@ -196,7 +196,6 @@ if __name__ == "__main__":
         full_x = columns*scaled_Mx+(columns-1)*margin
         full_y = rows*scaled_My+(rows-1)*margin
         full_im = Image.new(mode, (full_x, full_y), background_color)
-        full_draw = ImageDraw.Draw(full_im)
     counter = 0
     # Loop through all states to be plotted
     progressbar = ProgressBar(widgets=["Drawing images: ", Percentage(), Bar(), ETA()])
@@ -224,6 +223,11 @@ if __name__ == "__main__":
         state_im = Image.fromarray(colorfunc(Z), mode=mode)
         if options.potential:
             state_im = Image.blend(state_im, potential_im, options.potential_alpha)
+        if options.labels:
+            state_draw = ImageDraw.Draw(state_im)
+            E = energies[index]
+            label = ("n = %d, E = %."+str(options.label_energy_precision)+"f") % (index, E)
+            state_draw.text((0, 0), label, fill=foreground_color, font=font)
         if options.rescale != 1:
             state_im.thumbnail((scaled_Mx, scaled_My), Image.ANTIALIAS)
         if options.combined:
@@ -231,10 +235,6 @@ if __name__ == "__main__":
             paste_y = (counter // columns)*(scaled_My+margin)
             paste_corner = (paste_x, paste_y)
             full_im.paste(state_im, paste_corner)
-            if options.labels:
-                E = energies[index]
-                label = ("n = %d, E = %."+str(options.label_energy_precision)+"f") % (index, E)
-                full_draw.text(paste_corner, label, fill=foreground_color, font=font)
         if options.separate:
             state_im.save(separate_out_filename)
             if options.verbose and not has_progressbar:
