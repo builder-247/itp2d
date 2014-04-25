@@ -27,6 +27,7 @@ else:
 # Plot a stored potential from an itp2d datafile
 def main():
     parser = OptionParser(usage="%prog datafile.h5")
+    parser.add_option("", "--clip", type="float", help="Clip potential values larger than this")
     parser.add_option("-o", "--output", type="string", metavar="FILE",
             help="Save image to file instead of showing")
     parser.add_option("-2", "--2d", action="store_true", dest="twodee",
@@ -48,6 +49,7 @@ def main():
     My = file.attrs["grid_sizey"]
     scale = file.attrs["grid_delta"]
     potential = file["potential_values"].value
+    mask = (None if options.clip == None else (potential > options.clip))
 
     X = (2*arange(Mx)-Mx+1)*0.5*scale
     Y = (2*arange(My)-My+1)*0.5*scale
@@ -59,7 +61,7 @@ def main():
     if options.twodee or options.matplotlib3d:
         matplotlib_plot(X, Y, potential, options, extent)
     else:
-        mayavi_3dplot(X1d, Y1d, transpose(potential), options)
+        mayavi_3dplot(X1d, Y1d, transpose(potential), options, mask)
 
 def matplotlib_plot(X, Y, Z, options, extent):
         fig = pyplot.figure(figsize=(12,12))
@@ -78,7 +80,7 @@ def matplotlib_plot(X, Y, Z, options, extent):
         else:
             pyplot.show()
 
-def mayavi_3dplot(X, Y, Z, options):
+def mayavi_3dplot(X, Y, Z, options, mask):
     if not has_mayavi:
         raise RuntimeError("Can't plot with mayavi because it is not available")
     fig = mlab.figure(bgcolor=(1,1,1), fgcolor=(0,0,0))
@@ -88,7 +90,7 @@ def mayavi_3dplot(X, Y, Z, options):
     for light in lights:
         light.activate = True
         light.intensity = 0.5
-    s = mlab.surf(X, Y, Z, warp_scale='auto')
+    s = mlab.surf(X, Y, Z, warp_scale='auto', mask=mask)
     #mlab.axes(s, nb_labels=10)
     if options.output:
         mlab.savefig(options.output)
