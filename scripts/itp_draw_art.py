@@ -162,10 +162,11 @@ if __name__ == "__main__":
     rows = int(ceil(num_to_draw/columns))
     mode, colorfunc = colorschemes[options.colorscheme]
     # Load font for creating labels
-    if options.label_font_file == "":
-        # TODO: Replace this with some sensible search function
-        options.label_font_file = "/usr/share/fonts/dejavu/DejaVuSansMono.ttf"
-    font = ImageFont.truetype(options.label_font_file, options.label_font_size)
+    if options.labels:
+        if options.label_font_file == "":
+            # TODO: Replace this with some sensible search function
+            options.label_font_file = "/usr/share/fonts/dejavu/DejaVuSansMono.ttf"
+        font = ImageFont.truetype(options.label_font_file, options.label_font_size)
     # Get color of text from the colormap
     if mode == "RGB":
         foreground_color = tuple(colorfunc(np.ones((1,1)))[0,0])
