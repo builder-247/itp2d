@@ -179,6 +179,8 @@ Square oscillator potential 0.5*(|x|^a + |x|^a)\n\
 \tsquareoscillator(a)\n\
 Power oscillator potential 0.5*w*r^a\n\
 \tpoweroscillator(a,w)\n\
+Ring-like potential with a given radius r, width w and exponent e for walls:\n\
+\tring(r,w,e)\n\
 See header potential.hpp for details.";
 
 const char CommandLineParser::help_epilogue[] = "\

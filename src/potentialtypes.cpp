@@ -36,7 +36,11 @@ const double QuarticPotential::default_b = 0.01;
 const double SquareOscillator::default_alpha = 8;
 const double PowerOscillator::default_exponent = 4;
 const double PowerOscillator::default_w = 1;
-
+const double RingPotential::default_radius = 3;
+const double RingPotential::default_width = 1;
+const double RingPotential::default_exponent = 2;
+const double RingPotential::default_asymm_amplitude = 0;
+const double RingPotential::default_asymm_width = 1;
 // The parser delegator
 
 PotentialType const* parse_potential_description(std::string const& str) {
@@ -73,6 +77,8 @@ PotentialType const* parse_potential_description(std::string const& str) {
 		return new SquareOscillator(params);
 	if (name == "power" or name == "poweroscillator")
 		return new PowerOscillator(params);
+	if (name == "ring" or name == "ringpotential")
+		return new RingPotential(params);
 	else
 		throw UnknownPotentialType(str);
 	return NULL;
@@ -307,5 +313,53 @@ void PowerOscillator::init() {
 		throw InvalidPotentialType("power oscillator with negative \"frequency\"");
 	std::stringstream ss;
 	ss << "poweroscillator(" << a << "," << w << ")";
+	description = ss.str();
+}
+
+// RingPotential
+
+RingPotential::RingPotential(double radius, double width, double exponent, double asymm_amplitude, double asymm_width) :
+		r(radius),
+		w(width),
+		e(exponent),
+		asymm_A(asymm_amplitude),
+		asymm_w(asymm_width) {
+	init();
+}
+
+RingPotential::RingPotential(std::vector<double> params) {
+	if (params.empty()) {
+		r = default_radius;
+		w = default_width;
+		e = default_exponent;
+		asymm_A = default_asymm_amplitude;
+		asymm_w = default_asymm_width;
+	}
+	else if (params.size() == 3) {
+		r = params[0];
+		w = params[1];
+		e = params[2];
+		asymm_A = default_asymm_amplitude;
+		asymm_w = default_asymm_width;
+	}
+	else if (params.size() == 5) {
+		r = params[0];
+		w = params[1];
+		e = params[2];
+		asymm_A = params[3];
+		asymm_w = params[4];
+	}
+	else
+		throw InvalidPotentialType("ring potential takes either zero, three, or five parameters");
+	init();
+}
+
+void RingPotential::init() {
+	if (r < 0)
+		throw InvalidPotentialType("ring oscillator with negative radius");
+	if (w <= 0)
+		throw InvalidPotentialType("ring oscillator with non-positive width");
+	std::stringstream ss;
+	ss << "ring(" << r << "," << w << "," << e << "," << asymm_A << "," << asymm_w << ")";
 	description = ss.str();
 }

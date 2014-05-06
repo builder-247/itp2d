@@ -270,4 +270,33 @@ class PowerOscillator : public PotentialType {
 		void init();
 };
 
+// A flexible class for ring-like potentials, with optional asymmetry in the
+// form of a Gaussian spike
+class RingPotential : public PotentialType {
+	public:
+		static const double default_radius;
+		static const double default_width;
+		static const double default_exponent;
+		static const double default_asymm_amplitude;
+		static const double default_asymm_width;
+		RingPotential(double radius=default_radius, double width=default_width, double exponent=default_exponent,
+				double asymm_amplitude=default_asymm_amplitude, double asymm_width=default_asymm_width);
+		RingPotential(std::vector<double> params);
+		inline double operator()(double x, double y) const {
+			const double rp = hypot(x, y);
+			const double z = fabs(rp-r)/w;
+			const double xp = x-r;
+			const double G_exponent = -(xp*xp + y*y)/(2*asymm_w*asymm_w);
+			const double G = asymm_A*exp(G_exponent);
+			return 0.5*pow(z,e) + G;
+		}
+	private:
+		double r;
+		double w;
+		double e;
+		double asymm_A;
+		double asymm_w;
+		void init();
+};
+
 #endif // _POTENTIALTYPES_HPP_
