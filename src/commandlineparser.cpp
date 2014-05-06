@@ -43,6 +43,8 @@ Maximum distance from the center:\n\
 \tmaxradius(r)\n\
 Ring with inner radius r and width w:\n\
 \tring(r,w)\n\
+Principal angle between a and b:\n\
+\tangle(a,b)\n\
 You can also negate any other constraint with a '!', for example '!maxradius(4.0)'.\n\
 See header constraint.hpp for details.";
 

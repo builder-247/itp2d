@@ -108,4 +108,20 @@ class RingConstraint : public Constraint {
 		void init();
 };
 
+// Noise constrained in an angle interval
+
+class AngleConstraint : public Constraint {
+	public:
+		AngleConstraint(double _a, double _b) : a(_a), b(_b) { init(); }
+		AngleConstraint(std::vector<double> params);
+		bool check(__attribute__((unused)) double x, __attribute__((unused)) double y) const {
+			const double t = atan2(y,x);
+			return (a <= t and t <= b);
+		}
+	private:
+		double a;
+		double b;
+		void init();
+};
+
 #endif // _CONSTRAINT_HPP_

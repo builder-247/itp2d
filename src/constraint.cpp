@@ -48,6 +48,8 @@ Constraint const* parse_constraint_description(name_parameters_pair const& p) {
 		return new MaximumRadialDistanceConstraint(params);
 	else if (name == "ring" or name == "annulus")
 		return new RingConstraint(params);
+	else if (name == "angle")
+		return new AngleConstraint(params);
 	else
 		throw UnknownConstraintType(name);
 }
@@ -125,5 +127,25 @@ void RingConstraint::init() {
 		throw InvalidConstraintType("ring constraint with negative width");
 	std::stringstream ss;
 	ss << "ring with inner radius = " << minr << " and width = " << width;
+	description = ss.str();
+}
+
+// AngleConstraint
+
+AngleConstraint::AngleConstraint(std::vector<double> params) {
+	if (params.size() == 2) {
+		a = params[0];
+		b = params[1];
+	}
+	else
+		throw InvalidConstraintType("Constraint type AngleConstraint takes exactly 2 parameters");
+	init();
+}
+
+void AngleConstraint::init() {
+	if (b < a)
+		throw InvalidConstraintType("angle interval constraint with b < a");
+	std::stringstream ss;
+	ss << "principal angle in interval from " << a << " to " << b;
 	description = ss.str();
 }
