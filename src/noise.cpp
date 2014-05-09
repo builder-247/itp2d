@@ -94,6 +94,8 @@ void GaussianNoise::init(RNG& rng) {
 		// Determine amplitude and width
 		const double A = amplitude_mean + amplitude_stdev*rng.gaussian_rand();
 		const double w = width_mean + width_stdev*rng.gaussian_rand();
+		if (w < 0)
+			continue;
 		spikes.push_back(spike(x, y, A, w));
 	}
 }
