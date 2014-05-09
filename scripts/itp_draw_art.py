@@ -175,10 +175,12 @@ if __name__ == "__main__":
     # Initialize potential image
     if options.potential:
         try:
-            potential = np.flipud(file["/potential_values"].value)[trim:-trim,trim:-trim]
+            potential = np.flipud(file["/potential_values"].value)
         except KeyError:
             print >> sys.stderr, "Error: Could not read potential data from '%s'." % filename
             sys.exit(1)
+        if options.trim != 0:
+            potential = potential[trim:-trim,trim:-trim]
         # Normalize
         if options.potential_scale == 0:
             potential /= potential.max()
