@@ -59,6 +59,8 @@ def main():
     X, Y = meshgrid(X, Y)
     # Actual plotting
     if options.twodee or options.matplotlib3d:
+        if options.clip is not None:
+            clip(potential, float("-inf"), options.clip, out=potential)
         matplotlib_plot(X, Y, potential, options, extent)
     else:
         mayavi_3dplot(X1d, Y1d, transpose(potential), options, mask)
