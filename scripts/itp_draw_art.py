@@ -66,6 +66,35 @@ try:
 except ImportError:
     pass
 
+_grid_cache = {}
+
+def get_grid_points(s, d):
+    """
+    Return one-dimensional grid points given by their number s and spacing dx,
+    following the convention of itp2d
+    """
+    if (s, d) in _grid_cache:
+        return _grid_cache[(s, d)]
+    x = np.arange(s)
+    return (2*x + 1 - s)*(0.5*dx)
+
+def add_gaussian_values(x, y, amplitude, width, dx, value_array):
+    """
+    Helper function for reconstructing gaussian noise. Discretizes the
+    values of a gaussian blob with parameters x, y, amplitude
+    and adds the results to value_array with grid spacing dx
+    """
+    (sx, sy) = value_array.shape
+    scale = -0.5/(width*width)
+    px = get_grid_points(sx, dx)
+    py = get_grid_points(sy, dx)
+    rx2 = (px-x)**2
+    ry2 = (py-y)**2
+    rx2, ry2 = np.meshgrid(rx2, ry2)
+    r2 = rx2 + ry2
+    assert r2.shape == value_array.shape
+    value_array += amplitude*np.exp(scale*r2)
+
 if __name__ == "__main__":
     # parse command line arguments
     parser = OptionParser(usage="%prog [options] [datafile.h5] [indices]")
@@ -79,6 +108,7 @@ if __name__ == "__main__":
     parser.add_option("-o", "--output", type="string", metavar="FILENAME", help="Filename for the output image")
     parser.add_option("-a", "--all", action="store_true", help="Draw also the extra states not intended to converge")
     parser.add_option("-p", "--potential", action="store_true", help="Also draw a histogram of the potential under the states")
+    parser.add_option("",   "--noise-only", action="store_true", help="Draw only the noise part of the potential. Implies --potential")
     parser.add_option(      "--potential-alpha", type="float", help="Alpha value to use for the potential")
     parser.add_option(      "--potential-scale", type="float", metavar="VAL", help="Scale potential so that 1.0 in the colormap corresponds to VAL. Set to 0 to use the maximum value of the potential.")
     parser.add_option("-l", "--labels", action="store_true", help="Draw labels with each state's index and energy to the combined image")
@@ -98,6 +128,8 @@ if __name__ == "__main__":
     parser.add_option(      "--scale-to-average-point", type="float", metavar="VAL", dest="average_point", default=0,
             help="Instead of scaling density data so that 1.0 corresponds to maximum value, scale so that VAL corresponds to the average value.")
     (options, args) = parser.parse_args()
+    if options.noise_only:
+        options.potential = True
     if (len(args) > 0):
         filename = args[0]
     else:
@@ -175,9 +207,25 @@ if __name__ == "__main__":
     # Initialize potential image
     if options.potential:
         try:
-            potential = np.flipud(file["/potential_values"].value)
-        except KeyError:
-            print >> sys.stderr, "Error: Could not read potential data from '%s'." % filename
+            if not options.noise_only:
+                potential = np.flipud(file["/potential_values"].value)
+            else:
+                # This is a trickier case, since itp2d does not save the
+                # discretized noise potential separately. However, all the
+                # information to reconstruct the noise is in the itp2d
+                # datafile.
+                noise_type = file.attrs["noise"].lower()
+                if not noise_type.startswith("gaussian"):
+                    raise NotImplementedError("Noise reconstruction not implemented for noise type '%s'" % noise_type)
+                # Reshape noise_data to a list of (x, y, amplitude, width)
+                noise_data = np.reshape(file["noise_data"], (-1,4))
+                potential = np.zeros_like(file["potential_values"].value)
+                dx = file.attrs["grid_delta"]
+                for x, y, amplitude, width in noise_data:
+                    add_gaussian_values(x, y, amplitude, width, dx, potential)
+                potential = np.flipud(potential)
+        except KeyError as e:
+            print >> sys.stderr, "Error: Could not read potential data from '%s':" % filename, e
             sys.exit(1)
         if options.trim != 0:
             potential = potential[trim:-trim,trim:-trim]
