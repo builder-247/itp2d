@@ -115,6 +115,7 @@ if __name__ == "__main__":
     parser.add_option("", "--label-font-size", type="int", help="Font size for the labels")
     parser.add_option("", "--label-font-file", type="string", metavar="FILENAME", help="TTF or OTF font file for the labels")
     parser.add_option("", "--label-energy-precision", type="int", default=3, help="Number of decimals for energy values in labels")
+    parser.add_option("", "--circle", type="float", help="Draw a circle with the given radius on the image")
     parser.add_option("",   "--columns", type="int", help="Number of columns to use for states")
     parser.add_option("-s", "--square", action="store_true", help="Discard states so that the resulting image is square")
     parser.add_option("-r", "--rescale", type="float", metavar="FACTOR", help="Rescale resulting images with this factor")
@@ -155,6 +156,9 @@ if __name__ == "__main__":
     # Option parsing done. Read data.
     file = h5py.File(filename, 'r')
     N = file.attrs["num_states"]
+    dx = file.attrs["grid_delta"]
+    grid_sizex = file.attrs["grid_sizex"]
+    grid_sizey = file.attrs["grid_sizey"]
     try:
         states = file["/states"]
     except KeyError:
@@ -166,8 +170,8 @@ if __name__ == "__main__":
             or ((options.slot < 0) and abs(options.slot) > states.shape[0]):
         parser.error("Invalid slot index %d. Datafile has %d slots." % (options.slot, states.shape[0]))
     trim = options.trim
-    Mx = file.attrs["grid_sizex"] - 2*trim
-    My = file.attrs["grid_sizey"] - 2*trim
+    Mx = grid_sizex - 2*trim
+    My = grid_sizey - 2*trim
     scaled_Mx = int(options.rescale * Mx)
     scaled_My = int(options.rescale * My)
     # The states that are drawn are either
@@ -220,7 +224,6 @@ if __name__ == "__main__":
                 # Reshape noise_data to a list of (x, y, amplitude, width)
                 noise_data = np.reshape(file["noise_data"], (-1,4))
                 potential = np.zeros_like(file["potential_values"].value)
-                dx = file.attrs["grid_delta"]
                 for x, y, amplitude, width in noise_data:
                     add_gaussian_values(x, y, amplitude, width, dx, potential)
                 potential = np.flipud(potential)
@@ -274,11 +277,19 @@ if __name__ == "__main__":
         state_im = Image.fromarray(colorfunc(Z), mode=mode)
         if options.potential:
             state_im = Image.blend(state_im, potential_im, options.potential_alpha)
-        if options.labels:
+        if options.circle is not None or options.labels:
             state_draw = ImageDraw.Draw(state_im)
-            E = energies[index]
-            label = ("n = %d, E = %."+str(options.label_energy_precision)+"f") % (index, E)
-            state_draw.text((0, 0), label, fill=foreground_color, font=font)
+            if options.circle is not None:
+                radius_px = options.circle/dx
+                center_x = Mx//2
+                center_y = My//2
+                circle_bb = ((center_x-radius_px, center_y-radius_px),
+                        (center_x+radius_px, center_y+radius_px))
+                state_draw.ellipse(circle_bb, outline=foreground_color)
+            if options.labels:
+                E = energies[index]
+                label = ("n = %d, E = %."+str(options.label_energy_precision)+"f") % (index, E)
+                state_draw.text((0, 0), label, fill=foreground_color, font=font)
         if options.rescale != 1:
             state_im.thumbnail((scaled_Mx, scaled_My), Image.ANTIALIAS)
         if options.combined:
