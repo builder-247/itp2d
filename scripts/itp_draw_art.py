@@ -2,7 +2,7 @@
 from __future__ import division
 import sys
 import os
-from math import floor, ceil, sqrt
+from math import floor, ceil, sqrt, sin, cos
 from collections import namedtuple
 import numpy as np
 import h5py
@@ -134,6 +134,7 @@ if __name__ == "__main__":
     parser.add_option("", "--label-font-file", type="string", metavar="FILENAME", help="TTF or OTF font file for the labels")
     parser.add_option("", "--label-energy-precision", type="int", default=3, help="Number of decimals for energy values in labels")
     parser.add_option("", "--circle", type="float", help="Draw a circle with the given radius on the image")
+    parser.add_option("", "--mark-angles", type="float", action="append", help="Mark angles on circle drawn with --circle")
     parser.add_option("",   "--columns", type="int", help="Number of columns to use for states")
     parser.add_option("-s", "--square", action="store_true", help="Discard states so that the resulting image is square")
     parser.add_option("-r", "--rescale", type="float", metavar="FACTOR", help="Rescale resulting images with this factor")
@@ -300,6 +301,10 @@ if __name__ == "__main__":
             if options.circle is not None:
                 grid = (grid_sizex, grid_sizey, dx)
                 draw_circle(state_draw, (0, 0), options.circle, grid, outline=foreground_color)
+                for angle in options.mark_angles:
+                    x = options.circle*cos(angle)
+                    y = options.circle*sin(angle)
+                    draw_circle(state_draw, (x, y), options.circle/40, grid, fill=foreground_color)
             if options.labels:
                 E = energies[index]
                 label = ("n = %d, E = %."+str(options.label_energy_precision)+"f") % (index, E)
