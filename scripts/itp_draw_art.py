@@ -68,15 +68,22 @@ except ImportError:
 
 _grid_cache = {}
 
-def get_grid_points(s, d):
+def i_to_x(i, s, dx):
+    return (2*i + 1 - s)*(0.5*dx)
+
+def x_to_i(x, s, dx):
+    return (x/dx + (s-1)/2)
+
+def get_grid_points(s, dx):
     """
     Return one-dimensional grid points given by their number s and spacing dx,
     following the convention of itp2d
     """
-    if (s, d) in _grid_cache:
-        return _grid_cache[(s, d)]
-    x = np.arange(s)
-    return (2*x + 1 - s)*(0.5*dx)
+    if (s, dx) in _grid_cache:
+        return _grid_cache[(s, dx)]
+    xs = i_to_x(np.arange(s), s, dx)
+    _grid_cache[(s, dx)] = xs
+    return xs
 
 def add_gaussian_values(x, y, amplitude, width, dx, value_array):
     """
@@ -94,6 +101,17 @@ def add_gaussian_values(x, y, amplitude, width, dx, value_array):
     r2 = rx2 + ry2
     assert r2.shape == value_array.shape
     value_array += amplitude*np.exp(scale*r2)
+
+def draw_circle(drawer, pos, radius, grid, **kwargs):
+    x, y = pos
+    sx, sy, dx = grid
+    radius_px = radius/dx
+    x_px = x_to_i(x, sx, dx)
+    y_px = x_to_i(y, sy, dx)
+    circle_bb = ((x_px-radius_px, y_px-radius_px),
+        (x_px+radius_px, y_px+radius_px))
+    drawer.ellipse(circle_bb, **kwargs)
+
 
 if __name__ == "__main__":
     # parse command line arguments
@@ -280,12 +298,8 @@ if __name__ == "__main__":
         if options.circle is not None or options.labels:
             state_draw = ImageDraw.Draw(state_im)
             if options.circle is not None:
-                radius_px = options.circle/dx
-                center_x = Mx//2
-                center_y = My//2
-                circle_bb = ((center_x-radius_px, center_y-radius_px),
-                        (center_x+radius_px, center_y+radius_px))
-                state_draw.ellipse(circle_bb, outline=foreground_color)
+                grid = (grid_sizex, grid_sizey, dx)
+                draw_circle(state_draw, (0, 0), options.circle, grid, outline=foreground_color)
             if options.labels:
                 E = energies[index]
                 label = ("n = %d, E = %."+str(options.label_energy_precision)+"f") % (index, E)
