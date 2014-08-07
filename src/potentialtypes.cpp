@@ -41,6 +41,8 @@ const double RingPotential::default_width = 1;
 const double RingPotential::default_exponent = 2;
 const double RingPotential::default_asymm_amplitude = 0;
 const double RingPotential::default_asymm_width = 1;
+const double CoshPotential::default_amplitude = 1;
+const double CoshPotential::default_length_scale = 1;
 // The parser delegator
 
 PotentialType const* parse_potential_description(std::string const& str) {
@@ -79,6 +81,8 @@ PotentialType const* parse_potential_description(std::string const& str) {
 		return new PowerOscillator(params);
 	if (name == "ring" or name == "ringpotential")
 		return new RingPotential(params);
+	if (name == "cosh" or name == "coshpotential")
+		return new CoshPotential(params);
 	else
 		throw UnknownPotentialType(str);
 	return NULL;
@@ -361,5 +365,35 @@ void RingPotential::init() {
 		throw InvalidPotentialType("ring oscillator with non-positive width");
 	std::stringstream ss;
 	ss << "ring(" << r << "," << w << "," << e << "," << asymm_A << "," << asymm_w << ")";
+	description = ss.str();
+}
+
+// CoshPotential
+
+CoshPotential::CoshPotential(double amplitude, double length_scale) : A(amplitude), L(length_scale) {
+	init();
+}
+
+CoshPotential::CoshPotential(std::vector<double> params) {
+	if (params.empty()) {
+		A = default_amplitude;
+		L = default_length_scale;
+	}
+	else if (params.size() == 2) {
+		A = params[0];
+		L = params[1];
+	}
+	else
+		throw InvalidPotentialType("cosh potential takes either zero or two parameters");
+	init();
+}
+
+void CoshPotential::init() {
+	if (A <= 0)
+		throw InvalidPotentialType("cosh potential with non-positive amplitude");
+	if (L <= 0)
+		throw InvalidPotentialType("cosh potential with non-positive length scale");
+	std::stringstream ss;
+	ss << "cosh(" << A << "," << L << ")";
 	description = ss.str();
 }

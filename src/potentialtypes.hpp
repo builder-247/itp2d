@@ -299,4 +299,21 @@ class RingPotential : public PotentialType {
 		void init();
 };
 
+// A radial cosh-potential
+class CoshPotential : public PotentialType {
+	public:
+		static const double default_amplitude;
+		static const double default_length_scale;
+		CoshPotential(double amplitude=default_amplitude, double length_scale=default_length_scale);
+		CoshPotential(std::vector<double> params);
+		inline double operator()(double x, double y) const {
+			const double r = hypot(x, y);
+			return A*(cosh(r/L-1));
+		}
+	private:
+		double A;
+		double L;
+		void init();
+};
+
 #endif // _POTENTIALTYPES_HPP_
