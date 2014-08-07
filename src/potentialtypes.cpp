@@ -43,6 +43,11 @@ const double RingPotential::default_asymm_amplitude = 0;
 const double RingPotential::default_asymm_width = 1;
 const double CoshPotential::default_amplitude = 1;
 const double CoshPotential::default_length_scale = 1;
+const double SoftStadium::default_radius = 1;
+const double SoftStadium::default_center_length = 2;
+const double SoftStadium::default_height = 100;
+const double SoftStadium::default_a = 1;
+const double SoftStadium::default_b = 10;
 // The parser delegator
 
 PotentialType const* parse_potential_description(std::string const& str) {
@@ -83,6 +88,8 @@ PotentialType const* parse_potential_description(std::string const& str) {
 		return new RingPotential(params);
 	if (name == "cosh" or name == "coshpotential")
 		return new CoshPotential(params);
+	if (name == "softstadium")
+		return new SoftStadium(params);
 	else
 		throw UnknownPotentialType(str);
 	return NULL;
@@ -395,5 +402,55 @@ void CoshPotential::init() {
 		throw InvalidPotentialType("cosh potential with non-positive length scale");
 	std::stringstream ss;
 	ss << "cosh(" << A << "," << L << ")";
+	description = ss.str();
+}
+
+// SoftStadium
+
+SoftStadium::SoftStadium(double radius, double center_length, double height, double _a, double _b) :
+		R(radius), halfL(center_length/2), V(height), a(_a), b(_b) {
+	init();
+}
+
+SoftStadium::SoftStadium(std::vector<double> params) {
+	if (params.empty()) {
+		R = default_radius;
+		halfL = default_center_length/2;
+		V = default_height;
+		a = default_a;
+		b = default_b;
+	}
+	else if (params.size() == 3) {
+		R = params[0];
+		halfL = params[1];
+		V = params[2];
+		a = default_a;
+		b = default_b;
+	}
+	else if (params.size() == 5) {
+		R = params[0];
+		halfL = params[1];
+		V = params[2];
+		a = params[3];
+		b = params[4];
+	}
+	else
+		throw InvalidPotentialType("soft stadium potential takes either zero, three or five parameters");
+	init();
+}
+
+void SoftStadium::init() {
+	if (R <= 0)
+		throw InvalidPotentialType("soft stadium with non-positive radius");
+	if (halfL <= 0)
+		throw InvalidPotentialType("soft stadium with non-positive center length");
+	if (V <= 0)
+		throw InvalidPotentialType("soft stadium with non-positive height");
+	if (a <= 0)
+		throw InvalidPotentialType("soft stadium with non-positive a parameter");
+	if (b <= 0)
+		throw InvalidPotentialType("soft stadium with non-positive b parameter");
+	std::stringstream ss;
+	ss << "softstadium(" << R << "," << halfL*2 << "," << V << "," << a << "," << b << ")";
 	description = ss.str();
 }

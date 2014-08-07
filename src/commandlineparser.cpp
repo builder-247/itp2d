@@ -185,6 +185,8 @@ Ring-like potential with a given radius r, width w and exponent e for walls:\n\
 \tring(r,w,e)\n\
 Radial cosh potential V(r) = A*(cosh(r/L)-1)\n\
 \tcosh(A,L)\n\
+Soft stadium potential of Tomsovic & Heller\n\
+\tsoftstadium(R,L,V,a,b)\n\
 See header potential.hpp for details.";
 
 const char CommandLineParser::help_epilogue[] = "\

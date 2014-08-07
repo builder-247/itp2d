@@ -316,4 +316,38 @@ class CoshPotential : public PotentialType {
 		void init();
 };
 
+// Soft stadium potential as described by
+// Tomsovic, S. and Heller, E. J., PRE 47, 282 (1993)
+class SoftStadium : public PotentialType {
+	public:
+		static const double default_radius;
+		static const double default_center_length;
+		static const double default_height;
+		static const double default_a;
+		static const double default_b;
+		SoftStadium(double radius=default_radius, double center_length=default_center_length,
+				double height=default_height, double a=default_a, double b=default_b);
+		SoftStadium(std::vector<double> params);
+		inline double operator()(double x, double y) const {
+			double q;
+			if (fabs(x) <= halfL) { // in the central rectangle
+				q = y/R;
+			}
+			else if (x < -halfL) { //  in the left end cap
+				q = hypot(x+halfL, y)/R;
+			}
+			else { // in the right end cap
+				q = hypot(x-halfL, y)/R;
+			}
+			return V/(1+a*exp(b*(1-q*q)));
+		}
+	private:
+		double R;
+		double halfL;
+		double V;
+		double a;
+		double b;
+		void init();
+};
+
 #endif // _POTENTIALTYPES_HPP_
