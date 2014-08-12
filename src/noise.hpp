@@ -80,6 +80,18 @@ class GaussianNoise : public Noise {
 		std::vector<spike> spikes;
 };
 
+class SingleGaussianNoise : public Noise {
+	public:
+		SingleGaussianNoise(double x, double y, double amplitude, double width);
+		void add_noise(DataLayout const& dl, double* pot_values) const;
+		void write_realization_data(std::vector<double>& vec) const;
+	private:
+		double sx;
+		double sy;
+		double amp;
+		double width;
+};
+
 /* Coulomb-like impurities in 3D space with a tunable exponent. */
 class CoulombImpurities : public Noise {
 	public:

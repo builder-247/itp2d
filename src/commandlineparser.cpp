@@ -32,6 +32,8 @@ Description of possible noise added to the potential. Valid descriptions:\n\
 Gaussian spikes with the prescribed density and normally distributed amplitude and width:\n\
 \tgaussian(density,amp_mean,width_mean)\n\
 \tgaussian(density,amp_mean,amp_stdev,width_mean,width_stdev)\n\
+Single Gaussian spike at x, y with prescribed amplitude and width\n\
+\tsinglegaussian(x,y,amp,width)\n\
 Coulomb-like impurities with alpha/r^e potential uniformly distributed in 3D space\n\
 at maximum distance maxd from the calculation plane:\n\
 \tcoulomb(density,e,alpha,maxd)\n\

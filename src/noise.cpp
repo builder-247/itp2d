@@ -45,6 +45,12 @@ Noise const* parse_noise_description(std::string const& str,
 		else
 			throw InvalidNoiseType("Noise type GaussianNoise takes either 3 or 5 parameters");
 	}
+	else if (name == "singlegaussian") {
+		if (params.size() == 4)
+			return new SingleGaussianNoise(params[0], params[1], params[2], params[3]);
+		else
+			throw InvalidNoiseType("Noise type SingleGaussianNoise takes 4 parameters");
+	}
 	else if (name == "coulomb" or name == "coulombimpurities") {
 	// It looks like this "design pattern" has reached its end
 		if (params.size() == 4)
@@ -132,6 +138,38 @@ void GaussianNoise::write_realization_data(std::vector<double>& vec) const {
 		vec.push_back(std::tr1::get<2>(*it));
 		vec.push_back(std::tr1::get<3>(*it));
 	}
+}
+
+// SingleGaussianNoise
+
+SingleGaussianNoise::SingleGaussianNoise(double _x, double _y, double _amp, double _width) :
+	sx(_x), sy(_y), amp(_amp), width(_width) {
+		std::stringstream ss;
+		ss << "gaussian spike at (" << sx << ", " << sy << "), amplitude = " <<
+			amp << ", width = " << width;
+		description = ss.str();
+	}
+
+void SingleGaussianNoise::add_noise(DataLayout const& dl, double* pot_values) const {
+	double w2 = width*width;
+	for (size_t x=0; x<dl.sizex; x++) {
+		const double px = dl.get_posx(x);
+		for (size_t y=0; y<dl.sizey; y++) {
+			const double py = dl.get_posy(y);
+			const double rx = sx-px;
+			const double ry = sy-py;
+			const double r2 = rx*rx + ry*ry;
+			dl.value(pot_values, x, y) += amp*exp(-0.5*(r2/w2));
+		}
+	}
+}
+
+void SingleGaussianNoise::write_realization_data(std::vector<double>& vec) const {
+	vec.clear();
+	vec.push_back(sx);
+	vec.push_back(sy);
+	vec.push_back(amp);
+	vec.push_back(width);
 }
 
 // CoulombImpurities
