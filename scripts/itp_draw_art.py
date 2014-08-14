@@ -128,6 +128,7 @@ if __name__ == "__main__":
     parser.add_option("-p", "--potential", action="store_true", help="Also draw a histogram of the potential under the states")
     parser.add_option("",   "--noise-only", action="store_true", help="Draw only the noise part of the potential. Implies --potential")
     parser.add_option("",   "--noise-locations", action="store_true", help="Draw locations of noise spikes.")
+    parser.add_option("",   "--noise-location-marker-size", type="float", help="Marker radius for --noise-locations")
     parser.add_option(      "--potential-alpha", type="float", help="Alpha value to use for the potential")
     parser.add_option(      "--potential-scale", type="float", metavar="VAL", help="Scale potential so that 1.0 in the colormap corresponds to VAL. Set to 0 to use the maximum value of the potential.")
     parser.add_option("-l", "--labels", action="store_true", help="Draw labels with each state's index and energy to the combined image")
@@ -314,7 +315,7 @@ if __name__ == "__main__":
                 state_draw.text((0, 0), label, fill=foreground_color, font=font)
             if options.noise_locations:
                 for x, y, _, _ in noise_data:
-                    draw_circle(state_draw, (x, y), dx/2, grid, fill="red")
+                    draw_circle(state_draw, (x, y), options.noise_location_marker_size, grid, fill="red")
         if options.rescale != 1:
             state_im.thumbnail((scaled_Mx, scaled_My), Image.ANTIALIAS)
         if options.combined:
