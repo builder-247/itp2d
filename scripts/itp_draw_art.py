@@ -127,6 +127,7 @@ if __name__ == "__main__":
     parser.add_option("-a", "--all", action="store_true", help="Draw also the extra states not intended to converge")
     parser.add_option("-p", "--potential", action="store_true", help="Also draw a histogram of the potential under the states")
     parser.add_option("",   "--noise-only", action="store_true", help="Draw only the noise part of the potential. Implies --potential")
+    parser.add_option("",   "--noise-locations", action="store_true", help="Draw locations of noise spikes.")
     parser.add_option(      "--potential-alpha", type="float", help="Alpha value to use for the potential")
     parser.add_option(      "--potential-scale", type="float", metavar="VAL", help="Scale potential so that 1.0 in the colormap corresponds to VAL. Set to 0 to use the maximum value of the potential.")
     parser.add_option("-l", "--labels", action="store_true", help="Draw labels with each state's index and energy to the combined image")
@@ -227,6 +228,13 @@ if __name__ == "__main__":
         foreground_color = tuple(colorfunc(np.ones((1,1)))[0,0])
     else:
         foreground_color = colorfunc(np.ones((1,1)))[0,0]
+    # Read noise spike locations and parameters
+    if options.noise_only or options.noise_locations:
+        noise_type = file.attrs["noise"].lower()
+        if not noise_type.startswith("gaussian"):
+            raise NotImplementedError("Noise reconstruction not implemented for noise type '%s'" % noise_type)
+        # Reshape noise_data to a list of (x, y, amplitude, width)
+        noise_data = np.reshape(file["noise_data"], (-1,4))
     # Initialize potential image
     if options.potential:
         try:
@@ -237,11 +245,6 @@ if __name__ == "__main__":
                 # discretized noise potential separately. However, all the
                 # information to reconstruct the noise is in the itp2d
                 # datafile.
-                noise_type = file.attrs["noise"].lower()
-                if not noise_type.startswith("gaussian"):
-                    raise NotImplementedError("Noise reconstruction not implemented for noise type '%s'" % noise_type)
-                # Reshape noise_data to a list of (x, y, amplitude, width)
-                noise_data = np.reshape(file["noise_data"], (-1,4))
                 potential = np.zeros_like(file["potential_values"].value)
                 for x, y, amplitude, width in noise_data:
                     add_gaussian_values(x, y, amplitude, width, dx, potential)
@@ -296,10 +299,10 @@ if __name__ == "__main__":
         state_im = Image.fromarray(colorfunc(Z), mode=mode)
         if options.potential:
             state_im = Image.blend(state_im, potential_im, options.potential_alpha)
-        if options.circle is not None or options.labels:
+        if options.circle is not None or options.labels or options.noise_locations:
             state_draw = ImageDraw.Draw(state_im)
+            grid = (grid_sizex, grid_sizey, dx)
             if options.circle is not None:
-                grid = (grid_sizex, grid_sizey, dx)
                 draw_circle(state_draw, (0, 0), options.circle, grid, outline=foreground_color)
                 for angle in options.mark_angles:
                     x = options.circle*cos(angle)
@@ -309,6 +312,9 @@ if __name__ == "__main__":
                 E = energies[index]
                 label = ("n = %d, E = %."+str(options.label_energy_precision)+"f") % (index, E)
                 state_draw.text((0, 0), label, fill=foreground_color, font=font)
+            if options.noise_locations:
+                for x, y, _, _ in noise_data:
+                    draw_circle(state_draw, (x, y), dx/2, grid, fill="red")
         if options.rescale != 1:
             state_im.thumbnail((scaled_Mx, scaled_My), Image.ANTIALIAS)
         if options.combined:
