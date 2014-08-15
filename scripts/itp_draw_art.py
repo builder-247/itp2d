@@ -314,8 +314,9 @@ if __name__ == "__main__":
                 label = ("n = %d, E = %."+str(options.label_energy_precision)+"f") % (index, E)
                 state_draw.text((0, 0), label, fill=foreground_color, font=font)
             if options.noise_locations:
-                for x, y, _, _ in noise_data:
-                    draw_circle(state_draw, (x, y), options.noise_location_marker_size, grid, fill="red")
+                for x, y, _, width in noise_data:
+                    ms = (options.noise_location_marker_size if options.noise_location_marker_size else width)
+                    draw_circle(state_draw, (x, y), ms, grid, fill="red")
         if options.rescale != 1:
             state_im.thumbnail((scaled_Mx, scaled_My), Image.ANTIALIAS)
         if options.combined:
