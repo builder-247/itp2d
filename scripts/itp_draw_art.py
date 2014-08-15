@@ -125,6 +125,7 @@ if __name__ == "__main__":
     parser.add_option("-q", "--quiet", action="store_false", dest="verbose")
     parser.add_option("-o", "--output", type="string", metavar="FILENAME", help="Filename for the output image")
     parser.add_option("-a", "--all", action="store_true", help="Draw also the extra states not intended to converge")
+    parser.add_option("",   "--cumulative-density-sum", action="store_true", help="Plot cumulative sum of densities")
     parser.add_option("-p", "--potential", action="store_true", help="Also draw a histogram of the potential under the states")
     parser.add_option("",   "--noise-only", action="store_true", help="Draw only the noise part of the potential. Implies --potential")
     parser.add_option("",   "--noise-locations", action="store_true", help="Draw locations of noise spikes.")
@@ -274,6 +275,8 @@ if __name__ == "__main__":
         full_y = rows*scaled_My+(rows-1)*margin
         full_im = Image.new(mode, (full_x, full_y), background_color)
     counter = 0
+    if options.cumulative_density_sum:
+        density_sum = None
     # Loop through all states to be plotted
     progressbar = ProgressBar(widgets=["Drawing images: ", Percentage(), Bar(), ETA()])
     for index in progressbar(indices):
@@ -285,11 +288,19 @@ if __name__ == "__main__":
         # The data to plot is the square of the absolute value of the
         # wave function, i.e., the probability density
         if options.trim == 0:
-            Z = abs(states[options.slot, index])**2
+            density = abs(states[options.slot, index])**2
         else:
-            Z = abs(states[options.slot, index][trim:-trim,trim:-trim])**2
+            density = abs(states[options.slot, index][trim:-trim,trim:-trim])**2
         # Flip, since in the original data array y-axis points "downwards"
-        Z = np.flipud(Z)
+        density = np.flipud(density)
+        if options.cumulative_density_sum:
+            if density_sum is None:
+                density_sum = density[:]
+            else:
+                density_sum += density
+            Z = density_sum[:]
+        else:
+            Z = density
         # Normalize
         if options.average_point == 0:
             Z /= Z.max()
