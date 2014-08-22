@@ -63,7 +63,7 @@ def main():
             clip(potential, float("-inf"), options.clip, out=potential)
         matplotlib_plot(X, Y, potential, options, extent)
     else:
-        mayavi_3dplot(X1d, Y1d, transpose(potential), options, mask)
+        mayavi_3dplot(X1d, Y1d, transpose(potential), options, transpose(mask))
 
 def matplotlib_plot(X, Y, Z, options, extent):
         fig = pyplot.figure(figsize=(12,12))
