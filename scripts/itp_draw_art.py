@@ -107,7 +107,7 @@ def draw_circle(drawer, pos, radius, grid, **kwargs):
     sx, sy, dx = grid
     radius_px = radius/dx
     x_px = x_to_i(x, sx, dx)
-    y_px = x_to_i(y, sy, dx)
+    y_px = x_to_i(-y, sy, dx) # y-axis points downwards in PIL
     circle_bb = ((x_px-radius_px, y_px-radius_px),
         (x_px+radius_px, y_px+radius_px))
     drawer.ellipse(circle_bb, **kwargs)
@@ -291,7 +291,7 @@ if __name__ == "__main__":
             density = abs(states[options.slot, index])**2
         else:
             density = abs(states[options.slot, index][trim:-trim,trim:-trim])**2
-        # Flip, since in the original data array y-axis points "downwards"
+        # Flip, since in PIL the y-axis points downwards
         density = np.flipud(density)
         if options.cumulative_density_sum:
             if density_sum is None:
