@@ -19,6 +19,7 @@
 #ifndef _NOISE_HPP_
 #define _NOISE_HPP_
 
+#include <list>
 #include <vector>
 #include <tr1/tuple>
 
@@ -28,19 +29,84 @@
 #include "parser.hpp"
 #include "constraint.hpp"
 
-/* Interface class representing "noise" which can be added to some array of
- * values, such as a potential. */
+// Public noise class interface
+
 class Noise {
 	public:
 		virtual ~Noise() {};
 		virtual void add_noise(DataLayout const& dl, double* pot_values) const = 0;
-		std::string const& get_description() const { return description; }
+		virtual std::string const& get_description() const = 0;
 		// Write internal data which can be used to re-create the noise realization. For example for
 		// Gaussian impurities, store the positions, amplitudes and widths of the Gaussians.
 		virtual void write_realization_data(std::vector<double>& vec) const = 0;
-	protected:
+};
+
+// Interface class of impurity types
+
+class ImpurityType {
+	public:
+		virtual ~Impurity() {};
+		virtual void new_realization(std::vector<double>& params) = 0;
+		virtual void add_noise(double x, double y, std::vector<double> const& params, DataLayout const& dl, double* pot_values) const = 0;
+		std::string const& get_description() const { return description; }
+	private:
 		std::string description;
 };
+
+// Interface class of impurity distributions
+
+class ImpurityDistribution {
+	public:
+		typedef std::pair<double, double> coordinate_pair;
+		virtual ~ImpurityDistribution() {};
+		std::list<coordinate_pair> const& get_coordinates() const { return coordinates; }
+		std::string const& get_description() const { return description; }
+	private:
+		std::string description;
+		std::list<coordinate_pair> coordinates;
+};
+
+// Regular spatial noise class built from impurity type + impurity distribution
+
+class SpatialImpurities : public Noise {
+	public:
+		SpatialImpurities(ImpurityType const& type, ImpurityDistribution& distribution);
+		virtual void add_noise(DataLayout const& dl, double* pot_values) const;
+		std::string const& get_description() const;
+		void write_realization_data(std::vector<double>& vec) const;
+	private:
+		ImpurityType const& type;
+		ImpurityDistribution const& distribution;
+		std::list<double> realization_data;
+};
+
+// The trivial case of no noise at all
+
+class NoNoise : public Noise {
+	public:
+		void add_noise(__attribute__((unused)) DataLayout const& dl, __attribute__((unused)) double* pot_values) const {}
+		static std::string const& get_description() const { return "none"; }
+		void write_realization_data(std::vector<double>& vec) const { vec.clear(); }
+};
+
+// Individual impurity types
+
+class GaussianImpurities : public ImpurityType {
+	public:
+		GaussianImpurities(double amp_mean, double amp_stdev, double width_mean, double width_stdev, RNG& rng);
+		void new_realization(std::vector<double>& params);
+		void add_noise(double x, double y, std::vector<double> const& params, DataLayout const& dl, double* pot_values) const;
+		std::string const& get_description() const;
+	private:
+		double amp_mean;
+		double amp_stdev;
+		double width_mean;
+		double width_stdev;
+		RNG& rng;
+};
+
+// Individual distribution types
+
 
 // A parser function for returning a Noise instance from a user provided
 // desciption string
@@ -50,14 +116,6 @@ Noise const* parse_noise_description(std::string const& str, DataLayout const& d
 // Individual noise types
 
 /* The simple case of no noise at all */
-class NoNoise : public Noise {
-	public:
-		NoNoise() { init(); }
-		void add_noise(__attribute__((unused)) DataLayout const& dl, __attribute__((unused)) double* pot_values) const {}
-		void write_realization_data(std::vector<double>& vec) const { vec.clear(); }
-	private:
-		void init() { description = "none"; }
-};
 
 /* Randomly distributed gaussian spikes with normally distributed width
  * and normally distributed amplitude. */
