@@ -422,14 +422,14 @@ SoftStadium::SoftStadium(std::vector<double> params) {
 	}
 	else if (params.size() == 3) {
 		R = params[0];
-		halfL = params[1];
+		halfL = params[1]/2;
 		V = params[2];
 		a = default_a;
 		b = default_b;
 	}
 	else if (params.size() == 5) {
 		R = params[0];
-		halfL = params[1];
+		halfL = params[1]/2;
 		V = params[2];
 		a = params[3];
 		b = params[4];
