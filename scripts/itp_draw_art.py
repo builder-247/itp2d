@@ -325,8 +325,10 @@ if __name__ == "__main__":
                 label = ("n = %d, E = %."+str(options.label_energy_precision)+"f") % (index, E)
                 state_draw.text((0, 0), label, fill=foreground_color, font=font)
             if options.noise_locations:
+                hwhm_scale = sqrt(2*np.log(2)) # half width at half maximum (HWHM) of a Gaussian function
                 for x, y, _, width in noise_data:
-                    ms = (options.noise_location_marker_size if options.noise_location_marker_size else width)
+                    hwhm = hwhm_scale*width
+                    ms = (options.noise_location_marker_size if options.noise_location_marker_size else hwhm)
                     draw_circle(state_draw, (x, y), ms, grid, fill="red")
         if options.rescale != 1:
             state_im.thumbnail((scaled_Mx, scaled_My), Image.ANTIALIAS)
