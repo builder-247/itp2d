@@ -49,7 +49,7 @@ def main():
     My = file.attrs["grid_sizey"]
     scale = file.attrs["grid_delta"]
     potential = file["potential_values"].value
-    mask = (None if options.clip == None else (potential > options.clip))
+    mask = (None if options.clip == None else transpose(potential > options.clip))
 
     X = (2*arange(Mx)-Mx+1)*0.5*scale
     Y = (2*arange(My)-My+1)*0.5*scale
@@ -63,7 +63,7 @@ def main():
             clip(potential, float("-inf"), options.clip, out=potential)
         matplotlib_plot(X, Y, potential, options, extent)
     else:
-        mayavi_3dplot(X1d, Y1d, transpose(potential), options, transpose(mask))
+        mayavi_3dplot(X1d, Y1d, transpose(potential), options, mask)
 
 def matplotlib_plot(X, Y, Z, options, extent):
         fig = pyplot.figure(figsize=(12,12))
