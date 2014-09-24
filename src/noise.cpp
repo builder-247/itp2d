@@ -18,7 +18,65 @@
 
 #include "noise.hpp"
 
+// GaussianImpurities
+
+void GaussianImpurities::add_noise(double sx, double sy, std::vector<double> const& params, DataLayout const& dl, double* pot_values) const {
+	if (params.size() != num_params)
+		throw; // TODO
+	const double A = params[0];
+	const double w = params[1];
+	const double w2 = w*w;
+	for (size_t x=0; x<dl.sizex; x++) {
+		const double px = dl.get_posx(x);
+		for (size_t y=0; y<dl.sizey; y++) {
+			const double py = dl.get_posy(y);
+			const double rx = sx-px;
+			const double ry = sy-py;
+			const double r2 = rx*rx + ry*ry;
+			dl.value(pot_values, x, y) += A*exp(-0.5*(r2/w2));
+		}
+	}
+}
+
 // noise parser function
+
+ImpurityType const* parse_impurity_type_description(std::string const& type_str, DataLayout const& dl, RNG& rng) {
+	name_parameters_pair p;
+	p = parse_parameter_string(type_str);
+	std::string const& name = p.first;
+	std::vector<double> const& params = p.second;
+	// Simply delegate to the individual constructors based on name
+	if (name == "gaussian" or name == "gaussians" or name == "gaussiannoise") {
+		if (params.size() == 2)
+			return new GaussianImpurities(params[0], 0.0, params[1], 0.0, rng);
+		else if (params.size() == 4)
+			return new GaussianImpurities(params[0], params[1], params[2], params[3], rng);
+		else
+			throw InvalidImpurityType("Impurity type GaussianImpurities takes either 2 or 4 parameters");
+	}
+	else
+		throw UnknownImpurityType(type_str);
+}
+
+ImpurityDistribution const* parse_impurity_distribution_description(std::string const& distribution_str, DataLayout const& dl, Constraint const& constraint, RNG& rng) {
+	name_parameters_pair p;
+	p = parse_parameter_string(distribution_str);
+	std::string const& name = p.first;
+	std::vector<double> const& params = p.second;
+	// Simply delegate to the individual constructors based on name
+	if (name == "uniform") {
+		if (params.size() == 1)
+			return new UniformImpurities(params[0], dl, constraint, rng);
+		else
+			throw InvalidImpurityDistributionType("Impurity disribution type UniformImpurities takes only one parameter");
+	}
+	else
+		throw UnknownImpurityDisributionType(distribution_str);
+}
+
+// Old code
+
+/*
 
 Noise const* parse_noise_description(std::string const& str,
 		DataLayout const& dl, Constraint const& constraint, RNG& rng) {
@@ -297,3 +355,5 @@ void HemisphereImpurities::write_realization_data(std::vector<double>& vec) cons
 		vec.push_back(std::tr1::get<3>(*it));
 	}
 }
+
+*/
