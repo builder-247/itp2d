@@ -35,12 +35,12 @@ class Noise {
 	public:
 		virtual ~Noise() {};
 		virtual void add_noise(DataLayout const& dl, double* pot_values) const = 0;
-		std::string const& get_description() const { return description; }
+		virtual std::string const& get_description() const = 0;
+		virtual std::string const& get_distribution_description() const = 0;
+		virtual std::string const& get_constraint_description() const = 0;
 		// Write internal data which can be used to re-create the noise realization. For example for
 		// Gaussian impurities, store the positions, amplitudes and widths of the Gaussians.
 		virtual void write_realization_data(std::vector<double>& vec) const = 0;
-	protected:
-		std::string description;
 };
 
 // Interface class of impurity types
@@ -63,6 +63,7 @@ class ImpurityDistribution {
 		virtual ~ImpurityDistribution() {};
 		std::list<coordinate_pair> const& get_coordinates() const { return coordinates; }
 		std::string const& get_description() const { return description; }
+		virtual Constraint const& get_constraint() const { return NoConstraint(); }
 	protected:
 		std::list<coordinate_pair> coordinates;
 		std::string description;
@@ -72,15 +73,16 @@ class ImpurityDistribution {
 
 class SpatialImpurities : public Noise {
 	public:
-		SpatialImpurities(ImpurityType const& type, ImpurityDistribution& distribution);
-		virtual void add_noise(DataLayout const& dl, double* pot_values) const;
-		std::string const& get_description() const { return description; }
+		SpatialImpurities(ImpurityType const& type, ImpurityDistribution const& distribution);
+		void add_noise(DataLayout const& dl, double* pot_values) const;
+		std::string const& get_description() const { return type.get_description(); }
+		std::string const& get_distribution_description() const { return distribution.get_description(); }
+		std::string const& get_constraint_description() const { return distribution.get_constraint().get_description(); }
 		void write_realization_data(std::vector<double>& vec) const;
-	private:
 		ImpurityType const& type;
 		ImpurityDistribution const& distribution;
+	private:
 		std::list<double> realization_data;
-		std::string description;
 };
 
 // The trivial case of no noise at all
@@ -90,8 +92,13 @@ class NoNoise : public Noise {
 		NoNoise() {
 			description = "none";
 		}
+		std::string const& get_description() const { return description; }
+		std::string const& get_distribution_description() const { return description; }
+		std::string const& get_constraint_description() const { return description; }
 		void add_noise(__attribute__((unused)) DataLayout const& dl, __attribute__((unused)) double* pot_values) const {}
 		void write_realization_data(std::vector<double>& vec) const { vec.clear(); }
+	private:
+		std::string description;
 };
 
 // Individual impurity types
@@ -122,7 +129,8 @@ class GaussianImpurities : public ImpurityType {
 
 class UniformImpurities : public ImpurityDistribution {
 	public:
-		UniformImpurities(double density, DataLayout const& dl, Constraint const& constraint, RNG& rng) {
+		UniformImpurities(double density, DataLayout const& dl, Constraint const& _constraint, RNG& rng) : 
+				constraint(_constraint) {
 			description = "TODO";
 			// Draw the number of impurities from a Poisson distribution
 			const double lambda = density*dl.lenx*dl.leny;
@@ -136,6 +144,8 @@ class UniformImpurities : public ImpurityDistribution {
 				}
 			}
 		}
+		Constraint const& get_constraint() const { return constraint; }
+		Constraint const& constraint;
 };
 
 

@@ -142,6 +142,15 @@ class UnknownConvergenceType : public std::runtime_error {
 		}
 };
 
+class UnknownNoiseType : public std::runtime_error {
+	public:
+		UnknownNoiseType(std::string str) : std::runtime_error("") {
+			std::stringstream ss;
+			ss << "Noise type description \"" << str << "\" not understood by parser.";
+			static_cast<std::runtime_error&>(*this) = std::runtime_error(ss.str());
+		}
+};
+
 class UnknownImpurityType : public std::runtime_error {
 	public:
 		UnknownImpurityType(std::string str) : std::runtime_error("") {

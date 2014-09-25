@@ -38,6 +38,21 @@ void GaussianImpurities::add_noise(double sx, double sy, std::vector<double> con
 	}
 }
 
+// SpatialImpurities
+
+SpatialImpurities::SpatialImpurities(ImpurityType const& _type, ImpurityDistribution const& _distribution) :
+		type(_type), distribution(_distribution) {
+	throw NotImplemented("SpatialImpurities"); // TODO
+}
+
+void SpatialImpurities::add_noise(DataLayout const& dl, double* pot_values) const {
+	throw NotImplemented("SpatialImpurities"); // TODO
+}
+
+void SpatialImpurities::write_realization_data(std::vector<double>& vec) const {
+	throw NotImplemented("SpatialImpurities"); // TODO
+}
+
 // noise parser function
 
 ImpurityType const* parse_impurity_type_description(std::string const& type_str, DataLayout const& dl, RNG& rng) {
