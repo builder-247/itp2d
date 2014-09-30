@@ -48,8 +48,9 @@ class Noise {
 class ImpurityType {
 	public:
 		virtual ~ImpurityType() {};
-		virtual void new_realization(std::vector<double>& params) = 0;
+		virtual void new_realization(std::list<double>& params) const = 0;
 		virtual void add_noise(double x, double y, std::vector<double> const& params, DataLayout const& dl, double* pot_values) const = 0;
+		virtual size_t get_num_params() const = 0;
 		std::string const& get_description() const { return description; }
 	protected:
 		std::string description;
@@ -73,6 +74,7 @@ class ImpurityDistribution {
 
 class SpatialImpurities : public Noise {
 	public:
+		typedef ImpurityDistribution::coordinate_pair coordinate_pair;
 		SpatialImpurities(ImpurityType const& type, ImpurityDistribution const& distribution);
 		void add_noise(DataLayout const& dl, double* pot_values) const;
 		std::string const& get_description() const { return type.get_description(); }
@@ -108,15 +110,21 @@ class GaussianImpurities : public ImpurityType {
 	public:
 		GaussianImpurities(double _amp_mean, double _amp_stdev, double _width_mean, double _width_stdev, RNG& _rng) :
 				amp_mean(_amp_mean), amp_stdev(_amp_stdev), width_mean(_width_mean), width_stdev(_width_stdev), rng(_rng) {
-			description = "TODO";
+			std::stringstream ss;
+			ss << "Gaussian spikes, normally distributed amplitude with mean " << amp_mean
+				<< " and standard deviation " << amp_stdev
+				<< ", normally distributed width with mean " << width_mean
+				<< " and standard deviation " << width_stdev;
+			description = ss.str();
 		}
-		void new_realization(std::vector<double>& params) {
+		void new_realization(std::list<double>& params) const {
 			const double A = amp_mean + amp_stdev*rng.gaussian_rand();
 			const double w = width_mean + width_stdev*rng.gaussian_rand();
 			params.push_back(A);
 			params.push_back(w);
 		}
 		void add_noise(double x, double y, std::vector<double> const& params, DataLayout const& dl, double* pot_values) const;
+		size_t get_num_params() const { return num_params; }
 	private:
 		double amp_mean;
 		double amp_stdev;
@@ -131,7 +139,9 @@ class UniformImpurities : public ImpurityDistribution {
 	public:
 		UniformImpurities(double density, DataLayout const& dl, Constraint const& _constraint, RNG& rng) : 
 				constraint(_constraint) {
-			description = "TODO";
+			std::stringstream ss;
+			ss << "uniform distribution with density " << density << " impurities per unit square";
+			description = ss.str();
 			// Draw the number of impurities from a Poisson distribution
 			const double lambda = density*dl.lenx*dl.leny;
 			const unsigned int N = rng.poisson_rand(lambda);

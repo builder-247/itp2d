@@ -160,7 +160,7 @@ void ITPSystem::print_initial_message() {
 		<< "\t\tfinal convergence: " << params.get_final_convergence_test().get_description() << std::endl
 		<< "\tpotential: " << pot_type->get_description() << std::endl
 		<< "\t\tnoise: " << noise->get_description() << std::endl;
-	if (typeid(noise) == typeid(SpatialImpurities)) {
+	if (typeid(*noise) == typeid(SpatialImpurities)) {
 		out << "\t\timpurity distribution: " << noise->get_distribution_description() << std::endl
 			<< "\t\timpurity constraint: " << noise->get_constraint_description() << std::endl;
 	}

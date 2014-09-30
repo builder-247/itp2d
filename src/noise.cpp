@@ -18,11 +18,13 @@
 
 #include "noise.hpp"
 
+using namespace std;
+
 // GaussianImpurities
 
-void GaussianImpurities::add_noise(double sx, double sy, std::vector<double> const& params, DataLayout const& dl, double* pot_values) const {
+void GaussianImpurities::add_noise(double sx, double sy, vector<double> const& params, DataLayout const& dl, double* pot_values) const {
 	if (params.size() != num_params)
-		throw; // TODO
+		throw GeneralError("GaussianImpurities constructor with incorrect length for parameter vector. This should never happen.");
 	const double A = params[0];
 	const double w = params[1];
 	const double w2 = w*w;
@@ -42,24 +44,46 @@ void GaussianImpurities::add_noise(double sx, double sy, std::vector<double> con
 
 SpatialImpurities::SpatialImpurities(ImpurityType const& _type, ImpurityDistribution const& _distribution) :
 		type(_type), distribution(_distribution) {
-	throw NotImplemented("SpatialImpurities"); // TODO
+	list<coordinate_pair> const& coords = distribution.get_coordinates();
+	for (list<coordinate_pair>::const_iterator it = coords.begin(); it != coords.end(); ++it) {
+		double const& x = it->first;
+		double const& y = it->second;
+		realization_data.push_back(x);
+		realization_data.push_back(y);
+		type.new_realization(realization_data);
+	}
 }
 
 void SpatialImpurities::add_noise(DataLayout const& dl, double* pot_values) const {
-	throw NotImplemented("SpatialImpurities"); // TODO
+	if (realization_data.size() % (2+type.get_num_params()) != 0) {
+		throw GeneralError("SpatialImpurities::add_noise() with incorrect length for realization_data vector. This should never happen.");
+	}
+	list<double>::const_iterator it = realization_data.begin();
+	vector<double> params;
+	do {
+		const double x = *it; ++it;
+		const double y = *it; ++it;
+		for (size_t i=0; i<type.get_num_params(); i++) {
+			params.push_back(*it); it++;
+		}
+		type.add_noise(x, y, params, dl, pot_values);
+		params.clear();
+	} while (it != realization_data.end());
 }
 
-void SpatialImpurities::write_realization_data(std::vector<double>& vec) const {
-	throw NotImplemented("SpatialImpurities"); // TODO
+void SpatialImpurities::write_realization_data(vector<double>& vec) const {
+	vec.clear();
+	vec.reserve(realization_data.size());
+	copy(realization_data.begin(), realization_data.end(), back_inserter(vec));
 }
 
 // noise parser function
 
-ImpurityType const* parse_impurity_type_description(std::string const& type_str, DataLayout const& dl, RNG& rng) {
+ImpurityType const* parse_impurity_type_description(string const& type_str, DataLayout const& dl, RNG& rng) {
 	name_parameters_pair p;
 	p = parse_parameter_string(type_str);
-	std::string const& name = p.first;
-	std::vector<double> const& params = p.second;
+	string const& name = p.first;
+	vector<double> const& params = p.second;
 	// Simply delegate to the individual constructors based on name
 	if (name == "gaussian" or name == "gaussians" or name == "gaussiannoise") {
 		if (params.size() == 2)
@@ -73,11 +97,11 @@ ImpurityType const* parse_impurity_type_description(std::string const& type_str,
 		throw UnknownImpurityType(type_str);
 }
 
-ImpurityDistribution const* parse_impurity_distribution_description(std::string const& distribution_str, DataLayout const& dl, Constraint const& constraint, RNG& rng) {
+ImpurityDistribution const* parse_impurity_distribution_description(string const& distribution_str, DataLayout const& dl, Constraint const& constraint, RNG& rng) {
 	name_parameters_pair p;
 	p = parse_parameter_string(distribution_str);
-	std::string const& name = p.first;
-	std::vector<double> const& params = p.second;
+	string const& name = p.first;
+	vector<double> const& params = p.second;
 	// Simply delegate to the individual constructors based on name
 	if (name == "uniform") {
 		if (params.size() == 1)
@@ -89,161 +113,7 @@ ImpurityDistribution const* parse_impurity_distribution_description(std::string 
 		throw UnknownImpurityDisributionType(distribution_str);
 }
 
-// Old code
-
 /*
-
-Noise const* parse_noise_description(std::string const& str,
-		DataLayout const& dl, Constraint const& constraint, RNG& rng) {
-	// Parse with the generic parse_parameter_string function and extract the
-	// name and parameters.
-	name_parameters_pair p;
-	try {
-		p = parse_parameter_string(str);
-	}
-	catch (ParseError& e) {
-		std::cerr << e.what() << std::endl;
-		throw InvalidNoiseType(str);
-	}
-	std::string const& name = p.first;
-	std::vector<double> const& params = p.second;
-	// Simply delegate to the individual constructors based on name
-	if (name == "no" or name == "none" or name == "zero")
-		return new NoNoise();
-	else if (name == "gaussian" or name == "gaussians" or name == "gaussiannoise") {
-		if (params.size() == 3)
-			return new GaussianNoise(params[0], params[1], 0.0, params[2], 0.0, dl, constraint, rng);
-		else if (params.size() == 5)
-			return new GaussianNoise(params[0], params[1], params[2], params[3], params[4], dl, constraint, rng);
-		else
-			throw InvalidNoiseType("Noise type GaussianNoise takes either 3 or 5 parameters");
-	}
-	else if (name == "singlegaussian") {
-		if (params.size() == 4)
-			return new SingleGaussianNoise(params[0], params[1], params[2], params[3]);
-		else
-			throw InvalidNoiseType("Noise type SingleGaussianNoise takes 4 parameters");
-	}
-	else if (name == "coulomb" or name == "coulombimpurities") {
-	// It looks like this "design pattern" has reached its end
-		if (params.size() == 4)
-			return new CoulombImpurities(params[0], params[1], params[2], params[3], dl, constraint, rng);
-		else
-			throw InvalidNoiseType("Noise type CoulombImpurities takes 4 parameters");
-	}
-	else if (name == "hemisphere" or name == "hemispheres" or name == "hemisphereimpurities") {
-		if (params.size() == 3)
-			return new HemisphereImpurities(params[0], params[1], params[2], dl, constraint, rng);
-		else
-			throw InvalidNoiseType("Noise type HemisphereImpurities takes 3 parameters");
-	}
-	else
-		throw UnknownNoiseType(str);
-}
-
-// GaussianNoise
-
-GaussianNoise::GaussianNoise(double d, double amp, double amp_stdev, double w, double w_stdev,
-		DataLayout const& dl, Constraint const& constr, RNG& rng) :
-		datalayout(dl), constraint(constr),
-		density(d), amplitude_mean(amp), amplitude_stdev(amp_stdev), width_mean(w), width_stdev(w_stdev) {
-	init(rng);
-}
-
-void GaussianNoise::init(RNG& rng) {
-	// Write description
-	std::stringstream ss;
-	ss << "gaussian spikes, density = " << density << ", amplitude ~ N(" << amplitude_mean
-		<< "," << amplitude_stdev << "^2), width ~ N(" << width_mean << "," << width_stdev << "^2)";
-	description = ss.str();
-	// Generate noise
-	spikes.clear();
-	// The number of impurities on the calculation plane is Poisson distributed around the mean value
-	const double lambda = density*datalayout.lenx*datalayout.leny;
-	const unsigned int N = rng.poisson_rand(lambda);
-	spikes.reserve(N);
-	// First, randomly distribute the centers, amplitudes and widths of the spikes
-	for (unsigned int n=0; n<N; n++) {
-		// First randomize the position
-		const double x = (rng.uniform_rand()-0.5)*datalayout.lenx;
-		const double y = (rng.uniform_rand()-0.5)*datalayout.leny;
-		if (not constraint.check(x, y)) {
-			continue;
-		}
-		// Determine amplitude and width
-		const double A = amplitude_mean + amplitude_stdev*rng.gaussian_rand();
-		const double w = width_mean + width_stdev*rng.gaussian_rand();
-		if (w < 0)
-			continue;
-		spikes.push_back(spike(x, y, A, w));
-	}
-}
-
-void GaussianNoise::add_noise(DataLayout const& dl, double* pot_values) const {
-	// Loop through all spikes and add their effect into pot_values. This is
-	// not a very efficient way to do this, but this only needs to be done once
-	// so it doesn't really matter.
-	for (std::vector<spike>::const_iterator it = spikes.begin(); it != spikes.end(); ++it) {
-		const double sx = std::tr1::get<0>(*it);
-		const double sy = std::tr1::get<1>(*it);
-		const double A = std::tr1::get<2>(*it);
-		const double w = std::tr1::get<3>(*it);
-		const double w2 = w*w;
-		for (size_t x=0; x<dl.sizex; x++) {
-			const double px = dl.get_posx(x);
-			for (size_t y=0; y<dl.sizey; y++) {
-				const double py = dl.get_posy(y);
-				const double rx = sx-px;
-				const double ry = sy-py;
-				const double r2 = rx*rx + ry*ry;
-				dl.value(pot_values, x, y) += A*exp(-0.5*(r2/w2));
-			}
-		}
-	}
-}
-
-void GaussianNoise::write_realization_data(std::vector<double>& vec) const {
-	vec.clear();
-	vec.reserve(4*spikes.size());
-	for (std::vector<spike>::const_iterator it = spikes.begin(); it != spikes.end(); ++it) {
-		vec.push_back(std::tr1::get<0>(*it));
-		vec.push_back(std::tr1::get<1>(*it));
-		vec.push_back(std::tr1::get<2>(*it));
-		vec.push_back(std::tr1::get<3>(*it));
-	}
-}
-
-// SingleGaussianNoise
-
-SingleGaussianNoise::SingleGaussianNoise(double _x, double _y, double _amp, double _width) :
-	sx(_x), sy(_y), amp(_amp), width(_width) {
-		std::stringstream ss;
-		ss << "gaussian spike at (" << sx << ", " << sy << "), amplitude = " <<
-			amp << ", width = " << width;
-		description = ss.str();
-	}
-
-void SingleGaussianNoise::add_noise(DataLayout const& dl, double* pot_values) const {
-	double w2 = width*width;
-	for (size_t x=0; x<dl.sizex; x++) {
-		const double px = dl.get_posx(x);
-		for (size_t y=0; y<dl.sizey; y++) {
-			const double py = dl.get_posy(y);
-			const double rx = sx-px;
-			const double ry = sy-py;
-			const double r2 = rx*rx + ry*ry;
-			dl.value(pot_values, x, y) += amp*exp(-0.5*(r2/w2));
-		}
-	}
-}
-
-void SingleGaussianNoise::write_realization_data(std::vector<double>& vec) const {
-	vec.clear();
-	vec.push_back(sx);
-	vec.push_back(sy);
-	vec.push_back(amp);
-	vec.push_back(width);
-}
 
 // CoulombImpurities
 
@@ -297,47 +167,7 @@ void CoulombImpurities::add_noise(DataLayout const& dl, double* pot_values) cons
 	}
 }
 
-void CoulombImpurities::write_realization_data(std::vector<double>& vec) const {
-	vec.clear();
-	vec.reserve(4*impurities.size());
-	for (std::vector<impurity>::const_iterator it = impurities.begin(); it != impurities.end(); ++it) {
-		vec.push_back(std::tr1::get<0>(*it));
-		vec.push_back(std::tr1::get<1>(*it));
-		vec.push_back(std::tr1::get<2>(*it));
-		vec.push_back(std::tr1::get<3>(*it));
-	}
-}
-
 // HemisphereImpurities
-
-HemisphereImpurities::HemisphereImpurities(double d, double A, double r, DataLayout const& dl, Constraint const& constr, RNG& rng) :
-		datalayout(dl), constraint(constr),
-		density(d), amplitude(A), radius(r) {
-	init(rng);
-}
-
-void HemisphereImpurities::init(RNG& rng) {
-	// Write description
-	std::stringstream ss;
-	ss << "Hemisphere impurities, density = " << density << ", amplitude = "
-		<< amplitude << ", radius = " << radius;
-	description = ss.str();
-	// Generate noise
-	impurities.clear();
-	// The number of impurities inside the box is Poisson distributed around the mean value
-	const double lambda = density*datalayout.lenx*datalayout.leny;
-	const unsigned int N = rng.poisson_rand(lambda);
-	impurities.reserve(N);
-	// First, randomly distribute the positions of the impurities
-	for (unsigned int n=0; n<N; n++) {
-		const double x = (rng.uniform_rand()-0.5)*datalayout.lenx;
-		const double y = (rng.uniform_rand()-0.5)*datalayout.leny;
-		if (not constraint.check(x, y)) {
-			continue;
-		}
-		impurities.push_back(impurity(x, y, amplitude, radius));
-	}
-}
 
 void HemisphereImpurities::add_noise(DataLayout const& dl, double* pot_values) const {
 	for (std::vector<impurity>::const_iterator it = impurities.begin(); it != impurities.end(); ++it) {
@@ -357,17 +187,6 @@ void HemisphereImpurities::add_noise(DataLayout const& dl, double* pot_values) c
 					dl.value(pot_values, sx, sy) += A*sqrt(1-d2/r2);
 			}
 		}
-	}
-}
-
-void HemisphereImpurities::write_realization_data(std::vector<double>& vec) const {
-	vec.clear();
-	vec.reserve(4*impurities.size());
-	for (std::vector<impurity>::const_iterator it = impurities.begin(); it != impurities.end(); ++it) {
-		vec.push_back(std::tr1::get<0>(*it));
-		vec.push_back(std::tr1::get<1>(*it));
-		vec.push_back(std::tr1::get<2>(*it));
-		vec.push_back(std::tr1::get<3>(*it));
 	}
 }
 
