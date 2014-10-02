@@ -27,22 +27,32 @@ better performance.";
 const char CommandLineParser::help_wisdom_file_name[] = "\
 File name to use for FFTW wisdom.";
 
-const char CommandLineParser::help_noise[] = "TODO";
+const char CommandLineParser::help_noise[] = "Type of noise added to the potential. \
+Valid choices are currently 'none' for no noise or 'impurities', for spatially distributed \
+bumps in the potential. See documentation of flags --impurity-type, --impurity-distribution \
+and --impurity-constrant for more information about impurity noise.";
 
 const char CommandLineParser::help_impurity_type[] = "\
-Description of possible noise added to the potential. Valid descriptions:\n\
-Gaussian spikes with the prescribed density and normally distributed amplitude and width:\n\
-\tgaussian(density,amp_mean,width_mean)\n\
-\tgaussian(density,amp_mean,amp_stdev,width_mean,width_stdev)\n\
-Coulomb-like impurities with alpha/r^e potential uniformly distributed in 3D space\n\
-at maximum distance maxd from the calculation plane:\n\
-\tcoulomb(density,e,alpha,maxd)\n\
+Description of the type of impurity bumps added to the potential. Valid descriptions:\n\
+Gaussian bumps with normally distributed amplitude and width:\n\
+\tgaussian(amp_mean, width_mean)\n\
+\tgaussian(amp_mean, amp_stdev, width_mean, width_stdev)\n\
+Coulomb-like impurities with alpha/r^e potential:\n\
+\tcoulomb(e,alpha)\n\
+Hemisphere bumps with given amplitude and radius:\n\
+\themisphere(amplitude,radius)\n\
 See header noise.hpp for details.";
 
-const char CommandLineParser::help_impurity_distribution[] = "TODO";
+const char CommandLineParser::help_impurity_distribution[] = "\
+Spatial distribution of the impurity bumps. Valid descriptions:\n\
+Uniform distribution with given density:\n\
+\tuniform(density)\n\
+Fixed locations of impurities:\n\
+\tfixed(x1, y1, x2, y2, ...)";
 
 const char CommandLineParser::help_impurity_constraint[] = "\
-Description of possible geometric constraint imposed on the noise. Valid descriptions:\n\
+Description of possible geometric constraint imposed on the placement of impurities.\n\
+Valid descriptions:\n\
 Maximum distance from the center:\n\
 \tmaxradius(r)\n\
 Ring with inner radius r and width w:\n\

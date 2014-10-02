@@ -64,7 +64,7 @@ class ImpurityDistribution {
 		virtual ~ImpurityDistribution() {};
 		std::list<coordinate_pair> const& get_coordinates() const { return coordinates; }
 		std::string const& get_description() const { return description; }
-		virtual Constraint const& get_constraint() const { return NoConstraint(); }
+		virtual Constraint const& get_constraint() const = 0;
 	protected:
 		std::list<coordinate_pair> coordinates;
 		std::string description;
@@ -133,6 +133,44 @@ class GaussianImpurities : public ImpurityType {
 		RNG& rng;
 };
 
+class CoulombImpurities : public ImpurityType {
+	static const size_t num_params = 0;
+	public:
+		CoulombImpurities(double e, double _alpha, RNG& _rng) :
+				halfexponent(e/2), alpha(_alpha), rng(_rng) {
+			std::stringstream ss;
+			ss << "Coulomb-like impurities with exponent " << 2*halfexponent
+				<< " and prefactor " << alpha;
+			description = ss.str();
+		}
+		void new_realization(__attribute__((unused)) std::list<double>& params) const {}
+		void add_noise(double x, double y, std::vector<double> const& params, DataLayout const& dl, double* pot_values) const;
+		size_t get_num_params() const { return num_params; }
+	private:
+		double halfexponent;
+		double alpha;
+		RNG& rng;
+};
+
+class HemisphereImpurities : public ImpurityType {
+	static const size_t num_params = 0;
+	public:
+		HemisphereImpurities(double amplitude, double radius, RNG& _rng) :
+				A(amplitude), r2(radius*radius), rng(_rng) {
+			std::stringstream ss;
+			ss << "hemisphere bumps with amplitude " << A
+				<< " and radius " << std::sqrt(r2);
+			description = ss.str();
+		}
+		void new_realization(__attribute__((unused)) std::list<double>& params) const {}
+		void add_noise(double x, double y, std::vector<double> const& params, DataLayout const& dl, double* pot_values) const;
+		size_t get_num_params() const { return num_params; }
+	private:
+		double A;
+		double r2;
+		RNG& rng;
+};
+
 // Individual distribution types
 
 class UniformImpurities : public ImpurityDistribution {
@@ -159,82 +197,22 @@ class UniformImpurities : public ImpurityDistribution {
 };
 
 
-// A parser functions for returning instances from a user provided desciption
+class FixedImpurities : public ImpurityDistribution {
+	public:
+		FixedImpurities(std::list<coordinate_pair> _coordinates) {
+			description = "user-defined locations of impurities";
+			coordinates = _coordinates;
+		}
+		Constraint const& get_constraint() const { return constraint; }
+	private:
+		NoConstraint constraint;
+};
+
+// Parser functions for returning instances from user-provided desciption
 // strings
 
 ImpurityType const* parse_impurity_type_description(std::string const& type_str, DataLayout const& dl, RNG& rng);
 
 ImpurityDistribution const* parse_impurity_distribution_description(std::string const& distribution_str, DataLayout const& dl, Constraint const& constraint, RNG& rng);
-
-// Old noise types
-/*
-* Randomly distributed gaussian spikes with normally distributed width
- * and normally distributed amplitude.
-class GaussianNoise : public Noise {
-	public:
-		typedef std::tr1::tuple<double, double, double, double> spike; // x-coord, y-coord, amplitude and width of a spike
-		GaussianNoise(double d, double amp, double amp_stdev, double width, double width_stdev,
-				DataLayout const& dl, Constraint const& constr, RNG& rng);
-		void add_noise(DataLayout const& dl, double* pot_values) const;
-		void write_realization_data(std::vector<double>& vec) const;
-		DataLayout const& datalayout;
-		Constraint const& constraint;
-	private:
-		double density;
-		double amplitude_mean;
-		double amplitude_stdev;
-		double width_mean;
-		double width_stdev;
-		void init(RNG& rng);
-		std::vector<spike> spikes;
-};
-
-class SingleGaussianNoise : public Noise {
-	public:
-		SingleGaussianNoise(double x, double y, double amplitude, double width);
-		void add_noise(DataLayout const& dl, double* pot_values) const;
-		void write_realization_data(std::vector<double>& vec) const;
-	private:
-		double sx;
-		double sy;
-		double amp;
-		double width;
-};
-
-// Coulomb-like impurities in 3D space with a tunable exponent.
-class CoulombImpurities : public Noise {
-	public:
-		typedef std::tr1::tuple<double, double, double, double> impurity; // x-coord, y-coord, z-coord, alpha
-		CoulombImpurities(double d, double e, double a, double maxd, DataLayout const& dl, Constraint const& constr, RNG& rng);
-		void add_noise(DataLayout const& dl, double* pot_values) const;
-		void write_realization_data(std::vector<double>& vec) const;
-		DataLayout const& datalayout;
-		Constraint const& constraint;
-	private:
-		double density; // density of impurities in three dimensions
-		double exponent;
-		double alpha;	// the potential of a single impurity is alpha/r^exp
-		double maxd;	// the impurities are located furthest at maxd distance units from the calculation plane
-		void init(RNG& rng);
-		std::vector<impurity> impurities;
-};
-
-// Hemisphere-shaped finite-range impurities.
-class HemisphereImpurities : public Noise {
-	public:
-		typedef std::tr1::tuple<double, double, double, double> impurity; // x-coord, y-coord, amplitude, radius
-		HemisphereImpurities(double d, double A, double r, DataLayout const& dl, Constraint const& constr, RNG& rng);
-		void add_noise(DataLayout const& dl, double* pot_values) const;
-		void write_realization_data(std::vector<double>& vec) const;
-		DataLayout const& datalayout;
-		Constraint const& constraint;
-	private:
-		double density; // density of impurities in two dimensions
-		double amplitude;
-		double radius;
-		void init(RNG& rng);
-		std::vector<impurity> impurities;
-};
-*/
 
 #endif // _NOISE_HPP_
