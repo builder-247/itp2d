@@ -11,11 +11,10 @@ def main():
         outfilename = "_stripped".join(os.path.splitext(filename))
         # create copy of original file to make sure it is not harmed
         # copy-on-write would be quite useful here
-        temphandle, tempname = tempfile.mkstemp(suffix=".h5", prefix=os.path.splitext(filename)[0], dir=os.getcwd())
-        shutil.copy(filename, tempname)
-        f = h5py.File(tempname)
-        del f["/states"]
-        f.close()
+        _, tempname = tempfile.mkstemp(suffix=".h5", prefix="tmp-", dir=os.getcwd())
+        shutil.copyfile(filename, tempname)
+        with h5py.File(tempname) as f:
+            del f["/states"]
         subprocess.check_call(["h5repack", "-i", tempname, "-o", outfilename])
         os.unlink(tempname)
         print "Done. Stripped datafile saved to %s" % outfilename
