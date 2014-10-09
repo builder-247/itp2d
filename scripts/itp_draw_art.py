@@ -5,6 +5,8 @@ import os
 from math import floor, ceil, sqrt, sin, cos
 from collections import namedtuple
 import numpy as np
+from scipy.interpolate import RectBivariateSpline
+import scipy
 import h5py
 from optparse import OptionParser
 from PIL import Image, ImageFont, ImageDraw
@@ -154,6 +156,8 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     if options.noise_only:
         options.potential = True
+    if options.rescale > 1 and (options.potential or options.noise_only or options.circle or options.mark_angles):
+        parser.error("Spline interpolation (rescale > 1) is currently not supported together with potential drawing or markers")
     if (len(args) > 0):
         filename = args[0]
     else:
@@ -302,6 +306,14 @@ if __name__ == "__main__":
             Z = density_sum[:]
         else:
             Z = density
+        # If rescale > 1, enlarge with interpolation
+        if options.rescale > 1:
+            xs = get_grid_points(grid_sizex, dx)
+            ys = get_grid_points(grid_sizey, dx)
+            spline = RectBivariateSpline(xs, ys, Z)
+            new_xs = get_grid_points(grid_sizex*options.rescale, dx/options.rescale)
+            new_ys = get_grid_points(grid_sizey*options.rescale, dx/options.rescale)
+            Z = spline(new_xs, new_ys, grid=True)
         # Normalize
         if options.average_point == 0:
             Z /= Z.max()
@@ -332,7 +344,7 @@ if __name__ == "__main__":
                     hwhm = hwhm_scale*width
                     ms = (options.noise_location_marker_size if options.noise_location_marker_size else hwhm)
                     draw_circle(state_draw, (x, y), ms, grid, fill=(255, 0, 0, marker_alpha))
-        if options.rescale != 1:
+        if options.rescale < 1:
             state_im.thumbnail((scaled_Mx, scaled_My), Image.ANTIALIAS)
         if options.combined:
             paste_x = (counter % columns)*(scaled_Mx+margin)
