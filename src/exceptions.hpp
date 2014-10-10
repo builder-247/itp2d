@@ -146,7 +146,25 @@ class UnknownNoiseType : public std::runtime_error {
 	public:
 		UnknownNoiseType(std::string str) : std::runtime_error("") {
 			std::stringstream ss;
-			ss << "Noise description \"" << str << "\" not understood by parser.";
+			ss << "Noise type description \"" << str << "\" not understood by parser.";
+			static_cast<std::runtime_error&>(*this) = std::runtime_error(ss.str());
+		}
+};
+
+class UnknownImpurityType : public std::runtime_error {
+	public:
+		UnknownImpurityType(std::string str) : std::runtime_error("") {
+			std::stringstream ss;
+			ss << "Impurity type description \"" << str << "\" not understood by parser.";
+			static_cast<std::runtime_error&>(*this) = std::runtime_error(ss.str());
+		}
+};
+
+class UnknownImpurityDisributionType : public std::runtime_error {
+	public:
+		UnknownImpurityDisributionType(std::string str) : std::runtime_error("") {
+			std::stringstream ss;
+			ss << "Impurity distribution type description \"" << str << "\" not understood by parser.";
 			static_cast<std::runtime_error&>(*this) = std::runtime_error(ss.str());
 		}
 };
@@ -170,11 +188,20 @@ class InvalidPotentialType : public std::runtime_error {
 		}
 };
 
-class InvalidNoiseType : public std::runtime_error {
+class InvalidImpurityType : public std::runtime_error {
 	public:
-		InvalidNoiseType(std::string str) : std::runtime_error("") {
+		InvalidImpurityType(std::string str) : std::runtime_error("") {
 			std::stringstream ss;
-			ss	<< "Invalid noise type: " << str << std::endl;
+			ss	<< "Invalid impurity type: " << str << std::endl;
+			static_cast<std::runtime_error&>(*this) = std::runtime_error(ss.str());
+		}
+};
+
+class InvalidImpurityDistributionType : public std::runtime_error {
+	public:
+		InvalidImpurityDistributionType(std::string str) : std::runtime_error("") {
+			std::stringstream ss;
+			ss	<< "Invalid impurity distribution type: " << str << std::endl;
 			static_cast<std::runtime_error&>(*this) = std::runtime_error(ss.str());
 		}
 };
