@@ -21,6 +21,7 @@
 // Include individual unit test suites
 
 #include "test_rng.hpp"
+#include "test_timer.hpp"
 #include "test_eigensolver.hpp"
 #include "test_datalayout.hpp"
 #include "test_statearray.hpp"
