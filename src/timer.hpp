@@ -70,10 +70,7 @@ inline void Timer::reset() {
 
 inline double Timer::get_time() {
 	if (running) {
-		stop();
-		const double elapsed_time = 1e-9*static_cast<double>(elapsed_nsec);
-		start();
-		return elapsed_time;
+		throw GeneralError("Timer::get_time() called on a timer which was still running");
 	}
 	return 1e-9*static_cast<double>(elapsed_nsec);
 }
