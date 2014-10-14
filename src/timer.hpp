@@ -32,7 +32,6 @@
 class Timer {
 public:
 	Timer();
-	typedef struct timeval timeval;
 	inline void start();
 	inline void stop();
 	inline void reset();
