@@ -19,10 +19,14 @@
 #include "timer.hpp"
 
 Timer::Timer() : elapsed_nsec(0), running(false) {
+	#ifdef __MACH__
+	mach_timebase_info(&timebase_info);
+	#else
 	// Test that CLOCK_MONOTONIC works
-	timespec* t = new timespec;
+	time* t = new time;
 	const int retval = clock_gettime(CLOCK_MONOTONIC, t);
 	if (retval != 0)
 		throw GeneralError("CLOCK_MONOTONIC not supported. Cannot get reliable timing data");
 	delete t;
+	#endif
 }
