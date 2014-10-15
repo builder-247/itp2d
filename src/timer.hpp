@@ -34,7 +34,9 @@
 #include <sys/time.h>
 #endif
 
+#ifndef NSEC_PER_SEC
 #define NSEC_PER_SEC 1000000000L
+#endif
 
 #include "exceptions.hpp"
 
