@@ -230,7 +230,7 @@ inline comp State::dot(const State& other) const {
 	cblas_zdotc_sub(static_cast<int>(datalayout.N),
 			reinterpret_cast<const double*>(this->memptr), 1,
 			reinterpret_cast<const double*>(other.memptr), 1,
-			static_cast<void*>(&sum));
+			&sum);
 	return sum*datalayout.dx*datalayout.dx;
 }
 
