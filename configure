@@ -394,8 +394,8 @@ class LinearAlgebraLibs(Library):
         self.lalib = "plain"
 
     def check_openblas(self):
-        self.check_for_library("openblas", self.openblas_path, add_link_flag=True)
-        self.check_for_include("cblas.h", self.openblas_path)
+        self.check_for_library("openblas", self.openblas_path, ["openblas"], add_link_flag=True)
+        self.check_for_include("cblas.h", self.openblas_path, ["openblas"])
         print "Using OpenBLAS"
         self.lalib = "OpenBLAS"
 
