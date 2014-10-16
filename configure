@@ -247,10 +247,11 @@ class Library(Requirement):
         Requirement.reset(self)
 
     def find_file(self, name, paths=[], possible_subpaths=[]):
-        search_paths = paths[:]
+        search_paths = []
         for subpath in possible_subpaths:
             for p in paths:
                 search_paths.append(os.path.join(p, subpath))
+        search_paths.extend(paths)
         for path in search_paths:
             if os.path.exists(os.path.join(path, name)):
                 return path
