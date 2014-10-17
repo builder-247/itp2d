@@ -316,6 +316,10 @@ void CommandLineParser::parse(std::vector<std::string>& args) {
 	if (arg_noise.getValue() == "impurities" and not (arg_impurity_type.isSet() and arg_impurity_distribution.isSet())) {
 		throw TCLAP::CmdLineParseException("Arguments need to be set if noise type is 'impurities'", arg_impurity_type.getName()+" and "+arg_impurity_distribution.getName());
 	}
+	if (arg_noise.getValue() != "impurities" and (arg_impurity_type.isSet() or arg_impurity_distribution.isSet())) {
+		throw TCLAP::CmdLineParseException("Arguments have no effect if noise type is not 'impurities'", arg_impurity_type.getName()+" and "+arg_impurity_distribution.getName());
+	}
+	if (arg_save_everything.getValue())
 	if (arg_save_everything.getValue())
 		params.save_what = Parameters::Everything;
 	if (arg_save_onlyenergies.getValue())
