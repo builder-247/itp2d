@@ -75,6 +75,17 @@ void HemisphereImpurities::add_noise(double sx, double sy, vector<double> const&
 	}
 }
 
+// DeltaImpurities
+
+void DeltaImpurities::add_noise(double sx, double sy, std::vector<double> const& params, DataLayout const& dl, double* pot_values) const {
+	if (params.size() != num_params)
+		throw GeneralError("DeltaImpurities::add_noise with incorrect length for parameter vector. This should never happen.");
+	const double A = params[0];
+	size_t x = dl.get_x_index(sx);
+	size_t y = dl.get_y_index(sy);
+	dl.value(pot_values, x, y) += A;
+}
+
 // SpatialImpurities
 
 SpatialImpurities::SpatialImpurities(ImpurityType const& _type, ImpurityDistribution const& _distribution) :
@@ -141,6 +152,14 @@ ImpurityType const* parse_impurity_type_description(string const& type_str, Data
 			return new HemisphereImpurities(params[0], params[1], rng);
 		else
 			throw InvalidImpurityType("Impurity type HemisphereImpurities takes 2 parameters");
+	}
+	else if (name == "delta") {
+		if (params.size() == 2)
+			return new DeltaImpurities(params[0], params[1], dl, rng);
+		else if (params.size() == 1)
+			return new DeltaImpurities(params[0], 0.0, dl, rng);
+		else
+			throw InvalidImpurityType("Impurity type DeltaImpurities takes 1 or 2 parameters");
 	}
 	else
 		throw UnknownImpurityType(type_str);

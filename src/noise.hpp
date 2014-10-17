@@ -171,6 +171,29 @@ class HemisphereImpurities : public ImpurityType {
 		RNG& rng;
 };
 
+class DeltaImpurities : public ImpurityType {
+	static const size_t num_params = 1;
+	public:
+		DeltaImpurities(double _amp_mean, double _amp_stdev, DataLayout const& dl, RNG& _rng) :
+				amp_mean(_amp_mean), amp_stdev(_amp_stdev), inverse_unit_area(1.0/(dl.dx*dl.dx)), rng(_rng) {
+			std::stringstream ss;
+			ss << "Delta spikes, normally distributed integral with mean " << amp_mean
+				<< " and standard deviation " << amp_stdev;
+			description = ss.str();
+		}
+		void new_realization(std::list<double>& params) const {
+			const double A = amp_mean + amp_stdev*rng.gaussian_rand();
+			params.push_back(A);
+		}
+		void add_noise(double x, double y, std::vector<double> const& params, DataLayout const& dl, double* pot_values) const;
+		size_t get_num_params() const { return num_params; }
+	private:
+		double amp_mean;
+		double amp_stdev;
+		double inverse_unit_area;
+		RNG& rng;
+};
+
 // Individual distribution types
 
 class UniformImpurities : public ImpurityDistribution {
