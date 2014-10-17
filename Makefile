@@ -15,7 +15,14 @@ ifdef version
 	flags += -DITP2D_VERSION=\"$(version)\"
 endif
 
-lib_flags := -fopenmp -lrt -lfftw3 -lhdf5 -lhdf5_cpp
+# Query which OS we are using
+OS := $(shell uname -s)
+
+lib_flags := -fopenmp -lfftw3 -lhdf5 -lhdf5_cpp
+ifeq ($(OS),Linux)
+lib_flags += -lrt
+endif
+
 inc_flags :=
 # Path to unpacked gtest source
 gtest_dir = src/gtest
