@@ -10,6 +10,7 @@ import scipy
 import h5py
 from optparse import OptionParser
 from PIL import Image, ImageFont, ImageDraw
+import cPickle as pickle
 
 # Print pretty pictures from the wave functions computed with itp2d.
 
@@ -136,6 +137,7 @@ if __name__ == "__main__":
     parser.add_option(      "--potential-alpha", type="float", help="Alpha value to use for the potential")
     parser.add_option(      "--potential-scale", type="float", metavar="VAL", help="Scale potential so that 1.0 in the colormap corresponds to VAL. Set to 0 to use the maximum value of the potential.")
     parser.add_option("-l", "--labels", action="store_true", help="Draw labels with each state's index and energy to the combined image")
+    parser.add_option("", "--label-file", type="string", metavar="FILE", help="Load custom labels from FILE, which is a Python pickle of a dictionary mapping state indices to strings")
     parser.add_option("", "--label-font-size", type="int", help="Font size for the labels")
     parser.add_option("", "--label-font-file", type="string", metavar="FILENAME", help="TTF or OTF font file for the labels")
     parser.add_option("", "--label-energy-precision", type="int", default=3, help="Number of decimals for energy values in labels")
@@ -224,6 +226,9 @@ if __name__ == "__main__":
         columns = options.columns
     rows = int(ceil(num_to_draw/columns))
     mode, colorfunc = colorschemes[options.colorscheme]
+    # Load labels file
+    if options.label_file:
+        labeldict = pickle.load(open(options.label_file, 'r'))
     # Load font for creating labels
     if options.labels:
         if options.label_font_file == "":
@@ -334,8 +339,11 @@ if __name__ == "__main__":
                     y = options.circle*sin(angle)
                     draw_circle(state_draw, (x, y), options.circle/40, grid, fill=foreground_color)
             if options.labels:
-                E = energies[index]
-                label = ("n = %d, E = %."+str(options.label_energy_precision)+"f") % (index, E)
+                if options.label_file is not None:
+                    label = labeldict.get(index, "")
+                else:
+                    E = energies[index]
+                    label = ("n = %d, E = %."+str(options.label_energy_precision)+"f") % (index, E)
                 state_draw.text((0, 0), label, fill=foreground_color, font=font)
             if options.noise_locations:
                 hwhm_scale = sqrt(2*np.log(2)) # half width at half maximum (HWHM) of a Gaussian function
