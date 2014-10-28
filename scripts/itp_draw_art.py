@@ -128,6 +128,7 @@ if __name__ == "__main__":
     parser.add_option("-q", "--quiet", action="store_false", dest="verbose")
     parser.add_option("-o", "--output", type="string", metavar="FILENAME", help="Filename for the output image")
     parser.add_option("-a", "--all", action="store_true", help="Draw also the extra states not intended to converge")
+    parser.add_option("",   "--plot-phase", action="store_true", help="Plot phase instead of density")
     parser.add_option("",   "--cumulative-density-sum", action="store_true", help="Plot cumulative sum of densities")
     parser.add_option("-p", "--potential", action="store_true", help="Also draw a histogram of the potential under the states")
     parser.add_option("",   "--noise-only", action="store_true", help="Draw only the noise part of the potential. Implies --potential")
@@ -160,6 +161,8 @@ if __name__ == "__main__":
         options.potential = True
     if options.rescale > 1 and (options.potential or options.noise_only or options.circle or options.mark_angles):
         parser.error("Spline interpolation (rescale > 1) is currently not supported together with potential drawing or markers")
+    if options.plot_phase and options.cumulative_density_sum:
+        parser.error("Options --plot-phase and --cumulative-density-sum are mutually exclusive")
     if (len(args) > 0):
         filename = args[0]
     else:
@@ -301,19 +304,22 @@ if __name__ == "__main__":
         # The data to plot is the square of the absolute value of the
         # wave function, i.e., the probability density
         if options.trim == 0:
-            density = abs(states[options.slot, index])**2
+            state = states[options.slot, index]
         else:
-            density = abs(states[options.slot, index][trim:-trim,trim:-trim])**2
+            state = states[options.slot, index][trim:-trim,trim:-trim]
         # Flip, since in PIL the y-axis points downwards
-        density = np.flipud(density)
+        state = np.flipud(state)
         if options.cumulative_density_sum:
+            density = np.abs(state)**2
             if density_sum is None:
                 density_sum = density[:]
             else:
                 density_sum += density
             Z = density_sum[:]
+        elif options.plot_phase:
+            Z = (np.angle(state)+np.pi)/(2*np.pi)
         else:
-            Z = density
+            Z = np.abs(state)**2
         # If rescale > 1, enlarge with interpolation
         if options.rescale > 1:
             xs = get_grid_points(grid_sizex, dx)
@@ -323,11 +329,12 @@ if __name__ == "__main__":
             new_ys = get_grid_points(grid_sizey*options.rescale, dx/options.rescale)
             Z = spline(new_xs, new_ys, grid=True)
         # Normalize
-        if options.average_point == 0:
-            Z /= Z.max()
-        else:
-            avg = Z.mean()
-            Z *= options.average_point/avg
+        if not options.plot_phase:
+            if options.average_point == 0:
+                Z /= Z.max()
+            else:
+                avg = Z.mean()
+                Z *= options.average_point/avg
         # Create image by mapping data through colorfunc
         state_im = Image.fromarray(colorfunc(Z), mode=mode)
         if options.potential:
