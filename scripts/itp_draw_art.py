@@ -139,6 +139,7 @@ if __name__ == "__main__":
     parser.add_option(      "--potential-scale", type="float", metavar="VAL", help="Scale potential so that 1.0 in the colormap corresponds to VAL. Set to 0 to use the maximum value of the potential.")
     parser.add_option("-l", "--labels", action="store_true", help="Draw labels with each state's index and energy to the combined image")
     parser.add_option("", "--label-file", type="string", metavar="FILE", help="Load custom labels from FILE, which is a Python pickle of a dictionary mapping state indices to strings")
+    parser.add_option("", "--label-color", type="string", metavar="COLOR", help="Color to use for labels, instead of the foreground color defined by the given color map")
     parser.add_option("", "--label-font-size", type="int", help="Font size for the labels")
     parser.add_option("", "--label-font-file", type="string", metavar="FILENAME", help="TTF or OTF font file for the labels")
     parser.add_option("", "--label-energy-precision", type="int", default=3, help="Number of decimals for energy values in labels")
@@ -246,6 +247,10 @@ if __name__ == "__main__":
         foreground_color = tuple(colorfunc(np.ones((1,1)))[0,0])
     else:
         foreground_color = colorfunc(np.ones((1,1)))[0,0]
+    if options.label_color is not None:
+        label_color = options.label_color
+    else:
+        label_color = foreground_color
     # Read noise spike locations and parameters
     if options.noise_only or options.noise_locations:
         noise_type = file.attrs["noise"].lower()
@@ -354,7 +359,7 @@ if __name__ == "__main__":
                 else:
                     E = energies[index]
                     label = ("n = %d, E = %."+str(options.label_energy_precision)+"f") % (index, E)
-                state_draw.text((0, 0), label, fill=foreground_color, font=font)
+                state_draw.text((0, 0), label, fill=label_color, font=font)
             if options.noise_locations:
                 hwhm_scale = sqrt(2*np.log(2)) # half width at half maximum (HWHM) of a Gaussian function
                 marker_alpha = int(255*options.noise_location_marker_alpha)
