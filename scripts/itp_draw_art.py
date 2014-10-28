@@ -164,6 +164,9 @@ if __name__ == "__main__":
         filename = args[0]
     else:
         filename = "data/itp2d.h5"
+    if os.path.splitext(filename)[0].endswith("_stripped"):
+        print >> sys.stderr, "Datafile '%s' seems to be stripped with strip_states.py. No state data to plot."
+        sys.exit(1)
     indices = []
     for arg in args[1:]:
         try:
