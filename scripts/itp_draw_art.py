@@ -157,6 +157,7 @@ if __name__ == "__main__":
     parser.add_option("-S", "--slot", type="int", help="If the datafile contains several sets of states this lets you select the one you want. The default is to load the last one.")
     parser.add_option(      "--scale-to-average-point", type="float", metavar="VAL", dest="average_point", default=0,
             help="Instead of scaling density data so that 1.0 corresponds to maximum value, scale so that VAL corresponds to the average value.")
+    parser.add_option(      "--phase-filter-value", type="float", metavar="VAL", default=1e-15, help="When using --plot-phase, complex numbers with modulus less than VAL are considered to have zero phase, to avoid noise")
     (options, args) = parser.parse_args()
     if options.noise_only:
         options.potential = True
@@ -314,8 +315,8 @@ if __name__ == "__main__":
             state = states[options.slot, index][trim:-trim,trim:-trim]
         # Flip, since in PIL the y-axis points downwards
         state = np.flipud(state)
+        density = np.abs(state)**2
         if options.cumulative_density_sum:
-            density = np.abs(state)**2
             if density_sum is None:
                 density_sum = density[:]
             else:
@@ -323,8 +324,9 @@ if __name__ == "__main__":
             Z = density_sum[:]
         elif options.plot_phase:
             Z = (np.angle(state)+np.pi)/(2*np.pi)
+            Z[density < options.phase_filter_value] = 0
         else:
-            Z = np.abs(state)**2
+            Z = density
         # If rescale > 1, enlarge with interpolation
         if options.rescale > 1:
             xs = get_grid_points(grid_sizex, dx)
