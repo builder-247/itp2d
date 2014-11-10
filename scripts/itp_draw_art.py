@@ -157,6 +157,7 @@ if __name__ == "__main__":
     parser.add_option("-S", "--slot", type="int", help="If the datafile contains several sets of states this lets you select the one you want. The default is to load the last one.")
     parser.add_option(      "--scale-to-average-point", type="float", metavar="VAL", dest="average_point", default=0,
             help="Instead of scaling density data so that 1.0 corresponds to maximum value, scale so that VAL corresponds to the average value.")
+    parser.add_option(      "--common-scaling", action="store_true", help="Use common density scaling for all states")
     parser.add_option(      "--phase-filter-value", type="float", metavar="VAL", default=1e-15, help="When using --plot-phase, complex numbers with modulus less than VAL are considered to have zero phase, to avoid noise")
     (options, args) = parser.parse_args()
     if options.noise_only:
@@ -165,6 +166,10 @@ if __name__ == "__main__":
         parser.error("Spline interpolation (rescale > 1) is currently not supported together with potential drawing or markers")
     if options.plot_phase and options.cumulative_density_sum:
         parser.error("Options --plot-phase and --cumulative-density-sum are mutually exclusive")
+    if options.common_scaling and options.cumulative_density_sum:
+        parser.error("Options --common-scaling and --cumulative-density-sum are mutually exclusive")
+    if options.plot_phase and options.common_scaling:
+        parser.error("Options --common-scaling and --plot-phase are mutually exclusive")
     if (len(args) > 0):
         filename = args[0]
     else:
@@ -299,6 +304,20 @@ if __name__ == "__main__":
     counter = 0
     if options.cumulative_density_sum:
         density_sum = None
+    # Calculate common scaling factor, if needed
+    if options.common_scaling:
+        avgs = []
+        common_max = float("-inf")
+        progressbar = ProgressBar(widgets=["Calculating common density scale: ", Percentage(), Bar(), ETA()])
+        for index in progressbar(indices):
+            state = states[options.slot, index]
+            density = np.abs(state)**2
+            max_density = density.max()
+            avg_density = density.mean()
+            if max_density > common_max:
+                common_max = max_density
+            avgs.append(avg_density)
+        common_avg = np.mean(avgs)
     # Loop through all states to be plotted
     progressbar = ProgressBar(widgets=["Drawing images: ", Percentage(), Bar(), ETA()])
     for index in progressbar(indices):
@@ -337,11 +356,17 @@ if __name__ == "__main__":
             Z = spline(new_xs, new_ys, grid=True)
         # Normalize
         if not options.plot_phase:
-            if options.average_point == 0:
-                Z /= Z.max()
+            if options.common_scaling:
+                if options.average_point == 0:
+                    Z /= common_max
+                else:
+                    Z *= options.average_point/common_avg
             else:
-                avg = Z.mean()
-                Z *= options.average_point/avg
+                if options.average_point == 0:
+                    Z /= Z.max()
+                else:
+                    avg = Z.mean()
+                    Z *= options.average_point/avg
         # Create image by mapping data through colorfunc
         state_im = Image.fromarray(colorfunc(Z), mode=mode)
         if options.potential:
