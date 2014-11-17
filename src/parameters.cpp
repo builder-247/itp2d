@@ -104,10 +104,6 @@ void Parameters::set_to_defaults() {
 	clobber = default_clobber;
 	verbosity = default_verbosity;
 	num_threads = default_num_threads;
-	boundary = default_boundary;
-	sizex = default_sizex;
-	sizey = default_sizey;
-	lenx = default_lenx;
 	halforder = default_halforder;
 	eps_divisor = default_eps_divisor;
 	exhaust_eps = default_exhaust_eps;
@@ -118,6 +114,7 @@ void Parameters::set_to_defaults() {
 	noise_type = default_noise_type;
 	user_noise = NULL;
 	//
+	define_grid(default_sizex, default_sizey, default_lenx, default_boundary);
 	timestep_convergence_test = parse_convergence_description(default_timestep_convergence_test_string);
 	final_convergence_test = parse_convergence_description(default_final_convergence_test_string);
 	define_external_field(default_potential_type, default_B);
