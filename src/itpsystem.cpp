@@ -60,6 +60,9 @@ ITPSystem::ITPSystem(Parameters const& given_params,
 		impurity_distribution = parse_impurity_distribution_description(params.get_impurity_distribution(), datalayout, *impurity_constraint, rng);
 		noise = new SpatialImpurities(*impurity_type, *impurity_distribution);
 	}
+	else if (noise_type == "user") {
+		noise = &params.get_user_noise();
+	}
 	else
 		throw UnknownNoiseType(noise_type);
 	// Initialize potential
@@ -144,7 +147,9 @@ ITPSystem::~ITPSystem() {
 	delete datafile;
 	delete pot;
 	delete pot_type;
-	delete noise;
+	if (params.get_noise_type() != "user") {
+		delete noise;
+	}
 	delete impurity_type;
 	delete impurity_distribution;
 	delete impurity_constraint;

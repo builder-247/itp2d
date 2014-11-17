@@ -70,6 +70,13 @@ class Parameters {
 		inline void set_impurity_type(std::string const& str) { impurity_type = str; }
 		inline void set_impurity_distribution(std::string const& str) { impurity_distribution = str; }
 		inline void set_impurity_constraint(std::string const& str) { impurity_constraint = str; }
+		inline void set_user_noise(Noise const& noise) {
+			user_noise = &noise;
+			noise_type = "user";
+			impurity_type = "N/A";
+			impurity_distribution = "N/A";
+			impurity_constraint = "N/A";
+		}
 		inline void set_fftw_flags(unsigned int fl) { fftw_flags = fl; }
 		inline void set_verbosity(int val) { verbosity = val; }
 		inline void set_num_threads(int num) { num_threads = num; }
@@ -101,6 +108,12 @@ class Parameters {
 		inline std::string const& get_impurity_type() const { return impurity_type; }
 		inline std::string const& get_impurity_distribution() const { return impurity_distribution; }
 		inline std::string const& get_impurity_constraint() const { return impurity_constraint; }
+		inline Noise const& get_user_noise() const {
+			if (user_noise != NULL) {
+				return *user_noise;
+			}
+			throw GeneralError("Parameters::get_user_noise() called but no noise set by user");
+		}
 		inline double get_B() const { return B; }
 		inline int get_halforder() const { return halforder; }
 		inline std::list<double> const& get_eps_values() const { return eps_values; }
@@ -181,6 +194,7 @@ class Parameters {
 		std::string impurity_type;
 		std::string impurity_distribution;
 		std::string impurity_constraint;
+		Noise const* user_noise;
 		// Time evolution parameters
 		int halforder;					// Half the order of operator factorization
 		std::list<double> eps_values;	// Time step values to use

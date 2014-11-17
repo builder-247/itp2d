@@ -116,6 +116,7 @@ void Parameters::set_to_defaults() {
 	ortho_alg = default_ortho_alg;
 	fftw_flags = default_fftw_flags;
 	noise_type = default_noise_type;
+	user_noise = NULL;
 	//
 	timestep_convergence_test = parse_convergence_description(default_timestep_convergence_test_string);
 	final_convergence_test = parse_convergence_description(default_final_convergence_test_string);
@@ -125,6 +126,7 @@ void Parameters::set_to_defaults() {
 }
 
 Parameters::Parameters() :
+		user_noise(NULL),
 		timestep_convergence_test(NULL),
 		final_convergence_test(NULL) {
 	set_to_defaults();
