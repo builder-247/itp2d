@@ -350,4 +350,33 @@ class SoftStadium : public PotentialType {
 		void init();
 };
 
+// Another soft stadium potential with power-function walls
+class PowerStadium : public PotentialType {
+	public:
+		static const double default_radius;
+		static const double default_center_length;
+		static const double default_power;
+		PowerStadium(double radius=default_radius, double center_length=default_center_length,
+				double power=default_power);
+		PowerStadium(std::vector<double> params);
+		inline double operator()(double x, double y) const {
+			double q;
+			if (fabs(x) <= halfL) { // in the central rectangle
+				q = fabs(y/R);
+			}
+			else if (x < -halfL) { //  in the left end cap
+				q = hypot(x+halfL, y)/R;
+			}
+			else { // in the right end cap
+				q = hypot(x-halfL, y)/R;
+			}
+			return 0.5*pow(q, a);
+		}
+	private:
+		double R;
+		double halfL;
+		double a;
+		void init();
+};
+
 #endif // _POTENTIALTYPES_HPP_

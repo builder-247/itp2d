@@ -201,6 +201,8 @@ Radial cosh potential V(r) = A*(cosh(r/L)-1)\n\
 \tcosh(A,L)\n\
 Soft stadium potential of Tomsovic & Heller\n\
 \tsoftstadium(R,L,V,a,b)\n\
+Another soft stadium potential with power-function walls\n\
+\tpowerstadium(R,L,a)\n\
 See header potential.hpp for details.";
 
 const char CommandLineParser::help_epilogue[] = "\

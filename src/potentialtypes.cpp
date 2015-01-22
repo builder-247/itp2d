@@ -48,6 +48,9 @@ const double SoftStadium::default_center_length = 2;
 const double SoftStadium::default_height = 100;
 const double SoftStadium::default_a = 1;
 const double SoftStadium::default_b = 10;
+const double PowerStadium::default_radius = 1;
+const double PowerStadium::default_center_length = 2;
+const double PowerStadium::default_power = 4;
 // The parser delegator
 
 PotentialType const* parse_potential_description(std::string const& str) {
@@ -90,6 +93,8 @@ PotentialType const* parse_potential_description(std::string const& str) {
 		return new CoshPotential(params);
 	if (name == "softstadium")
 		return new SoftStadium(params);
+	if (name == "powerstadium")
+		return new PowerStadium(params);
 	else
 		throw UnknownPotentialType(str);
 	return NULL;
@@ -452,5 +457,43 @@ void SoftStadium::init() {
 		throw InvalidPotentialType("soft stadium with non-positive b parameter");
 	std::stringstream ss;
 	ss << "softstadium(" << R << "," << halfL*2 << "," << V << "," << a << "," << b << ")";
+	description = ss.str();
+}
+
+// PowerStadium
+
+PowerStadium::PowerStadium(double radius, double center_length, double power) :
+		R(radius), halfL(center_length/2), a(power) {
+	init();
+}
+
+PowerStadium::PowerStadium(std::vector<double> params) {
+	if (params.empty()) {
+		R = default_radius;
+		halfL = default_center_length/2;
+		a = default_power;
+	}
+	else if (params.size() == 1) {
+		R = default_radius;
+		halfL = default_center_length/2;
+		a = params[0];
+	}
+	else if (params.size() == 3) {
+		R = params[0];
+		halfL = params[1]/2;
+		a = params[2];
+		}
+	else
+		throw InvalidPotentialType("power stadium potential takes either zero, one or three parameters");
+	init();
+}
+
+void PowerStadium::init() {
+	if (R <= 0)
+		throw InvalidPotentialType("power stadium with non-positive radius");
+	if (halfL <= 0)
+		throw InvalidPotentialType("power stadium with non-positive center length");
+	std::stringstream ss;
+	ss << "powerstadium(" << R << "," << halfL*2 << "," << a << ")";
 	description = ss.str();
 }
