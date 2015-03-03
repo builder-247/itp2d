@@ -260,7 +260,11 @@ if __name__ == "__main__":
     # Read noise spike locations and parameters
     if options.noise_only or options.noise_locations:
         noise_type = file.attrs["noise"].lower()
-        if not noise_type.startswith("gaussian"):
+        if noise_type == "impurities":
+            impurity_type = file.attrs["impurity_type"].lower()
+            if not impurity_type.startswith("gaussian"):
+                raise NotImplementedError("Noise reconstruction not implemented for impurity type '%s'" % noise_type)
+        elif not noise_type.startswith("gaussian"):
             raise NotImplementedError("Noise reconstruction not implemented for noise type '%s'" % noise_type)
         # Reshape noise_data to a list of (x, y, amplitude, width)
         noise_data = np.reshape(file["noise_data"], (-1,4))
