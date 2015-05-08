@@ -308,7 +308,7 @@ class CoshPotential : public PotentialType {
 		CoshPotential(std::vector<double> params);
 		inline double operator()(double x, double y) const {
 			const double r = hypot(x, y);
-			return A*(cosh(r/L-1));
+			return A*(cosh(r/L)-1);
 		}
 	private:
 		double A;
