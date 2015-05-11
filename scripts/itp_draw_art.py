@@ -135,6 +135,7 @@ if __name__ == "__main__":
     parser.add_option("",   "--noise-locations", action="store_true", help="Draw locations of noise spikes.")
     parser.add_option("",   "--noise-location-marker-size", type="float", help="Marker radius for --noise-locations")
     parser.add_option("",   "--noise-location-marker-alpha", type="float", default=1.0, help="Marker alpha for --noise-locations")
+    parser.add_option("",   "--noise-location-marker-color", type="int", nargs=3, default=(255,0,0), help="Marker color for --noise-locations")
     parser.add_option(      "--potential-alpha", type="float", help="Alpha value to use for the potential")
     parser.add_option(      "--potential-scale", type="float", metavar="VAL", help="Scale potential so that 1.0 in the colormap corresponds to VAL. Set to 0 to use the maximum value of the potential.")
     parser.add_option("-l", "--labels", action="store_true", help="Draw labels with each state's index and energy to the combined image")
@@ -397,7 +398,8 @@ if __name__ == "__main__":
                 for x, y, _, width in noise_data:
                     hwhm = hwhm_scale*width
                     ms = (options.noise_location_marker_size if options.noise_location_marker_size else hwhm)
-                    draw_circle(state_draw, (x, y), ms, grid, fill=(255, 0, 0, marker_alpha))
+                    mcolor = options.noise_location_marker_color + (marker_alpha,)
+                    draw_circle(state_draw, (x, y), ms, grid, fill=mcolor)
         if options.rescale < 1:
             state_im.thumbnail((scaled_Mx, scaled_My), Image.ANTIALIAS)
         if options.combined:
