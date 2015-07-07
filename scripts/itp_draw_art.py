@@ -156,6 +156,8 @@ if __name__ == "__main__":
     parser.add_option("-c", "--colorscheme", type="choice", choices=colorschemes.keys(), help="The colors. Valid choices: %s" % colorschemes.keys())
     parser.add_option(      "--potential-colorscheme", type="choice", choices=colorschemes.keys(), help="Colorscheme for the potential.")
     parser.add_option("-S", "--slot", type="int", help="If the datafile contains several sets of states this lets you select the one you want. The default is to load the last one.")
+    parser.add_option(      "--fixed-scale", type="float", metavar="VAL",
+            help="Used fixed scale instead of scaling to average or maximum density")
     parser.add_option(      "--scale-to-average-point", type="float", metavar="VAL", dest="average_point", default=0,
             help="Instead of scaling density data so that 1.0 corresponds to maximum value, scale so that VAL corresponds to the average value.")
     parser.add_option(      "--common-scaling", action="store_true", help="Use common density scaling for all states")
@@ -361,7 +363,9 @@ if __name__ == "__main__":
             Z = spline(new_xs, new_ys, grid=True)
         # Normalize
         if not options.plot_phase:
-            if options.common_scaling:
+            if options.fixed_scale is not None:
+                Z /= options.fixed_scale
+            elif options.common_scaling:
                 if options.average_point == 0:
                     Z /= common_max
                 else:
