@@ -128,7 +128,7 @@ void StateSet::init_to_gaussian_noise(RNG& rng) {
 				data(n,x,y) = comp(rng.gaussian_rand(), rng.gaussian_rand());
 }
 
-// Orthonormalization with the Löwdin method (also called the subspace orthonormalization method),
+// Orthonormalization with the subspace orthonormalization method,
 // explained for example in M. Aichinger, E. Krotscheck, Comp. Mat. Sci. 34 (2005), pages 193--194.
 
 void StateSet::orthonormalize() throw(std::exception) {
