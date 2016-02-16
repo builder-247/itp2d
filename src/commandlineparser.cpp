@@ -41,6 +41,9 @@ Coulomb-like impurities with alpha/r^e potential:\n\
 \tcoulomb(e,alpha)\n\
 Hemisphere bumps with given amplitude and radius:\n\
 \themisphere(amplitude,radius)\n\
+Delta function bumps with normally distributed volume:\n\
+\tdelta(volume)\n\
+\tdelta(volume_mean, volume_stdev)\n\
 See header noise.hpp for details.";
 
 const char CommandLineParser::help_impurity_distribution[] = "\

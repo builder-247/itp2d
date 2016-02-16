@@ -25,6 +25,7 @@
 #define _DATALAYOUT_HPP_
 
 #include "itp2d_common.hpp"
+#include "exceptions.hpp"
 
 class DataLayout {
 	public:
@@ -35,6 +36,8 @@ class DataLayout {
 		template<typename Type> inline Type const& value(Type const* array, size_t x, size_t y) const;
 		inline double const& get_posx(size_t x) const { return posx[x]; }
 		inline double const& get_posy(size_t y) const { return posy[y]; }
+		inline size_t get_x_index(double x) const { return nearest_index(x, sizex, dx); }
+		inline size_t get_y_index(double y) const { return nearest_index(y, sizey, dx); }
 		// const data members
 		const size_t sizex;
 		const size_t sizey;
@@ -46,6 +49,8 @@ class DataLayout {
 		// these arrays store the positions of individual grid points
 		double* const posx;	
 		double* const posy;
+		// private helper function for get_?_index
+		static inline size_t nearest_index(double x, size_t s, double dx);
 };
 
 // Free functions for comparison testing
@@ -69,6 +74,17 @@ inline Type& DataLayout::value(Type* array, size_t x, size_t y) const {
 template<typename Type>
 inline Type const& DataLayout::value(Type const* array, size_t x, size_t y) const {
 	return array[y*sizex+x];
+}
+
+inline size_t DataLayout::nearest_index(double x, size_t s, double d) {
+	int i = round_to_int(x/d + (static_cast<double>(s)-1)/2);
+	if (i < 0) {
+		throw GeneralError("Overflow in DataLayout::nearest_index, returned index negative");
+	}
+	if (i >= static_cast<int>(s)) {
+		throw GeneralError("Overflow in DataLayout::nearest_index, returned index too large");
+	}
+	return i;
 }
 
 #endif // _DATALAYOUT_HPP_

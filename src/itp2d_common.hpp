@@ -65,4 +65,9 @@ inline comp* malloc_comp(size_t N) {
 	return reinterpret_cast<comp*>(fftw_malloc(N*sizeof(comp)));
 }
 
+// Simple rounding function
+inline int round_to_int(double r) {
+  return (int)((r > 0)? floor(r+0.5) : ceil(r-0.5));
+}
+
 #endif // _ITP2D_COMMON_HPP_
