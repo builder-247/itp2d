@@ -154,6 +154,7 @@ if __name__ == "__main__":
     parser.add_option(      "--separate", action="store_true", help="Save separate images of each state")
     parser.add_option(      "--no-combined", action="store_false", dest="combined", help="Do not save a combined image of all the states")
     parser.add_option("-c", "--colorscheme", type="choice", choices=colorschemes.keys(), help="The colors. Valid choices: %s" % colorschemes.keys())
+    parser.add_option(      "--colorscheme-power", type="float", default=1.0, help="Exponent used to fine-tune the color mapping. Each scaled density value in [0,1] is raised to this power before applying the color scheme transformation.")
     parser.add_option(      "--potential-colorscheme", type="choice", choices=colorschemes.keys(), help="Colorscheme for the potential.")
     parser.add_option("-S", "--slot", type="int", help="If the datafile contains several sets of states this lets you select the one you want. The default is to load the last one.")
     parser.add_option(      "--fixed-scale", type="float", metavar="VAL",
@@ -241,7 +242,12 @@ if __name__ == "__main__":
     else:
         columns = options.columns
     rows = int(ceil(num_to_draw/columns))
-    mode, colorfunc = colorschemes[options.colorscheme]
+    mode, orig_colorfunc = colorschemes[options.colorscheme]
+    if options.colorscheme_power != 1:
+        power = options.colorscheme_power
+        colorfunc = lambda x: orig_colorfunc(x**power)
+    else:
+        colorfunc = orig_colorfunc
     # Load labels file
     if options.label_file:
         labeldict = pickle.load(open(options.label_file, 'r'))
