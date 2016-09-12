@@ -5,12 +5,12 @@
 # installed.
 
 directory=${1-src}
-version=gtest-1.6.0
+version=release-1.6.0
 zipfile=${version}.zip
 
 echo Fetching and unpacking Google Test...
-wget -nc http://googletest.googlecode.com/files/${zipfile}
+wget -nc https://github.com/google/googletest/archive/${zipfile}
 unzip -q ${zipfile} -d ${directory}
-( cd ${directory} && ln -s -i ${version} gtest )
+( cd ${directory} && ln -s -i googletest-${version} gtest )
 echo Done
 echo It is now safe to remove ${zipfile}
