@@ -11,7 +11,7 @@ flags += -fopenmp
 
 # Add the version information if it is available
 default_version := 1.0.0-assumed
-version := $(shell git describe --always --dirty)
+version := $(shell git --git-dir=.git describe --always --dirty)
 ifdef version
 	flags += -DITP2D_VERSION=\"$(version)\"
 else
