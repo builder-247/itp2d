@@ -95,18 +95,18 @@ class UserSetPotential : public PotentialType {
 // The harmonic oscillator
 class HarmonicOscillator : public PotentialType {
 	public:
-		static const double default_frequency;
+		static const double default_prefactor;
 		static const double default_x0;
 		static const double default_y0;
-		HarmonicOscillator(double omega=default_frequency, double orig_x=default_x0, double orig_y=default_y0);
+		HarmonicOscillator(double A=default_prefactor, double orig_x=default_x0, double orig_y=default_y0);
 		HarmonicOscillator(std::vector<double> params);
 		inline double operator()(double x, double y) const {
 			const double px = x-x0;
 			const double py = y-y0;
-			return 0.5*w*(px*px+py*py);
+			return 0.5*A*(px*px+py*py);
 		}
 	private:
-		double w;
+		double A;
 		double x0;
 		double y0;
 		void init();
@@ -115,18 +115,18 @@ class HarmonicOscillator : public PotentialType {
 // The non-degenerate (elliptic) harmonic oscillator
 class EllipticOscillator : public PotentialType {
 	public:
-		static const double default_frequency_x;
-		static const double default_frequency_y;
+		static const double default_prefactor_x;
+		static const double default_prefactor_y;
 		static const double default_x0;
 		static const double default_y0;
-		EllipticOscillator(double omega_x=default_frequency_x, double omega_y=default_frequency_y);
+		EllipticOscillator(double Ax=default_prefactor_x, double Ay=default_prefactor_y);
 		EllipticOscillator(std::vector<double> params);
 		inline double operator()(double x, double y) const {
-			return 0.5*(wx*x*x + wy*y*y);
+			return 0.5*(Ax*x*x + Ay*y*y);
 		}
 	private:
-		double wx;
-		double wy;
+		double Ax;
+		double Ay;
 		void init();
 };
 
@@ -257,16 +257,16 @@ class SquareOscillator : public PotentialType {
 class PowerOscillator : public PotentialType {
 	public:
 		static const double default_exponent;
-		static const double default_w;
-		PowerOscillator(double exponent=default_exponent, double omega=default_w);
+		static const double default_prefactor;
+		PowerOscillator(double exponent=default_exponent, double A=default_prefactor);
 		PowerOscillator(std::vector<double> params);
 		inline double operator()(double x, double y) const {
 			const double r = hypot(x, y);
-			return 0.5*w*pow(r,a);
+			return 0.5*A*pow(r,a);
 		}
 	private:
 		double a;
-		double w;
+		double A;
 		void init();
 };
 

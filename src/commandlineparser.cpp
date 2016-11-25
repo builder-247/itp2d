@@ -178,11 +178,11 @@ const char CommandLineParser::help_potential[] = "\
 Description of the potential. Valid descriptions:\n\
 Zero potential:\n\
 \tzero\n\
-Harmonic oscillator with frequency w, centered at (x0,y0):\n\
-\tharmonic(w)\n\
-\tharmonic(w,x0,y0)\n\
-Elliptic oscillator with frequencies wx and wy:\n\
-\telliptic(wx,wy)\n\
+Harmonic oscillator with prefactor (frequency squared) A, centered at (x0,y0):\n\
+\tharmonic(A)\n\
+\tharmonic(A,x0,y0)\n\
+Elliptic oscillator with prefactors Ax and Ay:\n\
+\telliptic(Ax,Ay)\n\
 Square box with power function walls:\n\
 \tprettyhardsquare(exponent)\n\
 Soft-walled pentagon:\n\
@@ -196,8 +196,8 @@ Quartic oscillator potential (x^2 * y^2)/2 + b(x^4 + y^4)/4, rotated by pi/4:\n\
 \tquartic(b)\n\
 Square oscillator potential 0.5*(|x|^a + |x|^a)\n\
 \tsquareoscillator(a)\n\
-Power oscillator potential 0.5*w*r^a\n\
-\tpoweroscillator(a,w)\n\
+Power oscillator potential 0.5*A*r^a\n\
+\tpoweroscillator(a,A)\n\
 Ring-like potential with a given radius r, width w and exponent e for walls:\n\
 \tring(r,w,e)\n\
 Radial cosh potential V(r) = A*(cosh(r/L)-1)\n\
