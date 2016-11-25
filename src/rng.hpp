@@ -23,9 +23,6 @@
 #ifndef _RNG_HPP_
 #define _RNG_HPP_
 
-#ifndef _BSD_SOURCE
-#define _BSD_SOURCE
-#endif
 #include <tr1/random>
 #include <sys/time.h>
 
