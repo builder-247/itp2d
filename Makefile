@@ -10,7 +10,7 @@ flags += -Wno-long-long -Wno-variadic-macros
 flags += -fopenmp
 
 # Add the version information if it is available
-default_version := 1.0.0-assumed
+default_version := 1.1.0-assumed
 version := $(shell git --git-dir=.git describe --always --dirty)
 ifdef version
 	flags += -DITP2D_VERSION=\"$(version)\"
