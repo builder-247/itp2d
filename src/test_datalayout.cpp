@@ -67,3 +67,18 @@ TEST(datalayout, values_method) {
 	EXPECT_EQ(dl.value(ac, 1, 1), 3);
 	delete[] a;
 }
+
+TEST(datalayout, get_indices) {
+	const DataLayout dl(2, 2, 1.0);
+	EXPECT_EQ(typeid(size_t), typeid(dl.get_x_index(0)));
+	EXPECT_EQ(typeid(size_t), typeid(dl.get_y_index(0)));
+	EXPECT_ANY_THROW(dl.get_x_index(-1.0001));
+	EXPECT_ANY_THROW(dl.get_x_index(1.0001));
+	EXPECT_ANY_THROW(dl.get_y_index(-1.0001));
+	EXPECT_ANY_THROW(dl.get_y_index(1.0001));
+	EXPECT_EQ(0, dl.get_x_index(-0.01));
+	EXPECT_EQ(0, dl.get_x_index(-0.5));
+	EXPECT_EQ(1, dl.get_y_index(0.9));
+	EXPECT_EQ(1, dl.get_y_index(0.01));
+	EXPECT_EQ(1, dl.get_y_index(0.5));
+	}

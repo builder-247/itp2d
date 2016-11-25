@@ -66,7 +66,9 @@ class Datafile {
 		void add_attribute(const char* name, const char* value);
 		void add_attribute(const char* name, std::string const& value);
 		inline void flush() { hfile.flush(H5F_SCOPE_GLOBAL); }
+                bool is_open() const;
 	private:
+                bool dataset_exists(const std::string name) const;
 		static inline void validate_selection(H5::DataSpace const& dataspace);
 		// template for adding a string as a HDF5 Attribute in order to provide
 		// documentation for DataSets and other HDF5 objects

@@ -91,10 +91,35 @@ int main(int argc, char* argv[]) {
 		fclose(wisdom_file);
 	}
 	// Initialize ITPSystem
-	ITPSystem* sys = new ITPSystem(params, &abort_flag, &save_flag);
+	ITPSystem* sys = NULL;
+	try {
+		sys = new ITPSystem(params, &abort_flag, &save_flag);
+	}
+	catch (exception& e) {
+		cerr << "Error while initializing ITP system:" << endl
+			<< e.what() << endl;
+		delete sys;
+		return 3;
+	}
+	catch(...) {
+		delete sys;
+		return 3;
+	}
 	// Main loop
 	while(not sys->is_finished()) {
-		sys->step();
+		try {
+			sys->step();
+		}
+		catch (exception& e) {
+			cerr << "Error while running ITP iteration:" << endl
+				<< e.what() << endl;
+			delete sys;
+			return 4;
+		}
+		catch(...) {
+			delete sys;
+			return 4;
+		}
 	}
 	// Save FFTW Wisdom
 	wisdom_file = fopen(fftw_wisdom_filename.c_str(), "w");

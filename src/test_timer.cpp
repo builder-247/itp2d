@@ -1,4 +1,4 @@
-/* Copyright 2012 Perttu Luukko
+/* Copyright 2014 Perttu Luukko
 
  * This file is part of itp2d.
 
@@ -16,17 +16,24 @@
  * itp2d.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "timer.hpp"
+/*
+ * Unit tests for the Timer class.
+ */
 
-Timer::Timer() : elapsed_nsec(0), running(false) {
-	#ifdef __MACH__
-	mach_timebase_info(&timebase_info);
-	#else
-	// Test that CLOCK_MONOTONIC works
-	time* t = new time;
-	const int retval = clock_gettime(CLOCK_MONOTONIC, t);
-	if (retval != 0)
-		throw GeneralError("CLOCK_MONOTONIC not supported. Cannot get reliable timing data");
-	delete t;
-	#endif
+#include "test_timer.hpp"
+
+// Test that the timer produces sensible results
+TEST(timer, basic_timing) {
+	const double tolerance = 1e-3;
+	const unsigned int timings = 5;
+	const unsigned int sleep_us = 10000;
+	const double expected_time = timings*sleep_us*1e-6;
+	Timer timer;
+	for (unsigned i=0; i<timings; i++) {
+		timer.start();
+		usleep(sleep_us);
+		timer.stop();
+	}
+	const double elapsed_time = timer.get_time();
+	EXPECT_NEAR(expected_time, elapsed_time, tolerance);
 }

@@ -1,89 +1,65 @@
 #!/usr/bin/env python2
+# vim: set fileencoding=utf8
 from __future__ import division
-from math import *
-import sys, os
 import h5py
-from optparse import OptionParser
-from numpy import *
+import warnings
+from argparse import ArgumentParser
+import numpy as np
 
 try:
-    from matplotlib import cm, pyplot, ticker
-    from mpl_toolkits.mplot3d import Axes3D
-except ImportError as e:
-    print "Couldn't import matplotlib:", str(e)
-    has_matplotlib = False
-else:
-    has_matplotlib = True
+    from matplotlib import pyplot
+except ImportError:
+    warnings.warn("Could not import matplotlib, 2D plot not available")
 
 try:
-    import mayavi
     from mayavi import mlab
-except ImportError as e:
-    print "Couldn't import mayavi:", str(e)
-    has_mayavi = False
-else:
-    has_mayavi = True
+except ImportError:
+    warnings.warn("Could not import mayavi, 3D plot not available")
 
 # Plot a stored potential from an itp2d datafile
 def main():
-    parser = OptionParser(usage="%prog datafile.h5")
-    parser.add_option("", "--clip", type="float", help="Clip potential values larger than this")
-    parser.add_option("-o", "--output", type="string", metavar="FILE",
+    parser = ArgumentParser()
+    parser.add_argument("-c", "--clip", type=float, help="Clip potential values larger than this")
+    parser.add_argument("-o", "--output", type=str, metavar="FILE",
             help="Save image to file instead of showing")
-    parser.add_option("-2", "--2d", action="store_true", dest="twodee",
-            help="Plot 2D projection of potential")
-    parser.add_option("", "--matplotlib3d", action="store_true", dest="matplotlib3d",
-            help="Plot 3D image using matplotlib. Very slow.")
-    (options, args) = parser.parse_args()
+    parser.add_argument("-2", "--2d", action="store_true", dest="twodee",
+            help="Plot 2D projection of potential with matplotlib")
+    parser.add_argument("--clip-hack-number-of-contours", type=int, default=100,
+            help="How many contours to use as the surface to give nice clipping in mayavi")
+    parser.add_argument("datafile", type=str, help="Datafile saved by itp2d")
+    args = parser.parse_args()
 
-    try:
-        filename = args[0]
-    except:
-        parser.print_usage()
-        sys.exit()
+    # Load data
+    with h5py.File(args.datafile, 'r') as f:
+        sx = f.attrs["grid_sizex"]
+        sy = f.attrs["grid_sizey"]
+        grid_delta = f.attrs["grid_delta"]
+        potential = f["potential_values"].value
 
-    # Option parsing done
-    file = h5py.File(filename, 'r')
-
-    Mx = file.attrs["grid_sizex"]
-    My = file.attrs["grid_sizey"]
-    scale = file.attrs["grid_delta"]
-    potential = file["potential_values"].value
-    mask = (None if options.clip == None else transpose(potential > options.clip))
-
-    X = (2*arange(Mx)-Mx+1)*0.5*scale
-    Y = (2*arange(My)-My+1)*0.5*scale
-    X1d = X[:]
-    Y1d = Y[:]
-    extent = array([min(X), max(X), min(Y), max(Y)])
-    X, Y = meshgrid(X, Y)
+    X = (2*np.arange(sx)-sx+1)*0.5*grid_delta
+    Y = (2*np.arange(sy)-sx+1)*0.5*grid_delta
+    extent = np.array([min(X), max(X), min(Y), max(Y)])
     # Actual plotting
-    if options.twodee or options.matplotlib3d:
-        if options.clip is not None:
-            clip(potential, float("-inf"), options.clip, out=potential)
-        matplotlib_plot(X, Y, potential, options, extent)
+    if args.twodee:
+        if args.clip is not None:
+            np.clip(potential, float("-inf"), args.clip, out=potential)
+        matplotlib_2dplot(potential, args, extent)
     else:
-        mayavi_3dplot(X1d, Y1d, transpose(potential), options, mask)
+        mayavi_3dplot(X, Y, np.transpose(potential), args)
 
-def matplotlib_plot(X, Y, Z, options, extent):
-        fig = pyplot.figure(figsize=(12,12))
-        ax = fig.add_subplot(1, 1, 1,
-                projection=("rectilinear" if options.twodee else "3d"), aspect="equal")
-        if options.twodee:
-            ax.imshow(Z, extent=extent, rasterized=True, origin='lower')
-        else:
-            ax.set_xlabel('$x$')
-            ax.set_ylabel('$y$')
-            ax.plot_surface(X, Y, Z,
-                    rstride=1, cstride=1, cmap=cm.jet, linewidth=0)
-            ax.apply_aspect()
-        if options.output:
-            pyplot.savefig(options.output)
-        else:
-            pyplot.show()
+def matplotlib_2dplot(Z, args, extent):
+    if not "pyplot" in globals():
+        raise RuntimeError("Can't plot with matplotlib because it's not available")
+    fig = pyplot.figure(figsize=(12,12))
+    ax = fig.add_subplot(1, 1, 1, projection="rectilinear")
+    ax.imshow(Z, extent=extent, rasterized=True, origin='lower')
+    if args.output:
+        pyplot.savefig(args.output)
+    else:
+        pyplot.show()
 
-def mayavi_3dplot(X, Y, Z, options, mask):
-    if not has_mayavi:
+def mayavi_3dplot(X, Y, Z, args):
+    if not "mlab" in globals():
         raise RuntimeError("Can't plot with mayavi because it is not available")
     fig = mlab.figure(bgcolor=(1,1,1), fgcolor=(0,0,0))
     light_manager = fig.scene.light_manager
@@ -92,10 +68,17 @@ def mayavi_3dplot(X, Y, Z, options, mask):
     for light in lights:
         light.activate = True
         light.intensity = 0.5
-    s = mlab.surf(X, Y, Z, warp_scale='auto', mask=mask)
-    #mlab.axes(s, nb_labels=10)
-    if options.output:
-        mlab.savefig(options.output)
+    s = mlab.surf(X, Y, Z, warp_scale='auto')
+    if args.clip is not None:
+        s.module_manager.scalar_lut_manager.reverse_lut = True
+        s.module_manager.scalar_lut_manager.use_default_range = False
+        s.module_manager.scalar_lut_manager.data_range = np.array([0,  args.clip])
+        s.contour.number_of_contours = args.clip_hack_number_of_contours
+        s.enable_contours = True
+        s.contour.filled_contours = True
+        s.contour.maximum_contour = args.clip
+    if args.output:
+        mlab.savefig(args.output)
     else:
         mlab.show()
     mlab.close(all=True)

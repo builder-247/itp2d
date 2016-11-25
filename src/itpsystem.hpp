@@ -86,7 +86,7 @@ class ITPSystem {
 		inline double get_convtest_time() { return convtest_timer.get_time(); }
 		inline StateSet const& get_states() const { return states; }
 		inline State const& get_state(size_t n) const { return states[n]; }
-		inline Potential const& get_potential() const { return pot; }
+		inline Potential const& get_potential() const { return *pot; }
 		inline OperatorSum const& get_hamiltonian() const { return H; }
 		inline double get_eps() const { return eps; }
 		// Main operation
@@ -132,9 +132,11 @@ class ITPSystem {
 		char timestring[24];
 		// Main members
 		PotentialType const* pot_type;
-		Constraint const* noise_constraint;
 		Noise const* noise;
-		const Potential pot;
+		ImpurityType const* impurity_type;
+		ImpurityDistribution const* impurity_distribution;
+		Constraint const* impurity_constraint;
+		Potential const* pot;
 		const Kinetic kin;
 		OperatorSum H;
 		MultiProductSplit* T;

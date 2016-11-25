@@ -20,11 +20,11 @@
 
 // Default values for parameters
 
-const double HarmonicOscillator::default_frequency = 1;
+const double HarmonicOscillator::default_prefactor = 1;
 const double HarmonicOscillator::default_x0 = 0;
 const double HarmonicOscillator::default_y0 = 0;
-const double EllipticOscillator::default_frequency_x = 1;
-const double EllipticOscillator::default_frequency_y = 1.6180339887498948482;
+const double EllipticOscillator::default_prefactor_x = 1;
+const double EllipticOscillator::default_prefactor_y = 1.6180339887498948482;
 const double PrettyHardSquare::default_exponent = 8;
 const double HenonHeiles::default_a = 205.0/42.0;
 const double HenonHeiles::default_b = -13.0/3.0;
@@ -35,7 +35,7 @@ const double GaussianPotential::default_y0 = 0;
 const double QuarticPotential::default_b = 0.01;
 const double SquareOscillator::default_alpha = 8;
 const double PowerOscillator::default_exponent = 4;
-const double PowerOscillator::default_w = 1;
+const double PowerOscillator::default_prefactor = 1;
 const double RingPotential::default_radius = 3;
 const double RingPotential::default_width = 1;
 const double RingPotential::default_exponent = 2;
@@ -48,6 +48,9 @@ const double SoftStadium::default_center_length = 2;
 const double SoftStadium::default_height = 100;
 const double SoftStadium::default_a = 1;
 const double SoftStadium::default_b = 10;
+const double PowerStadium::default_radius = 1;
+const double PowerStadium::default_center_length = 2;
+const double PowerStadium::default_power = 4;
 // The parser delegator
 
 PotentialType const* parse_potential_description(std::string const& str) {
@@ -90,6 +93,8 @@ PotentialType const* parse_potential_description(std::string const& str) {
 		return new CoshPotential(params);
 	if (name == "softstadium")
 		return new SoftStadium(params);
+	if (name == "powerstadium")
+		return new PowerStadium(params);
 	else
 		throw UnknownPotentialType(str);
 	return NULL;
@@ -104,8 +109,8 @@ ZeroPotential::ZeroPotential(std::vector<double> params) {
 }
 
 // The harmonic potential
-HarmonicOscillator::HarmonicOscillator(double omega, double orig_x, double orig_y) :
-		w(omega),
+HarmonicOscillator::HarmonicOscillator(double prefactor, double orig_x, double orig_y) :
+		A(prefactor),
 		x0(orig_x),
 		y0(orig_y) {
 	init();
@@ -113,17 +118,17 @@ HarmonicOscillator::HarmonicOscillator(double omega, double orig_x, double orig_
 
 HarmonicOscillator::HarmonicOscillator(std::vector<double> params) {
 	if (params.empty()) {
-		w = default_frequency;
+		A = default_prefactor;
 		x0 = default_x0;
 		y0 = default_y0;
 	}
 	else if (params.size() == 1) {
-		w = params[0];
+		A = params[0];
 		x0 = default_x0;
 		y0 = default_y0;
 	}
 	else if (params.size() == 3) {
-		w = params[0];
+		A = params[0];
 		x0 = params[1];
 		y0 = params[2];
 	}
@@ -133,29 +138,29 @@ HarmonicOscillator::HarmonicOscillator(std::vector<double> params) {
 }
 
 void HarmonicOscillator::init() {
-	if (w < 0)
-		throw InvalidPotentialType("harmonic oscillator with negative frequency");
+	if (A < 0)
+		throw InvalidPotentialType("harmonic oscillator with negative prefactor");
 	std::stringstream ss;
-	ss << "harmonic(" << w << ")";
+	ss << "harmonic(" << A << ")";
 	description = ss.str();
 }
 
 // EllipticOscillator
 
-EllipticOscillator::EllipticOscillator(double omega_x, double omega_y) :
-		wx(omega_x),
-		wy(omega_y) {
+EllipticOscillator::EllipticOscillator(double prefactor_x, double prefactor_y) :
+		Ax(prefactor_x),
+		Ay(prefactor_y) {
 	init();
 }
 
 EllipticOscillator::EllipticOscillator(std::vector<double> params) {
 	if (params.empty()) {
-		wx = default_frequency_x;
-		wy = default_frequency_y;
+		Ax = default_prefactor_x;
+		Ay = default_prefactor_y;
 	}
 	else if (params.size() == 2) {
-		wx = params[0];
-		wy = params[1];
+		Ax = params[0];
+		Ay = params[1];
 	}
 	else
 		throw InvalidPotentialType("elliptic oscillator potential takes either zero or three parameters");
@@ -163,10 +168,10 @@ EllipticOscillator::EllipticOscillator(std::vector<double> params) {
 }
 
 void EllipticOscillator::init() {
-	if (wx < 0 or wy < 0)
-		throw InvalidPotentialType("elliptic oscillator with negative frequency");
+	if (Ax < 0 or Ay < 0)
+		throw InvalidPotentialType("elliptic oscillator with negative prefactor");
 	std::stringstream ss;
-	ss << "elliptic(" << wx <<", " << wy << ")";
+	ss << "elliptic(" << Ax <<", " << Ay << ")";
 	description = ss.str();
 }
 // PrettyHardSquare
@@ -297,22 +302,22 @@ void SquareOscillator::init() {
 
 PowerOscillator::PowerOscillator(double exponent, double omega) :
 		a(exponent),
-		w(omega) {
+		A(omega) {
 	init();
 }
 
 PowerOscillator::PowerOscillator(std::vector<double> params) {
 	if (params.empty()) {
 		a = default_exponent;
-		w = default_w;
+		A = default_prefactor;
 	}
 	else if (params.size() == 1) {
 		a = params[0];
-		w = default_w;
+		A = default_prefactor;
 	}
 	else if (params.size() == 2) {
 		a = params[0];
-		w = params[1];
+		A = params[1];
 	}
 	else
 		throw InvalidPotentialType("power oscillator potential takes either zero, one or two parameters");
@@ -320,10 +325,10 @@ PowerOscillator::PowerOscillator(std::vector<double> params) {
 }
 
 void PowerOscillator::init() {
-	if (w < 0)
-		throw InvalidPotentialType("power oscillator with negative \"frequency\"");
+	if (A < 0)
+		throw InvalidPotentialType("power oscillator with negative prefactor");
 	std::stringstream ss;
-	ss << "poweroscillator(" << a << "," << w << ")";
+	ss << "poweroscillator(" << a << "," << A << ")";
 	description = ss.str();
 }
 
@@ -452,5 +457,43 @@ void SoftStadium::init() {
 		throw InvalidPotentialType("soft stadium with non-positive b parameter");
 	std::stringstream ss;
 	ss << "softstadium(" << R << "," << halfL*2 << "," << V << "," << a << "," << b << ")";
+	description = ss.str();
+}
+
+// PowerStadium
+
+PowerStadium::PowerStadium(double radius, double center_length, double power) :
+		R(radius), halfL(center_length/2), a(power) {
+	init();
+}
+
+PowerStadium::PowerStadium(std::vector<double> params) {
+	if (params.empty()) {
+		R = default_radius;
+		halfL = default_center_length/2;
+		a = default_power;
+	}
+	else if (params.size() == 1) {
+		R = default_radius;
+		halfL = default_center_length/2;
+		a = params[0];
+	}
+	else if (params.size() == 3) {
+		R = params[0];
+		halfL = params[1]/2;
+		a = params[2];
+		}
+	else
+		throw InvalidPotentialType("power stadium potential takes either zero, one or three parameters");
+	init();
+}
+
+void PowerStadium::init() {
+	if (R <= 0)
+		throw InvalidPotentialType("power stadium with non-positive radius");
+	if (halfL <= 0)
+		throw InvalidPotentialType("power stadium with non-positive center length");
+	std::stringstream ss;
+	ss << "powerstadium(" << R << "," << halfL*2 << "," << a << ")";
 	description = ss.str();
 }

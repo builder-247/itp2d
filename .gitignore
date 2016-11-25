@@ -70,6 +70,7 @@ obj/test_operators.o
 obj/test_parser.o
 obj/test_potentialparser.o
 obj/test_rng.o
+obj/test_timer.o
 obj/tests_common.o
 obj/test_statearray.o
 obj/test_state.o
@@ -123,6 +124,7 @@ obj/transformer.o
 .deps/test_parser.o.d
 .deps/test_potentialparser.o.d
 .deps/test_rng.o.d
+.deps/test_timer.o.d
 .deps/tests_common.o.d
 .deps/test_statearray.o.d
 .deps/test_state.o.d

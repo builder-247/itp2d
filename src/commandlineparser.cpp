@@ -27,20 +27,35 @@ better performance.";
 const char CommandLineParser::help_wisdom_file_name[] = "\
 File name to use for FFTW wisdom.";
 
-const char CommandLineParser::help_noise[] = "\
-Description of possible noise added to the potential. Valid descriptions:\n\
-Gaussian spikes with the prescribed density and normally distributed amplitude and width:\n\
-\tgaussian(density,amp_mean,width_mean)\n\
-\tgaussian(density,amp_mean,amp_stdev,width_mean,width_stdev)\n\
-Single Gaussian spike at x, y with prescribed amplitude and width\n\
-\tsinglegaussian(x,y,amp,width)\n\
-Coulomb-like impurities with alpha/r^e potential uniformly distributed in 3D space\n\
-at maximum distance maxd from the calculation plane:\n\
-\tcoulomb(density,e,alpha,maxd)\n\
+const char CommandLineParser::help_noise[] = "Type of noise added to the potential. \
+Valid choices are currently 'none' for no noise or 'impurities', for spatially distributed \
+bumps in the potential. See documentation of flags --impurity-type, --impurity-distribution \
+and --impurity-constrant for more information about impurity noise.";
+
+const char CommandLineParser::help_impurity_type[] = "\
+Description of the type of impurity bumps added to the potential. Valid descriptions:\n\
+Gaussian bumps with normally distributed amplitude and width:\n\
+\tgaussian(amp_mean, width_mean)\n\
+\tgaussian(amp_mean, amp_stdev, width_mean, width_stdev)\n\
+Coulomb-like impurities with alpha/r^e potential:\n\
+\tcoulomb(e,alpha)\n\
+Hemisphere bumps with given amplitude and radius:\n\
+\themisphere(amplitude,radius)\n\
+Delta function bumps with normally distributed volume:\n\
+\tdelta(volume)\n\
+\tdelta(volume_mean, volume_stdev)\n\
 See header noise.hpp for details.";
 
-const char CommandLineParser::help_noise_constraint[] = "\
-Description of possible geometric constraint imposed on the noise. Valid descriptions:\n\
+const char CommandLineParser::help_impurity_distribution[] = "\
+Spatial distribution of the impurity bumps. Valid descriptions:\n\
+Uniform distribution with given density:\n\
+\tuniform(density)\n\
+Fixed locations of impurities:\n\
+\tfixed(x1, y1, x2, y2, ...)";
+
+const char CommandLineParser::help_impurity_constraint[] = "\
+Description of possible geometric constraint imposed on the placement of impurities.\n\
+Valid descriptions:\n\
 Maximum distance from the center:\n\
 \tmaxradius(r)\n\
 Ring with inner radius r and width w:\n\
@@ -163,11 +178,11 @@ const char CommandLineParser::help_potential[] = "\
 Description of the potential. Valid descriptions:\n\
 Zero potential:\n\
 \tzero\n\
-Harmonic oscillator with frequency w, centered at (x0,y0):\n\
-\tharmonic(w)\n\
-\tharmonic(w,x0,y0)\n\
-Elliptic oscillator with frequencies wx and wy:\n\
-\telliptic(wx,wy)\n\
+Harmonic oscillator with prefactor (frequency squared) A, centered at (x0,y0):\n\
+\tharmonic(A)\n\
+\tharmonic(A,x0,y0)\n\
+Elliptic oscillator with prefactors Ax and Ay:\n\
+\telliptic(Ax,Ay)\n\
 Square box with power function walls:\n\
 \tprettyhardsquare(exponent)\n\
 Soft-walled pentagon:\n\
@@ -181,14 +196,16 @@ Quartic oscillator potential (x^2 * y^2)/2 + b(x^4 + y^4)/4, rotated by pi/4:\n\
 \tquartic(b)\n\
 Square oscillator potential 0.5*(|x|^a + |x|^a)\n\
 \tsquareoscillator(a)\n\
-Power oscillator potential 0.5*w*r^a\n\
-\tpoweroscillator(a,w)\n\
+Power oscillator potential 0.5*A*r^a\n\
+\tpoweroscillator(a,A)\n\
 Ring-like potential with a given radius r, width w and exponent e for walls:\n\
 \tring(r,w,e)\n\
 Radial cosh potential V(r) = A*(cosh(r/L)-1)\n\
 \tcosh(A,L)\n\
 Soft stadium potential of Tomsovic & Heller\n\
 \tsoftstadium(R,L,V,a,b)\n\
+Another soft stadium potential with power-function walls\n\
+\tpowerstadium(R,L,a)\n\
 See header potential.hpp for details.";
 
 const char CommandLineParser::help_epilogue[] = "\
@@ -208,7 +225,9 @@ CommandLineParser::CommandLineParser() :
 	arg_highmem("", "highmem-orthonormalization", help_highmem, cmd),
 	arg_wisdom_file_name("", "wisdomfile", help_wisdom_file_name, false, Parameters::default_wisdom_file_name, "FILENAME", cmd),
 	arg_noise("", "noise", help_noise, false, Parameters::default_noise_type, "STRING", cmd),
-	arg_noise_constraint("", "noise-constraint", help_noise_constraint, false, Parameters::default_noise_constraint_type, "STRING", cmd),
+	arg_impurity_type("", "impurity-type", help_impurity_type, false, Parameters::default_impurity_type, "STRING", cmd),
+	arg_impurity_distribution("", "impurity-distribution", help_impurity_distribution, false, Parameters::default_impurity_distribution, "STRING", cmd),
+	arg_impurity_constraint("", "impurity-constraint", help_impurity_constraint, false, Parameters::default_impurity_constraint, "STRING", cmd),
 	arg_recover("", "recover", help_recover, cmd),
 	arg_rngseed("", "rngseed", help_rngseed, false, Parameters::default_rngseed, "NUM", cmd),
 	arg_min_time_step("", "mineps", help_min_time_step, false, Parameters::default_min_time_step, "FLOAT", cmd),
@@ -296,7 +315,16 @@ void CommandLineParser::parse(std::vector<std::string>& args) {
 	params.set_timestep_convergence_test(arg_timestep_convtest.getValue());
 	params.set_final_convergence_test(arg_final_convtest.getValue());
 	params.set_noise_type(arg_noise.getValue());
-	params.set_noise_constraint_type(arg_noise_constraint.getValue());
+	params.set_impurity_type(arg_impurity_type.getValue());
+	params.set_impurity_distribution(arg_impurity_distribution.getValue());
+	params.set_impurity_constraint(arg_impurity_constraint.getValue());
+	if (arg_noise.getValue() == "impurities" and not (arg_impurity_type.isSet() and arg_impurity_distribution.isSet())) {
+		throw TCLAP::CmdLineParseException("Arguments need to be set if noise type is 'impurities'", arg_impurity_type.getName()+" and "+arg_impurity_distribution.getName());
+	}
+	if (arg_noise.getValue() != "impurities" and (arg_impurity_type.isSet() or arg_impurity_distribution.isSet())) {
+		throw TCLAP::CmdLineParseException("Arguments have no effect if noise type is not 'impurities'", arg_impurity_type.getName()+" and "+arg_impurity_distribution.getName());
+	}
+	if (arg_save_everything.getValue())
 	if (arg_save_everything.getValue())
 		params.save_what = Parameters::Everything;
 	if (arg_save_onlyenergies.getValue())

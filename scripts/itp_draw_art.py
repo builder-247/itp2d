@@ -5,9 +5,12 @@ import os
 from math import floor, ceil, sqrt, sin, cos
 from collections import namedtuple
 import numpy as np
+from scipy.interpolate import RectBivariateSpline
+import scipy
 import h5py
 from optparse import OptionParser
 from PIL import Image, ImageFont, ImageDraw
+import cPickle as pickle
 
 # Print pretty pictures from the wave functions computed with itp2d.
 
@@ -125,15 +128,19 @@ if __name__ == "__main__":
     parser.add_option("-q", "--quiet", action="store_false", dest="verbose")
     parser.add_option("-o", "--output", type="string", metavar="FILENAME", help="Filename for the output image")
     parser.add_option("-a", "--all", action="store_true", help="Draw also the extra states not intended to converge")
+    parser.add_option("",   "--plot-phase", action="store_true", help="Plot phase instead of density")
     parser.add_option("",   "--cumulative-density-sum", action="store_true", help="Plot cumulative sum of densities")
     parser.add_option("-p", "--potential", action="store_true", help="Also draw a histogram of the potential under the states")
     parser.add_option("",   "--noise-only", action="store_true", help="Draw only the noise part of the potential. Implies --potential")
     parser.add_option("",   "--noise-locations", action="store_true", help="Draw locations of noise spikes.")
     parser.add_option("",   "--noise-location-marker-size", type="float", help="Marker radius for --noise-locations")
     parser.add_option("",   "--noise-location-marker-alpha", type="float", default=1.0, help="Marker alpha for --noise-locations")
+    parser.add_option("",   "--noise-location-marker-color", type="int", nargs=3, default=(255,0,0), help="Marker color for --noise-locations")
     parser.add_option(      "--potential-alpha", type="float", help="Alpha value to use for the potential")
     parser.add_option(      "--potential-scale", type="float", metavar="VAL", help="Scale potential so that 1.0 in the colormap corresponds to VAL. Set to 0 to use the maximum value of the potential.")
     parser.add_option("-l", "--labels", action="store_true", help="Draw labels with each state's index and energy to the combined image")
+    parser.add_option("", "--label-file", type="string", metavar="FILE", help="Load custom labels from FILE, which is a Python pickle of a dictionary mapping state indices to strings")
+    parser.add_option("", "--label-color", type="string", metavar="COLOR", help="Color to use for labels, instead of the foreground color defined by the given color map")
     parser.add_option("", "--label-font-size", type="int", help="Font size for the labels")
     parser.add_option("", "--label-font-file", type="string", metavar="FILENAME", help="TTF or OTF font file for the labels")
     parser.add_option("", "--label-energy-precision", type="int", default=3, help="Number of decimals for energy values in labels")
@@ -147,17 +154,33 @@ if __name__ == "__main__":
     parser.add_option(      "--separate", action="store_true", help="Save separate images of each state")
     parser.add_option(      "--no-combined", action="store_false", dest="combined", help="Do not save a combined image of all the states")
     parser.add_option("-c", "--colorscheme", type="choice", choices=colorschemes.keys(), help="The colors. Valid choices: %s" % colorschemes.keys())
+    parser.add_option(      "--colorscheme-power", type="float", default=1.0, help="Exponent used to fine-tune the color mapping. Each scaled density value in [0,1] is raised to this power before applying the color scheme transformation.")
     parser.add_option(      "--potential-colorscheme", type="choice", choices=colorschemes.keys(), help="Colorscheme for the potential.")
     parser.add_option("-S", "--slot", type="int", help="If the datafile contains several sets of states this lets you select the one you want. The default is to load the last one.")
+    parser.add_option(      "--fixed-scale", type="float", metavar="VAL",
+            help="Used fixed scale instead of scaling to average or maximum density")
     parser.add_option(      "--scale-to-average-point", type="float", metavar="VAL", dest="average_point", default=0,
             help="Instead of scaling density data so that 1.0 corresponds to maximum value, scale so that VAL corresponds to the average value.")
+    parser.add_option(      "--common-scaling", action="store_true", help="Use common density scaling for all states")
+    parser.add_option(      "--phase-filter-value", type="float", metavar="VAL", default=1e-15, help="When using --plot-phase, complex numbers with modulus less than VAL are considered to have zero phase, to avoid noise")
     (options, args) = parser.parse_args()
     if options.noise_only:
         options.potential = True
+    if options.rescale > 1 and (options.potential or options.noise_only or options.circle or options.mark_angles):
+        parser.error("Spline interpolation (rescale > 1) is currently not supported together with potential drawing or markers")
+    if options.plot_phase and options.cumulative_density_sum:
+        parser.error("Options --plot-phase and --cumulative-density-sum are mutually exclusive")
+    if options.common_scaling and options.cumulative_density_sum:
+        parser.error("Options --common-scaling and --cumulative-density-sum are mutually exclusive")
+    if options.plot_phase and options.common_scaling:
+        parser.error("Options --common-scaling and --plot-phase are mutually exclusive")
     if (len(args) > 0):
         filename = args[0]
     else:
         filename = "data/itp2d.h5"
+    if os.path.splitext(filename)[0].endswith("_stripped"):
+        print >> sys.stderr, "Datafile '%s' seems to be stripped with strip_states.py. No state data to plot."
+        sys.exit(1)
     indices = []
     for arg in args[1:]:
         try:
@@ -219,7 +242,15 @@ if __name__ == "__main__":
     else:
         columns = options.columns
     rows = int(ceil(num_to_draw/columns))
-    mode, colorfunc = colorschemes[options.colorscheme]
+    mode, orig_colorfunc = colorschemes[options.colorscheme]
+    if options.colorscheme_power != 1:
+        power = options.colorscheme_power
+        colorfunc = lambda x: orig_colorfunc(x**power)
+    else:
+        colorfunc = orig_colorfunc
+    # Load labels file
+    if options.label_file:
+        labeldict = pickle.load(open(options.label_file, 'r'))
     # Load font for creating labels
     if options.labels:
         if options.label_font_file == "":
@@ -231,10 +262,18 @@ if __name__ == "__main__":
         foreground_color = tuple(colorfunc(np.ones((1,1)))[0,0])
     else:
         foreground_color = colorfunc(np.ones((1,1)))[0,0]
+    if options.label_color is not None:
+        label_color = options.label_color
+    else:
+        label_color = foreground_color
     # Read noise spike locations and parameters
     if options.noise_only or options.noise_locations:
         noise_type = file.attrs["noise"].lower()
-        if not noise_type.startswith("gaussian"):
+        if noise_type == "impurities":
+            impurity_type = file.attrs["impurity_type"].lower()
+            if not impurity_type.startswith("gaussian"):
+                raise NotImplementedError("Noise reconstruction not implemented for impurity type '%s'" % noise_type)
+        elif not noise_type.startswith("gaussian"):
             raise NotImplementedError("Noise reconstruction not implemented for noise type '%s'" % noise_type)
         # Reshape noise_data to a list of (x, y, amplitude, width)
         noise_data = np.reshape(file["noise_data"], (-1,4))
@@ -278,6 +317,20 @@ if __name__ == "__main__":
     counter = 0
     if options.cumulative_density_sum:
         density_sum = None
+    # Calculate common scaling factor, if needed
+    if options.common_scaling:
+        avgs = []
+        common_max = float("-inf")
+        progressbar = ProgressBar(widgets=["Calculating common density scale: ", Percentage(), Bar(), ETA()])
+        for index in progressbar(indices):
+            state = states[options.slot, index]
+            density = np.abs(state)**2
+            max_density = density.max()
+            avg_density = density.mean()
+            if max_density > common_max:
+                common_max = max_density
+            avgs.append(avg_density)
+        common_avg = np.mean(avgs)
     # Loop through all states to be plotted
     progressbar = ProgressBar(widgets=["Drawing images: ", Percentage(), Bar(), ETA()])
     for index in progressbar(indices):
@@ -289,25 +342,46 @@ if __name__ == "__main__":
         # The data to plot is the square of the absolute value of the
         # wave function, i.e., the probability density
         if options.trim == 0:
-            density = abs(states[options.slot, index])**2
+            state = states[options.slot, index]
         else:
-            density = abs(states[options.slot, index][trim:-trim,trim:-trim])**2
+            state = states[options.slot, index][trim:-trim,trim:-trim]
         # Flip, since in PIL the y-axis points downwards
-        density = np.flipud(density)
+        state = np.flipud(state)
+        density = np.abs(state)**2
         if options.cumulative_density_sum:
             if density_sum is None:
                 density_sum = density[:]
             else:
                 density_sum += density
             Z = density_sum[:]
+        elif options.plot_phase:
+            Z = (np.angle(state)+np.pi)/(2*np.pi)
+            Z[density < options.phase_filter_value] = 0
         else:
             Z = density
+        # If rescale > 1, enlarge with interpolation
+        if options.rescale > 1:
+            xs = get_grid_points(grid_sizex, dx)
+            ys = get_grid_points(grid_sizey, dx)
+            spline = RectBivariateSpline(xs, ys, Z)
+            new_xs = get_grid_points(grid_sizex*options.rescale, dx/options.rescale)
+            new_ys = get_grid_points(grid_sizey*options.rescale, dx/options.rescale)
+            Z = spline(new_xs, new_ys, grid=True)
         # Normalize
-        if options.average_point == 0:
-            Z /= Z.max()
-        else:
-            avg = Z.mean()
-            Z *= options.average_point/avg
+        if not options.plot_phase:
+            if options.fixed_scale is not None:
+                Z /= options.fixed_scale
+            elif options.common_scaling:
+                if options.average_point == 0:
+                    Z /= common_max
+                else:
+                    Z *= options.average_point/common_avg
+            else:
+                if options.average_point == 0:
+                    Z /= Z.max()
+                else:
+                    avg = Z.mean()
+                    Z *= options.average_point/avg
         # Create image by mapping data through colorfunc
         state_im = Image.fromarray(colorfunc(Z), mode=mode)
         if options.potential:
@@ -322,17 +396,21 @@ if __name__ == "__main__":
                     y = options.circle*sin(angle)
                     draw_circle(state_draw, (x, y), options.circle/40, grid, fill=foreground_color)
             if options.labels:
-                E = energies[index]
-                label = ("n = %d, E = %."+str(options.label_energy_precision)+"f") % (index, E)
-                state_draw.text((0, 0), label, fill=foreground_color, font=font)
+                if options.label_file is not None:
+                    label = labeldict.get(index, "")
+                else:
+                    E = energies[index]
+                    label = ("n = %d, E = %."+str(options.label_energy_precision)+"f") % (index, E)
+                state_draw.text((0, 0), label, fill=label_color, font=font)
             if options.noise_locations:
                 hwhm_scale = sqrt(2*np.log(2)) # half width at half maximum (HWHM) of a Gaussian function
                 marker_alpha = int(255*options.noise_location_marker_alpha)
                 for x, y, _, width in noise_data:
                     hwhm = hwhm_scale*width
                     ms = (options.noise_location_marker_size if options.noise_location_marker_size else hwhm)
-                    draw_circle(state_draw, (x, y), ms, grid, fill=(255, 0, 0, marker_alpha))
-        if options.rescale != 1:
+                    mcolor = options.noise_location_marker_color + (marker_alpha,)
+                    draw_circle(state_draw, (x, y), ms, grid, fill=mcolor)
+        if options.rescale < 1:
             state_im.thumbnail((scaled_Mx, scaled_My), Image.ANTIALIAS)
         if options.combined:
             paste_x = (counter % columns)*(scaled_Mx+margin)

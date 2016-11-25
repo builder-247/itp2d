@@ -244,13 +244,16 @@ class Library(Requirement):
         self.cflags = []
         self.libflags = []
         self.includeflags = []
+        self.header_paths = {}
+        self.library_paths = {}
         Requirement.reset(self)
 
     def find_file(self, name, paths=[], possible_subpaths=[]):
-        search_paths = paths[:]
+        search_paths = []
         for subpath in possible_subpaths:
             for p in paths:
                 search_paths.append(os.path.join(p, subpath))
+        search_paths.extend(paths)
         for path in search_paths:
             if os.path.exists(os.path.join(path, name)):
                 return path
@@ -276,6 +279,7 @@ class Library(Requirement):
     def include_found(self, name, path):
         print os.path.join(path, name)
         apath = os.path.abspath(path)
+        self.header_paths[name] = os.path.join(apath, name)
         if apath not in compiler_include_paths:
             self.includeflags.append("-I%s" % path)
 
@@ -314,6 +318,7 @@ class Library(Requirement):
     def library_found(self, name, static, libname, path, add_link_flag):
         print os.path.join(path, libname)
         apath = os.path.abspath(path)
+        self.library_paths[libname] = os.path.join(path, libname)
         if apath not in compiler_lib_paths and not static:
             self.libflags.append("-L%s" % path)
             self.libflags.append("-Wl,-rpath %s" % path)
@@ -380,9 +385,28 @@ class LinearAlgebraLibs(Library):
     def check_cblas(self):
         self.check_for_include("cblas.h", self.cblas_path, ["atlas"])
         self.check_for_library("cblas", self.cblas_path, ["atlas"], add_link_flag=True)
+        # Check that cblas.h is *not* OpenBLAS flavor
+        if self.cblas_is_openblas_flavor():
+            raise RequirementFail("Trying to use plain CBLAS, but found cblas.h at %s is from OpenBLAS" % \
+                    self.header_paths["cblas.h"])
         # Only check for and link BLAS if --with-blas was explicitly used
         if self.blas_path:
             self.check_blas()
+
+    def cblas_is_openblas_flavor(self):
+        cblas_header_path = self.header_paths["cblas.h"]
+        openblas_pattern = re.compile("openblas", flags=re.IGNORECASE)
+        f = open(cblas_header_path, 'r')
+        lines_count = 0
+        for line in f:
+            lines_count += 1
+            if openblas_pattern.search(line) is not None:
+                f.close()
+                return True
+            if lines_count > 20:
+                break
+        f.close()
+        return False
 
     def check_lapack(self):
         self.check_for_library("lapack", self.lapack_path, ["atlas"], add_link_flag=True)
@@ -394,8 +418,12 @@ class LinearAlgebraLibs(Library):
         self.lalib = "plain"
 
     def check_openblas(self):
-        self.check_for_library("openblas", self.openblas_path, add_link_flag=True)
-        self.check_for_include("cblas.h", self.openblas_path)
+        self.check_for_library("openblas", self.openblas_path, ["openblas"], add_link_flag=True)
+        self.check_for_include("cblas.h", self.openblas_path, ["openblas"])
+        # Check that cblas.h is OpenBLAS flavor
+        if not self.cblas_is_openblas_flavor():
+            raise RequirementFail("Trying to use OpenBLAS, but found cblas.h at %s is not from OpenBLAS" % \
+                    self.header_paths["cblas.h"])
         print "Using OpenBLAS"
         self.lalib = "OpenBLAS"
 
@@ -477,6 +505,9 @@ class LinearAlgebraLibs(Library):
 
     def print_summary(self):
         print "Linear algebra library:", self.lalib
+        for pathdict in [self.library_paths, self.header_paths]:
+            for name, path in pathdict.iteritems():
+                print "  %s = %s" % (name, path)
 
 class HDF5(Library):
     def __init__(self, options):

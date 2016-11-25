@@ -41,7 +41,9 @@ const char Parameters::default_potential_type[] = "harmonic";
 const char Parameters::default_timestep_convergence_test_string[] = "relstdev(1e-3,1e-4)";
 const char Parameters::default_final_convergence_test_string[] = "relstdev(1e-3,0)";
 const char Parameters::default_noise_type[] = "none";
-const char Parameters::default_noise_constraint_type[] = "none";
+const char Parameters::default_impurity_type[] = "N/A";
+const char Parameters::default_impurity_distribution[] = "N/A";
+const char Parameters::default_impurity_constraint[] = "none";
 const double Parameters::default_B = 0;
 const int Parameters::default_halforder = 5;
 const double Parameters::default_initial_eps = 0.50;
@@ -74,7 +76,9 @@ std::ostream& operator<<(std::ostream& stream, const Parameters& params) {
 	stream << "initialstate_description: " << params.get_initialstate_description() << std::endl;
 	stream << "potential_type: " << params.get_potential_type() << std::endl;
 	stream << "noise_type: " << params.get_noise_type() << std::endl;
-	stream << "noise_constraint_type: " << params.get_noise_constraint_type() << std::endl;
+	stream << "impurity_type: " << params.get_impurity_type() << std::endl;
+	stream << "impurity_distribution: " << params.get_impurity_distribution() << std::endl;
+	stream << "impurity_constraint: " << params.get_impurity_constraint() << std::endl;
 	stream << "timestep_convergence_test: " << params.get_timestep_convergence_test().get_description() << std::endl;
 	stream << "final_convergence_test: " << params.get_final_convergence_test().get_description() << std::endl;
 	stream << "B: " << params.get_B() << std::endl;
@@ -100,10 +104,6 @@ void Parameters::set_to_defaults() {
 	clobber = default_clobber;
 	verbosity = default_verbosity;
 	num_threads = default_num_threads;
-	boundary = default_boundary;
-	sizex = default_sizex;
-	sizey = default_sizey;
-	lenx = default_lenx;
 	halforder = default_halforder;
 	eps_divisor = default_eps_divisor;
 	exhaust_eps = default_exhaust_eps;
@@ -112,8 +112,9 @@ void Parameters::set_to_defaults() {
 	ortho_alg = default_ortho_alg;
 	fftw_flags = default_fftw_flags;
 	noise_type = default_noise_type;
-	noise_constraint_type = default_noise_constraint_type;
+	user_noise = NULL;
 	//
+	define_grid(default_sizex, default_sizey, default_lenx, default_boundary);
 	timestep_convergence_test = parse_convergence_description(default_timestep_convergence_test_string);
 	final_convergence_test = parse_convergence_description(default_final_convergence_test_string);
 	define_external_field(default_potential_type, default_B);
@@ -122,6 +123,7 @@ void Parameters::set_to_defaults() {
 }
 
 Parameters::Parameters() :
+		user_noise(NULL),
 		timestep_convergence_test(NULL),
 		final_convergence_test(NULL) {
 	set_to_defaults();
