@@ -10,9 +10,12 @@ flags += -Wno-long-long -Wno-variadic-macros
 flags += -fopenmp
 
 # Add the version information if it is available
+default_version := 1.0.0-assumed
 version := $(shell git describe --always --dirty)
 ifdef version
 	flags += -DITP2D_VERSION=\"$(version)\"
+else
+	flags += -DITP2D_VERSION=\"$(default_version)\"
 endif
 
 # Query which OS we are using
