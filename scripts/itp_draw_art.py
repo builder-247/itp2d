@@ -11,6 +11,7 @@ import h5py
 from optparse import OptionParser
 from PIL import Image, ImageFont, ImageDraw
 import cPickle as pickle
+import warnings
 
 # Print pretty pictures from the wave functions computed with itp2d.
 
@@ -119,7 +120,7 @@ def draw_circle(drawer, pos, radius, grid, **kwargs):
 if __name__ == "__main__":
     # parse command line arguments
     parser = OptionParser(usage="%prog [options] [datafile.h5] [indices]")
-    parser.set_defaults(verbose=True, labels=False, label_font_size=10, label_font_file="",
+    parser.set_defaults(verbose=True, labels=False, label_font_size=10,
             combined=True, colorscheme="default", potential_colorscheme="bow", potential_scale=0,
             potential_alpha=0.4, slot=-1, margin=0, trim=0, average_point=0,
             rescale=1)
@@ -253,10 +254,14 @@ if __name__ == "__main__":
         labeldict = pickle.load(open(options.label_file, 'r'))
     # Load font for creating labels
     if options.labels:
-        if options.label_font_file == "":
-            # TODO: Replace this with some sensible search function
-            options.label_font_file = "/usr/share/fonts/dejavu/DejaVuSansMono.ttf"
-        font = ImageFont.truetype(options.label_font_file, options.label_font_size)
+        if options.label_font_file is None:
+            try:
+                font = ImageFont.truetype("DejaVuSansMono.ttf", options.label_font_size)
+            except IOError:
+                warnings.warn("Couldn't find DejaVuSansMono font. Falling back to a default font. This means --label-font-size has no effect. Please specify font file with --label-font-file.")
+                font = ImageFont.load_default()
+        else:
+            font = ImageFont.truetype(options.label_font_file, options.label_font_size)
     # Get color of text from the colormap
     if mode == "RGB":
         foreground_color = tuple(colorfunc(np.ones((1,1)))[0,0])
