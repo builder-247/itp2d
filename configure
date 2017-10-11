@@ -559,7 +559,7 @@ class gtest(Library):
                 fail = True
         if fail:
             self.warn("Could not find unpacked gtest source. Unit tests cannot be built.\n\
-The helper script `scripts/fetch_gtest.h` can fetch the source for you.")
+The helper script `scripts/fetch_gtest.sh` can fetch the source for you.")
 
     def makefile_changes(self):
         return "gtest_dir := %s\n" % self.path
